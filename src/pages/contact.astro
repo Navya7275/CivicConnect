@@ -1,0 +1,165 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Contact Us | CivicConnect" description="Get in touch with the CivicConnect team for questions, suggestions, or feedback.">
+  <div class="py-24 px-6 max-w-lg mx-auto">
+    <!-- Header -->
+    <div class="mb-12">
+      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">get in touch</span>
+      <h1 class="text-display-md text-ink mb-4">Contact CivicConnect</h1>
+      <p class="text-body-sm text-mute leading-relaxed">
+        Have questions, suggestions, or reports about the tool? Send us a message and we'll get back to you.
+      </p>
+    </div>
+
+    <!-- Success message overlay -->
+    <div id="success-banner" class="hidden p-6 border border-primary bg-canvas-card rounded-sm text-center mb-8 animate-fade-in" aria-live="polite">
+      <h2 class="text-body-md text-ink font-semibold mb-2">Message Submitted Successfully</h2>
+      <p class="text-body-sm text-mute mb-4">Thank you for reaching out. Our team will review your submission shortly.</p>
+      <button type="button" id="reset-form-btn" class="button-pill button-pill-outline text-caption-mono-sm">Send Another Message</button>
+    </div>
+
+    <!-- Contact Form -->
+    <form id="contact-form" class="space-y-6" novalidate>
+      <!-- Name field -->
+      <div class="flex flex-col gap-2">
+        <label for="user-name" class="text-caption-mono-sm text-ink tracking-wider">name</label>
+        <input 
+          type="text" 
+          id="user-name" 
+          name="name" 
+          placeholder="Enter your name…" 
+          required 
+          autocomplete="name" 
+          class="w-full px-4 py-3 bg-canvas-soft border border-hairline rounded-sm text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+        />
+        <span id="name-error" class="hidden text-xs text-accent-sunset mt-1" role="alert">Please enter your name.</span>
+      </div>
+
+      <!-- Email field -->
+      <div class="flex flex-col gap-2">
+        <label for="user-email" class="text-caption-mono-sm text-ink tracking-wider">email</label>
+        <input 
+          type="email" 
+          id="user-email" 
+          name="email" 
+          placeholder="name@example.com…" 
+          required 
+          autocomplete="email" 
+          spellcheck="false"
+          class="w-full px-4 py-3 bg-canvas-soft border border-hairline rounded-sm text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+        />
+        <span id="email-error" class="hidden text-xs text-accent-sunset mt-1" role="alert">Please enter a valid email address.</span>
+      </div>
+
+      <!-- Message field -->
+      <div class="flex flex-col gap-2">
+        <label for="user-message" class="text-caption-mono-sm text-ink tracking-wider">message</label>
+        <textarea 
+          id="user-message" 
+          name="message" 
+          rows="5"
+          placeholder="Describe your question or feedback…" 
+          required 
+          class="w-full px-4 py-3 bg-canvas-soft border border-hairline rounded-sm text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none resize-none"
+        ></textarea>
+        <span id="message-error" class="hidden text-xs text-accent-sunset mt-1" role="alert">Please write your message.</span>
+      </div>
+
+      <!-- Submit button -->
+      <button 
+        type="submit" 
+        id="submit-btn" 
+        class="button-pill button-pill-primary w-full py-3.5 mt-4 transition-all duration-200"
+      >
+        <span id="submit-text">Send Message</span>
+        <span id="submit-spinner" class="hidden flex items-center justify-center gap-2">
+          <!-- Animated Spinner SVG -->
+          <svg class="animate-spin h-5 w-5 text-on-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Sending…
+        </span>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('contact-form') as HTMLFormElement;
+    const successBanner = document.getElementById('success-banner') as HTMLDivElement;
+    const resetBtn = document.getElementById('reset-form-btn') as HTMLButtonElement;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    const submitText = document.getElementById('submit-text') as HTMLSpanElement;
+    const submitSpinner = document.getElementById('submit-spinner') as HTMLSpanElement;
+
+    // Field refs
+    const nameInput = document.getElementById('user-name') as HTMLInputElement;
+    const emailInput = document.getElementById('user-email') as HTMLInputElement;
+    const messageInput = document.getElementById('user-message') as HTMLTextAreaElement;
+
+    // Error refs
+    const nameError = document.getElementById('name-error') as HTMLSpanElement;
+    const emailError = document.getElementById('email-error') as HTMLSpanElement;
+    const messageError = document.getElementById('message-error') as HTMLSpanElement;
+
+    if (form && successBanner && resetBtn && submitBtn && submitText && submitSpinner) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Reset validation status
+        let isValid = true;
+        nameError.classList.add('hidden');
+        emailError.classList.add('hidden');
+        messageError.classList.add('hidden');
+
+        // Name Validation
+        if (!nameInput.value.trim()) {
+          nameError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        // Email Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
+          emailError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        // Message Validation
+        if (!messageInput.value.trim()) {
+          messageError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // Simulate Submission State
+        submitBtn.disabled = true;
+        submitText.classList.add('hidden');
+        submitSpinner.classList.remove('hidden');
+
+        // Delay to simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Done! Show success state
+        form.classList.add('hidden');
+        successBanner.classList.remove('hidden');
+
+        // Reset inputs
+        form.reset();
+        
+        // Re-enable button state
+        submitBtn.disabled = false;
+        submitText.classList.remove('hidden');
+        submitSpinner.classList.add('hidden');
+      });
+
+      resetBtn.addEventListener('click', () => {
+        successBanner.classList.add('hidden');
+        form.classList.remove('hidden');
+      });
+    }
+  </script>
+</Layout>

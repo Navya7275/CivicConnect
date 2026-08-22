@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About | CivicConnect" description="Learn about the purpose, goals, and team behind the CivicConnect platform.">
+  <div class="py-24 px-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-16">
+      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">mission</span>
+      <h1 class="text-display-md text-ink mb-6">About CivicConnect</h1>
+      <p class="text-body-lg text-mute leading-relaxed">
+        Making Indian constitutional rights, civil laws, and government entitlements understandable and accessible to every citizen.
+      </p>
+    </div>
+
+    <!-- Divider -->
+    <hr class="border-hairline my-12" />
+
+    <!-- Content Sections -->
+    <div class="space-y-12 text-body-md text-body leading-relaxed">
+      <section>
+        <span class="text-caption-mono text-accent-sunset tracking-wider block mb-3">the challenge</span>
+        <h2 class="text-display-xs text-ink mb-4">The Complexity Barrier</h2>
+        <p class="mb-4">
+          India has a rich legislative framework and thousands of welfare schemes designed to support citizens. However, finding, interpreting, and benefiting from these resources is often hindered by complex legal language, fragmented websites, and bureaucratic barriers.
+        </p>
+        <p>
+          As a result, many eligible citizens remain unaware of their entitlements, and ordinary people struggle to find accurate answers to everyday civil questions (such as deadlines for filing requests, consumer protection rights, or state pensions).
+        </p>
+      </section>
+
+      <section>
+        <span class="text-caption-mono text-accent-breeze tracking-wider block mb-3">our solution</span>
+        <h2 class="text-display-xs text-ink mb-4">Democratizing Civic Information</h2>
+        <p class="mb-4">
+          CivicConnect bridges this gap by combining modern AI assistance with strict retrieval mechanisms. We believe that citizens shouldn't need a legal degree to understand their basic rights or check their eligibility for government aid.
+        </p>
+        <p>
+          By translating complex legal terminology into simple, direct explanations—while always providing official supporting citations—we empower citizens with verified knowledge they can rely on.
+        </p>
+      </section>
+
+      <section>
+        <span class="text-caption-mono text-accent-dusk tracking-wider block mb-3">how we are different</span>
+        <h2 class="text-display-xs text-ink mb-4">Citations over Hallucinations</h2>
+        <p class="mb-4">
+          Generic AI tools can frequently generate convincing but fabricated legal advice. CivicConnect does not generate answers out of thin air. 
+        </p>
+        <p>
+          Every response produced by the system is generated *only* from verified, retrieved source files from official gazettes and portals. If a source document cannot be found, the system informs you, rather than fabricating a response.
+        </p>
+      </section>
+
+      <section class="bg-canvas-card border border-hairline rounded-sm p-6 mt-8">
+        <h3 class="text-body-md text-ink font-semibold mb-2">Important Notice</h3>
+        <p class="text-body-sm text-mute leading-relaxed">
+          CivicConnect is an informational tool. It is not affiliated with the Government of India or any state government. The platform provides simplified guidance and is not a substitute for formal, professional advice from certified legal counsel.
+        </p>
+      </section>
+    </div>
+  </div>
+</Layout>
