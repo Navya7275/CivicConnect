@@ -1,32 +1,43 @@
-# CivicConnect
+# Astro Starter Kit: Minimal
 
-**A multi-agent, hybrid-RAG assistant that explains Indian law and welfare schemes to non-lawyers — grounded in the actual acts, so it doesn't hallucinate section numbers or confuse state and central law.**
+```sh
+npm create astro@latest -- --template minimal
+```
 
-> 🚧 **Status: early development.** This project is being built in stages. The README will grow as features land.
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
----
+## 🚀 Project Structure
 
-## Problem
+Inside of your Astro project, you'll see the following folders and files:
 
-Many Indians can't afford legal help or don't know which welfare schemes they qualify for, so rights and benefits that are legally theirs go unclaimed. General-purpose LLMs make this worse — they invent section numbers and mix up state-specific laws with central ones.
+```text
+/
+├── public/
+├── src/
+│   └── pages/
+│       └── index.astro
+└── package.json
+```
 
-## Idea
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
-Ground every answer in real statutory sources using:
-- **Hybrid retrieval** — semantic search (meaning) + BM25 (exact section numbers) + metadata filtering (correct jurisdiction).
-- **Agent pipeline (LangGraph)** — understand the query → retrieve → answer in plain language.
-- **Verification loop** — check every cited section against its source before showing the answer.
+There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
-## Planned Stack
+Any static assets, like images, can be placed in the `public/` directory.
 
-React · FastAPI · PostgreSQL · sentence-transformers · FAISS/ChromaDB · rank_bm25 · LangGraph · Groq (Llama)
+## 🧞 Commands
 
-## Progress
+All commands are run from the root of the project, from a terminal:
 
-- [x] Project setup & repo
-- [ ] Data ingestion (India Code / MyScheme scraping + chunking)
-- [ ] Hybrid retrieval (dense + BM25 + RRF fusion)
-- [ ] Query understanding agent
-- [ ] Synthesis + citation verification
-- [ ] Frontend
-- [ ] Evaluation (RAGAS + citation accuracy)
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`      |
+| `npm run build`           | Build your production site to `./dist/`          |
+| `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- --help` | Get help using the Astro CLI                     |
+
+## 👀 Want to learn more?
+
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
