@@ -23,12 +23,14 @@ Navya and Ayushi share the backend but own **separate folders** (see §4) so the
 
 Every part is tagged with its owner. This is the full scope of what "done" looks like.
 
-**Data Layer — `[Harsh]`**
+**Data Layer — `[Harsh]`** *(Status: Implementation complete for Phases A1–A3)*
 - Scrape / collect sources: India Code, MyScheme, Dept. of Consumer Affairs
 - Chunk documents preserving `Act → Chapter → Section` hierarchy
 - Attach metadata to every chunk: jurisdiction, act, section, effective date, source URL
-- Postgres schema: `documents`, `chunks`, `query_logs`
-- Build the vector index (FAISS/Chroma) and the BM25 index
+- Postgres schema: `documents`, `chunks`, `query_logs` (implemented via SQLAlchemy 2.x in `data/db/models.py`)
+- Build the vector index (FAISS) and the BM25 index (implemented in `data/indexing/build_index.py`)
+- Loaded 25 real statutory sections from Consumer Protection Act, 2019 and 3 welfare schemes (PMJDY, PM-KISAN, Ladli Laxmi Yojana)
+- Saved query logging support utility (`data/db/logger.py`)
 
 **Retrieval Layer — `[Ayushi]`**
 - Dense retriever (sentence-transformers)

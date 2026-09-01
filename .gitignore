@@ -1,3 +1,20 @@
-.env
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.env
+
+# Database & artifacts
+*.db
+*.sqlite
+data/indexing/artifacts/
+data/ingestion/raw_data/
+
+# IDE
+.idea/
+.vscode/

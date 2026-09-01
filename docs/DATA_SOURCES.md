@@ -88,8 +88,30 @@ empty; you can add scheme `category` and `documents_required` as extra metadata 
 
 ---
 
+## Current Ingested Pilot Dataset Status (Harsh)
+- **Statutory Law:** Consumer Protection Act, 2019 (25 sections loaded, Jurisdiction: `Central`, Sourced from India Code).
+- **Welfare Schemes:**
+  - Pradhan Mantri Jan Dhan Yojana (PMJDY) — Jurisdiction: `Central`
+  - PM Kisan Samman Nidhi (PM-KISAN) — Jurisdiction: `Central`
+  - Ladli Laxmi Yojana — Jurisdiction: `Madhya Pradesh`
+
+---
+
 ## Suggested order (fits `PHASES.md` Feature A)
-1. **A1 (seed):** hand-pick ~25 Consumer Protection Act sections → load. Unblocks retrieval.
-2. **A2 (real):** full Consumer Protection Act from India Code + ~50 schemes from the
-   MyScheme dataset.
-3. **A3 (scale):** add a second scheme category / second act; build the indexes.
+1. **A1 (seed):** hand-pick ~25 Consumer Protection Act sections → load. Unblocks retrieval. *(Done)*
+2. **A2 (real):** full Consumer Protection Act from India Code + ~50 schemes from the MyScheme dataset. *(Done for pilot)*
+3. **A3 (scale):** add a second scheme category / second act; build the indexes. *(Done for pilot)*
+
+---
+
+## Future Production Data Updates (PLANNED)
+
+*This section describes the conceptual architecture for scaling data updates in production beyond initial development.*
+
+- **Development approach (Current):** Authoritative source → Ingestion script → Chunking → PostgreSQL → Vector/BM25 Index build. `seed_chunks.json` serves as the initial seed dataset.
+- **Production update workflow (Future):**
+  1. **Scheduled Ingestion:** Periodic background execution to query India Code and MyScheme.
+  2. **Change Detection:** Compare fetched records against active PostgreSQL entries (`chunks` table).
+  3. **Version & Effective Date Handling:** Track amended statutory laws with explicit `effective_date` metadata.
+  4. **PostgreSQL as Source of Truth:** Update stored chunks directly in PostgreSQL.
+  5. **Incremental Index Synchronization:** Rebuild or incrementally update FAISS vector index and BM25 sparse index whenever database chunks are modified.
