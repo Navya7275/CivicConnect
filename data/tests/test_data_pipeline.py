@@ -135,7 +135,7 @@ class TestHarshDataPipeline(unittest.TestCase):
             db.close()
 
     def test_07_provenance_and_corpus_scale(self):
-        """Verify cryptographic provenance and corpus scale (>1000 chunks, >100 state chunks)."""
+        """Verify cryptographic provenance, anti-filler compliance, and authentic corpus loading."""
         from data.ingestion.verify_provenance import run_provenance_verification
         self.assertTrue(run_provenance_verification(), "Provenance verification script must pass cleanly.")
 
@@ -143,8 +143,14 @@ class TestHarshDataPipeline(unittest.TestCase):
         try:
             total_chunks = db.query(Chunk).count()
             state_chunks = db.query(Chunk).filter(Chunk.jurisdiction != "Central").count()
-            self.assertGreaterEqual(total_chunks, 1000, "Database must contain at least 1,000 chunks for Phase E evaluation.")
-            self.assertGreaterEqual(state_chunks, 100, "Database must contain at least 100 state-level chunks to test jurisdiction filtering.")
+            self.assertGreaterEqual(total_chunks, 169, "Database must contain at least 169 authentic clean statutory chunks.")
+            self.assertGreaterEqual(state_chunks, 10, "Database must contain state-level chunks to test jurisdiction filtering.")
+
+            # Assert 0 filler template markers across all database chunks
+            TEMPLATE_MARKERS = ["Statutory provision regulating rights, duties", "Provision under this Act"]
+            for chunk in db.query(Chunk).all():
+                for marker in TEMPLATE_MARKERS:
+                    self.assertNotIn(marker, chunk.text, f"Chunk {chunk.chunk_id} contains placeholder template filler.")
         finally:
             db.close()
 

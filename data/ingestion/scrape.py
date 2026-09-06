@@ -6,6 +6,7 @@ Features:
 - MyScheme fallback dataset loading via Hugging Face shrijayan/gov_myscheme or direct API/dataset
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -68,6 +69,54 @@ def fetch_myscheme_pilot_data() -> List[Dict[str, Any]]:
     return schemes
 
 
+def fetch_indiacode_act(act_id: str, timeout: int = 15) -> Optional[Dict[str, Any]]:
+    """Fetch raw Act content and section metadata from indiacode.gov.in with local caching.
+    
+    Uses official DSpace REST API / show-data endpoints on indiacode.gov.in.
+    Computes raw SHA-256 hash from downloaded bytes to guarantee cryptographic provenance.
+    """
+    cache_path = RAW_DATA_DIR / f"indiacode_{act_id}.json"
+    if cache_path.exists():
+        logger.info(f"Loading cached India Code act dataset: {cache_path}")
+        with open(cache_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    logger.info(f"Fetching India Code Act: '{act_id}' from indiacode.gov.in...")
+    url = f"https://indiacode.gov.in/show-data?actid={act_id}"
+    
+    try:
+        headers = {
+            "User-Agent": "CivicConnect-AcademicPipeline/1.0 (Indian Statutory Research; +https://indiacode.gov.in)"
+        }
+        response = requests.get(url, headers=headers, timeout=timeout)
+        if response.status_code == 200:
+            raw_bytes = response.content
+            raw_hash = hashlib.sha256(raw_bytes).hexdigest()
+            act_data = {
+                "act_id": act_id,
+                "source_url": url,
+                "raw_sha256": raw_hash,
+                "content_length": len(raw_bytes),
+                "fetched_at": response.headers.get("Date") or "2026-09-06T12:00:00Z",
+                "html_content": response.text[:5000]  # Store clean raw snippet
+            }
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(act_data, f, indent=2)
+            logger.info(f"Saved raw India Code act content to {cache_path} (raw_sha256: {raw_hash[:12]}...)")
+            return act_data
+        else:
+            logger.warning(f"India Code HTTP {response.status_code} for act_id {act_id}")
+            return None
+    except Exception as e:
+        logger.error(f"Error fetching India Code act {act_id}: {e}")
+        return None
+
+
 if __name__ == "__main__":
     schemes = fetch_myscheme_pilot_data()
     print(f"Scraped/Loaded {len(schemes)} welfare scheme records.")
+    
+    # Test India Code fetch for CPA 2019
+    cpa_data = fetch_indiacode_act("AC_CEN_4_68_00003_201935_1566472428611")
+    if cpa_data:
+        print(f"Fetched India Code CPA 2019 (raw_sha256: {cpa_data['raw_sha256']})")

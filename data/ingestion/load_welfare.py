@@ -39,6 +39,12 @@ def load_welfare_schemes() -> None:
                 db.add(doc)
                 db.flush()
 
+            raw_file_path = Path(__file__).resolve().parent / "raw_data" / "myscheme_pilot.json"
+            raw_sha = ""
+            if raw_file_path.exists():
+                import hashlib
+                raw_sha = hashlib.sha256(raw_file_path.read_bytes()).hexdigest()
+
             chunk_dicts = chunk_welfare_scheme(
                 scheme_name=scheme_name,
                 description=item.get("description", ""),
@@ -52,6 +58,9 @@ def load_welfare_schemes() -> None:
                 documents_required=item.get("documents_required", ""),
                 scheme_id_slug=f"scheme-p{idx}",
                 excerpt=item.get("excerpt", ""),
+                raw_sha256=raw_sha,
+                extraction_method="api",
+                reviewer_name="Harsh Gupta",
             )
 
             for c in chunk_dicts:

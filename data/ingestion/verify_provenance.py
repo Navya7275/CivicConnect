@@ -11,12 +11,16 @@ import hashlib
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
+import requests
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from data.db.database import SessionLocal
 from data.db.models import Chunk, Document
+
+RAW_DATA_DIR = Path(__file__).parent / "raw_data"
+RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def compute_sha256(text: str) -> str:
@@ -26,7 +30,7 @@ def compute_sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def run_provenance_verification() -> bool:
+def run_provenance_verification(verify_network: bool = False) -> bool:
     """Perform comprehensive provenance audit on database chunks."""
     db = SessionLocal()
     try:
@@ -38,8 +42,11 @@ def run_provenance_verification() -> bool:
         missing_text_hash = 0
         missing_reviewer_manual = 0
         invalid_extraction_methods = 0
+        network_fetch_failures = 0
+        raw_hash_mismatches = 0
 
         valid_methods = {"html", "pdf", "api", "manual"}
+        url_cache: Dict[str, bytes] = {}
 
         for c in chunks:
             # 1. Text SHA-256 verification
@@ -65,6 +72,27 @@ def run_provenance_verification() -> bool:
                     print(f"[FAIL] Manual extraction missing reviewer_name for chunk {c.chunk_id}")
                     missing_reviewer_manual += 1
 
+            # 5. Network / Cache Source Re-verification
+            if verify_network and method in ("html", "pdf", "api"):
+                url = c.source_url.strip()
+                if url and url not in url_cache:
+                    try:
+                        headers = {"User-Agent": "CivicConnect-AcademicPipeline/1.0 (Indian Legal Research)"}
+                        resp = requests.get(url, headers=headers, timeout=10)
+                        if resp.status_code == 200:
+                            url_cache[url] = resp.content
+                        else:
+                            print(f"[WARN] Network fetch status {resp.status_code} for URL: {url}")
+                            network_fetch_failures += 1
+                    except Exception as err:
+                        print(f"[WARN] Network fetch exception for {url}: {err}")
+                        network_fetch_failures += 1
+
+                if url in url_cache:
+                    fetched_raw_hash = hashlib.sha256(url_cache[url]).hexdigest()
+                    if c.raw_sha256 and c.raw_sha256 != fetched_raw_hash:
+                        print(f"[WARN] Raw SHA-256 updated/changed for URL {url}: stored={c.raw_sha256}, fetched={fetched_raw_hash}")
+
         print("\nProvenance Verification Report")
         print("-------------------------------")
         print(f"Total Chunks Verified       : {total}")
@@ -72,7 +100,8 @@ def run_provenance_verification() -> bool:
         print(f"Missing Text SHA-256        : {missing_text_hash}")
         print(f"Missing Raw SHA-256         : {missing_raw_hash}")
         print(f"Missing Reviewer (Manual)   : {missing_reviewer_manual}")
-        print(f"Invalid Extraction Methods : {invalid_extraction_methods}\n")
+        print(f"Invalid Extraction Methods : {invalid_extraction_methods}")
+        print(f"Network Fetch Failures      : {network_fetch_failures}\n")
 
         critical_errors = (
             text_hash_mismatches

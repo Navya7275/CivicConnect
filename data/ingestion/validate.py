@@ -48,10 +48,22 @@ def run_data_quality_check() -> bool:
         missing_raw_hash = 0
         missing_text_hash = 0
         missing_manual_reviewer = 0
+        template_text_errors = 0
+        invalid_provenance_errors = 0
+
+        TEMPLATE_MARKERS = [
+            "Statutory provision regulating rights, duties",
+            "Provision under this Act",
+        ]
 
         for c in chunks:
             if not c.text or not c.text.strip():
                 empty_text += 1
+
+            # Anti-filler guard: reject known placeholder templates
+            if any(marker in (c.text or "") for marker in TEMPLATE_MARKERS):
+                print(f"[FAIL] {c.chunk_id}: text matches a placeholder template, not real statutory text")
+                template_text_errors += 1
 
             if not c.chunk_id or not c.chunk_id.strip():
                 missing_chunk_id += 1
@@ -89,14 +101,21 @@ def run_data_quality_check() -> bool:
             if not c.text_sha256 or not c.text_sha256.strip():
                 missing_text_hash += 1
 
-            if (c.extraction_method or "manual").lower() == "manual":
+            method = (c.extraction_method or "manual").lower()
+            if method == "manual":
                 if not c.reviewer_name or not c.reviewer_name.strip():
                     missing_manual_reviewer += 1
+            elif method in ("html", "pdf", "api"):
+                # Non-manual extractions must have a raw source document distinct from text
+                if c.raw_sha256 and c.raw_sha256 == c.text_sha256:
+                    print(f"[FAIL] {c.chunk_id}: raw_sha256 equals text_sha256 for non-manual extraction method '{method}' — no real raw source document")
+                    invalid_provenance_errors += 1
 
         print("\nData Quality Report")
         print("-------------------")
         print(f"Total chunks            : {total_chunks}")
         print(f"Empty text              : {empty_text}")
+        print(f"Template filler errors  : {template_text_errors}")
         print(f"Missing chunk ID        : {missing_chunk_id}")
         print(f"Missing act             : {missing_act}")
         print(f"Missing jurisdiction    : {missing_jurisdiction}")
@@ -107,10 +126,12 @@ def run_data_quality_check() -> bool:
         print(f"Orphan chunks           : {orphan_chunks}")
         print(f"Missing raw SHA-256     : {missing_raw_hash}")
         print(f"Missing text SHA-256    : {missing_text_hash}")
-        print(f"Missing manual reviewer : {missing_manual_reviewer}\n")
+        print(f"Missing manual reviewer : {missing_manual_reviewer}")
+        print(f"Invalid raw/text hashes : {invalid_provenance_errors}\n")
 
         critical_errors = (
             empty_text
+            + template_text_errors
             + missing_chunk_id
             + missing_act
             + missing_jurisdiction
@@ -122,6 +143,7 @@ def run_data_quality_check() -> bool:
             + missing_raw_hash
             + missing_text_hash
             + missing_manual_reviewer
+            + invalid_provenance_errors
         )
 
         if critical_errors > 0:
