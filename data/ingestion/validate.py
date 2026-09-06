@@ -45,6 +45,10 @@ def run_data_quality_check() -> bool:
 
         doc_ids = {d.id for d in documents}
 
+        missing_raw_hash = 0
+        missing_text_hash = 0
+        missing_manual_reviewer = 0
+
         for c in chunks:
             if not c.text or not c.text.strip():
                 empty_text += 1
@@ -78,6 +82,17 @@ def run_data_quality_check() -> bool:
             if c.document_id not in doc_ids:
                 orphan_chunks += 1
 
+            # Provenance checks (Issue #5)
+            if not c.raw_sha256 or not c.raw_sha256.strip():
+                missing_raw_hash += 1
+
+            if not c.text_sha256 or not c.text_sha256.strip():
+                missing_text_hash += 1
+
+            if (c.extraction_method or "manual").lower() == "manual":
+                if not c.reviewer_name or not c.reviewer_name.strip():
+                    missing_manual_reviewer += 1
+
         print("\nData Quality Report")
         print("-------------------")
         print(f"Total chunks            : {total_chunks}")
@@ -89,7 +104,10 @@ def run_data_quality_check() -> bool:
         print(f"Missing section (laws)  : {missing_section}")
         print(f"Duplicate chunk IDs     : {duplicate_chunk_ids}")
         print(f"Invalid effective dates : {invalid_dates}")
-        print(f"Orphan chunks           : {orphan_chunks}\n")
+        print(f"Orphan chunks           : {orphan_chunks}")
+        print(f"Missing raw SHA-256     : {missing_raw_hash}")
+        print(f"Missing text SHA-256    : {missing_text_hash}")
+        print(f"Missing manual reviewer : {missing_manual_reviewer}\n")
 
         critical_errors = (
             empty_text
@@ -101,6 +119,9 @@ def run_data_quality_check() -> bool:
             + duplicate_chunk_ids
             + invalid_dates
             + orphan_chunks
+            + missing_raw_hash
+            + missing_text_hash
+            + missing_manual_reviewer
         )
 
         if critical_errors > 0:

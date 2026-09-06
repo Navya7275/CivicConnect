@@ -49,15 +49,24 @@ class Chunk(Base):
     chapter: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     section: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     jurisdiction: Mapped[str] = mapped_column(String(100), nullable=False)
-    effective_date: Mapped[str] = mapped_column(String(20), nullable=False)  # YYYY-MM-DD
+    effective_date: Mapped[str] = mapped_column(String(20), nullable=False)  # YYYY-MM-DD (Commencement date)
+    assent_date: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default=None)  # YYYY-MM-DD (Presidential assent)
+    excerpt: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)  # Quoted text snippet for precise citation
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Cryptographic Provenance Metadata (Issue #5)
+    raw_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
+    text_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
+    fetched_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    extraction_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default="manual")  # html, pdf, api, manual
+    reviewer_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
 
     # Relationships
     document: Mapped["Document"] = relationship("Document", back_populates="chunks")
 
     def to_dict(self) -> dict:
-        """Convert model instance to the standard chunk contract dictionary."""
-        return {
+        """Convert model instance to the standard chunk contract dictionary with provenance."""
+        res = {
             "chunk_id": self.chunk_id,
             "text": self.text,
             "act": self.act,
@@ -67,6 +76,21 @@ class Chunk(Base):
             "effective_date": self.effective_date,
             "source_url": self.source_url,
         }
+        if self.assent_date:
+            res["assent_date"] = self.assent_date
+        if self.excerpt:
+            res["excerpt"] = self.excerpt
+        if self.raw_sha256:
+            res["raw_sha256"] = self.raw_sha256
+        if self.text_sha256:
+            res["text_sha256"] = self.text_sha256
+        if self.fetched_at:
+            res["fetched_at"] = self.fetched_at.isoformat()
+        if self.extraction_method:
+            res["extraction_method"] = self.extraction_method
+        if self.reviewer_name:
+            res["reviewer_name"] = self.reviewer_name
+        return res
 
     def __repr__(self) -> str:
         return f"<Chunk(chunk_id='{self.chunk_id}', act='{self.act}', section='{self.section}')>"

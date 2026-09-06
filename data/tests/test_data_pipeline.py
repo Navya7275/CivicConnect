@@ -33,13 +33,25 @@ class TestHarshDataPipeline(unittest.TestCase):
         init_db()
 
     def test_01_db_models_and_tables(self):
-        """Verify database tables exist and can insert/query documents and chunks."""
+        """Verify database tables exist and can insert/query documents and chunks with dates & excerpts."""
         db = SessionLocal()
         try:
             doc_count = db.query(Document).count()
             chunk_count = db.query(Chunk).count()
             self.assertGreaterEqual(doc_count, 1, "Documents table should contain at least 1 document.")
             self.assertGreaterEqual(chunk_count, 25, "Chunks table should contain at least 25 chunks.")
+
+            # Test commencement date and assent date on CPA 2019 chunks
+            cpa_chunk = db.query(Chunk).filter_by(chunk_id="cpa2019-s1").first()
+            if cpa_chunk:
+                self.assertEqual(cpa_chunk.effective_date, "2020-07-20", "CPA 2019 section 1 effective_date should be 2020-07-20.")
+                self.assertEqual(cpa_chunk.assent_date, "2019-08-09", "CPA 2019 section 1 assent_date should be 2019-08-09.")
+                self.assertIsNotNone(cpa_chunk.excerpt, "CPA 2019 section 1 excerpt should not be None.")
+
+                d = cpa_chunk.to_dict()
+                self.assertEqual(d["effective_date"], "2020-07-20")
+                self.assertEqual(d["assent_date"], "2019-08-09")
+                self.assertIn("excerpt", d)
         finally:
             db.close()
 
@@ -54,20 +66,25 @@ class TestHarshDataPipeline(unittest.TestCase):
         self.assertTrue(run_data_quality_check(), "Data quality check must pass with zero critical errors.")
 
     def test_04_deterministic_chunking(self):
-        """Verify deterministic chunking preserves metadata and sections."""
+        """Verify deterministic chunking preserves metadata, dates, excerpts, and sections."""
         chunks = chunk_law_section(
             act="Consumer Protection Act, 2019",
             chapter="Chapter IV",
             section="Section 35",
             text="Section 35: Manner in which complaint shall be made by consumer.",
             jurisdiction="Central",
-            effective_date="2019-08-09",
+            effective_date="2020-07-20",
             source_url="https://indiacode.nic.in/show-data",
             chunk_id_prefix="cpa2019-section35",
+            assent_date="2019-08-09",
+            excerpt="Section 35: Manner in which complaint shall be made.",
         )
         self.assertEqual(len(chunks), 1)
         self.assertEqual(chunks[0]["chunk_id"], "cpa2019-section35")
         self.assertEqual(chunks[0]["section"], "Section 35")
+        self.assertEqual(chunks[0]["effective_date"], "2020-07-20")
+        self.assertEqual(chunks[0]["assent_date"], "2019-08-09")
+        self.assertEqual(chunks[0]["excerpt"], "Section 35: Manner in which complaint shall be made.")
 
     def test_05_index_building_and_retrieval(self):
         """Verify FAISS and BM25 indexes build cleanly and preserve chunk_id mappings."""
@@ -114,6 +131,20 @@ class TestHarshDataPipeline(unittest.TestCase):
             fetched = db.query(QueryLog).filter_by(id=log_entry.id).first()
             self.assertIsNotNone(fetched)
             self.assertEqual(fetched.cited_chunk_ids, ["cpa2019-s2-9"])
+        finally:
+            db.close()
+
+    def test_07_provenance_and_corpus_scale(self):
+        """Verify cryptographic provenance and corpus scale (>1000 chunks, >100 state chunks)."""
+        from data.ingestion.verify_provenance import run_provenance_verification
+        self.assertTrue(run_provenance_verification(), "Provenance verification script must pass cleanly.")
+
+        db = SessionLocal()
+        try:
+            total_chunks = db.query(Chunk).count()
+            state_chunks = db.query(Chunk).filter(Chunk.jurisdiction != "Central").count()
+            self.assertGreaterEqual(total_chunks, 1000, "Database must contain at least 1,000 chunks for Phase E evaluation.")
+            self.assertGreaterEqual(state_chunks, 100, "Database must contain at least 100 state-level chunks to test jurisdiction filtering.")
         finally:
             db.close()
 

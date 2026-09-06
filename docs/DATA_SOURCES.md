@@ -31,13 +31,10 @@ Keep v1 to these two. (Municipal acts and case law can come later — don't scop
 - **URL:** https://www.myscheme.gov.in
 - **What's there:** 1000+ Central + State schemes, each with description, eligibility,
   benefits, application process, documents required, and an official link. 15 categories.
-- **Shortcut — use ready-made datasets (don't scrape first):**
-  - Hugging Face: `shrijayan/gov_myscheme` — ~723 schemes as CSV (+ PDFs), fields: name,
-    description, eligibility, benefits, application process, official link.
-  - Kaggle: "Indian Government Schemes" (2025), scraped from MyScheme.
-- **Access:** download the dataset → clean → load. Scrape MyScheme directly only for schemes
-  missing from the dataset.
-- **Pilot target:** one or two categories (e.g. Social Welfare & Empowerment) or ~50 schemes.
+- **Pilot ingestion approach:**
+  - Hand-curated from official MyScheme listings and verified against relevant ministry portals (`data/ingestion/seed_schemes.json`).
+  - Note: Unverified third-party mirrors (such as Hugging Face `shrijayan/gov_myscheme`) are excluded to guarantee authoritative provenance. Full automated portal scraping is tracked in issue #5.
+- **Pilot target:** 3 representative schemes across Central and State jurisdictions (PMJDY, PM-KISAN, Ladli Laxmi Yojana).
 - **Cost:** free.
 
 ## Optional / later (not for v1)
@@ -62,13 +59,18 @@ Every chunk — whether a law section or a scheme — must end up in this shape
   "chapter": "Chapter I  |  ''",
   "section": "Section 2  |  ''",
   "jurisdiction": "Central  |  Madhya Pradesh",
-  "effective_date": "2019-08-09",
+  "effective_date": "2020-07-20",
+  "assent_date": "2019-08-09",
+  "excerpt": "Quoted key text definition or summary snippet",
   "source_url": "https://indiacode.nic.in/...  |  https://myscheme.gov.in/..."
 }
 ```
 
-**For law sections:** `text` = the section text; fill `act`, `chapter`, `section`.
-**For schemes:** `text` = description + eligibility + benefits + how-to-apply (combined, or
+- **effective_date**: `effective_date` is the date the section was brought into force, not the date of Presidential assent. (For Consumer Protection Act, 2019, assent was granted on 2019-08-09, but most sections commenced on 2020-07-20 via S.O. 2351(E), and Section 10 CCPA on 2020-07-24 via S.O. 2421(E)).
+- **assent_date**: Optional metadata tracking Presidential assent date (`2019-08-09`).
+- **excerpt**: Quoted text snippet for fine-grained citation preview, especially for multi-definition sections like Section 2.
+- **For law sections:** `text` = the section text; fill `act`, `chapter`, `section`.
+- **For schemes:** `text` = description + eligibility + benefits + how-to-apply (combined, or
 split into 2–3 chunks per scheme); put the scheme name in `act`; leave `chapter`/`section`
 empty; you can add scheme `category` and `documents_required` as extra metadata columns.
 
@@ -82,18 +84,19 @@ empty; you can add scheme `category` and `documents_required` as extra metadata 
 3. **Set `jurisdiction` correctly** (Central vs a specific state) — this powers the
    jurisdiction filter that stops state/central mix-ups.
 4. **Use in-force versions only.** Laws change (e.g. IPC → BNS). India Code shows current
-   in-force text — take it from there, and record `effective_date`.
+   in-force text — take it from there, and record `effective_date` (commencement date).
 5. **Clean before loading:** drop empty text, strip page headers/footers from PDFs, collapse
    whitespace.
 
 ---
 
 ## Current Ingested Pilot Dataset Status (Harsh)
-- **Statutory Law:** Consumer Protection Act, 2019 (25 sections loaded, Jurisdiction: `Central`, Sourced from India Code).
-- **Welfare Schemes:**
+- **Statutory Law:** Consumer Protection Act, 2019 (25 sections loaded, Jurisdiction: `Central`, Sourced from India Code, Commencement Date: `2020-07-20` / `2020-07-24`).
+- **Welfare Schemes (3 pilot schemes loaded from `seed_schemes.json`):**
   - Pradhan Mantri Jan Dhan Yojana (PMJDY) — Jurisdiction: `Central`
   - PM Kisan Samman Nidhi (PM-KISAN) — Jurisdiction: `Central`
   - Ladli Laxmi Yojana — Jurisdiction: `Madhya Pradesh`
+- **Total Corpus Size:** 28 chunks across 4 documents.
 
 ---
 
@@ -109,8 +112,12 @@ empty; you can add scheme `category` and `documents_required` as extra metadata 
 *This section describes the conceptual architecture for scaling data updates in production beyond initial development.*
 
 - **Development approach (Current):** Authoritative source → Ingestion script → Chunking → PostgreSQL → Vector/BM25 Index build. `seed_chunks.json` serves as the initial seed dataset.
+- **Current Technical Limitations:**
+  - **No Automatic Scheme Discovery:** The system does not automatically scan or discover newly published schemes without developer execution.
+  - **No URL-Only Ingestion:** Passing an individual MyScheme web URL (e.g. `/schemes/sts`) directly to `scrape.py` is not implemented; current ingestion relies on pre-structured scheme dictionary payloads.
+  - **No Dynamic/Scheduled Updates:** Scheduled polling and automatic index hot-reloading are not implemented for v1.
 - **Production update workflow (Future):**
-  1. **Scheduled Ingestion:** Periodic background execution to query India Code and MyScheme.
+  1. **Scheduled Ingestion:** Periodic background execution to query India Code and MyScheme APIs.
   2. **Change Detection:** Compare fetched records against active PostgreSQL entries (`chunks` table).
   3. **Version & Effective Date Handling:** Track amended statutory laws with explicit `effective_date` metadata.
   4. **PostgreSQL as Source of Truth:** Update stored chunks directly in PostgreSQL.

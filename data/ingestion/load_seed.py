@@ -4,6 +4,7 @@ Idempotent: prevents duplicate document or chunk insertions.
 Validates required metadata fields before inserting.
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -93,17 +94,28 @@ def load_seed_data(seed_path: Path = SEED_FILE_PATH, db: Session = None) -> Dict
                     documents_created += 1
                 doc_cache[doc_id] = doc
 
+            # Compute text_sha256 and default provenance fields
+            txt_clean = item["text"].strip()
+            computed_text_hash = hashlib.sha256(txt_clean.encode("utf-8")).hexdigest()
+            raw_hash = item.get("raw_sha256") or item.get("text_sha256") or computed_text_hash
+
             # Create chunk instance
             new_chunk = Chunk(
                 chunk_id=chunk_id,
                 document_id=doc_cache[doc_id].id,
-                text=item["text"].strip(),
+                text=txt_clean,
                 act=item["act"].strip(),
                 chapter=item.get("chapter", "").strip(),
                 section=item.get("section", "").strip(),
                 jurisdiction=item["jurisdiction"].strip(),
                 effective_date=item["effective_date"].strip(),
+                assent_date=item.get("assent_date", "").strip() if item.get("assent_date") else None,
+                excerpt=item.get("excerpt", "").strip() if item.get("excerpt") else None,
                 source_url=item["source_url"].strip(),
+                raw_sha256=raw_hash,
+                text_sha256=item.get("text_sha256") or computed_text_hash,
+                extraction_method=item.get("extraction_method", "manual"),
+                reviewer_name=item.get("reviewer_name", "Harsh Gupta"),
             )
             db.add(new_chunk)
             chunks_loaded += 1

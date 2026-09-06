@@ -36,70 +36,30 @@ def fetch_url(url: str, timeout: int = 15) -> Optional[str]:
 
 
 def fetch_myscheme_pilot_data() -> List[Dict[str, Any]]:
-    """Fetch or load pilot welfare schemes from MyScheme / Hugging Face shrijayan/gov_myscheme dataset."""
+    """Fetch or load pilot welfare schemes from seed_schemes.json.
+    
+    Note: Unverified third-party mirrors (such as Hugging Face shrijayan/gov_myscheme)
+    are intentionally avoided in favor of hand-curated, ministry-verified seed records.
+    Full automated scraping directly from official portals is tracked under Issue #5.
+    """
     cache_path = RAW_DATA_DIR / "myscheme_pilot.json"
+    seed_schemes_path = Path(__file__).parent / "seed_schemes.json"
+
     if cache_path.exists():
         logger.info(f"Loading MyScheme pilot data from local cache: {cache_path}")
         with open(cache_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    logger.info("Attempting to fetch welfare scheme dataset from Hugging Face API...")
-    hf_url = "https://datasets-server.huggingface.co/rows?dataset=shrijayan/gov_myscheme&config=default&split=train&offset=0&length=50"
-    
-    data = fetch_url(hf_url)
-    schemes = []
+    if seed_schemes_path.exists():
+        logger.info(f"Loading hand-curated pilot welfare schemes from {seed_schemes_path}...")
+        with open(seed_schemes_path, "r", encoding="utf-8") as f:
+            schemes = json.load(f)
+    else:
+        logger.warning(f"Seed schemes file not found at {seed_schemes_path}")
+        schemes = []
 
-    if data:
-        try:
-            res_json = json.loads(data)
-            rows = res_json.get("rows", [])
-            for r in rows:
-                row_data = r.get("row", {})
-                schemes.append(row_data)
-        except Exception as e:
-            logger.warning(f"Could not parse HF API response: {e}")
-
-    # Fallback pilot scheme records if network dataset is unreachable/different format
-    if not schemes:
-        logger.info("Using embedded pilot MyScheme welfare data...")
-        schemes = [
-            {
-                "scheme_name": "Pradhan Mantri Jan Dhan Yojana (PMJDY)",
-                "description": "National Mission for Financial Inclusion to ensure access to financial services namely Banking/Savings & Deposit Accounts, Remittance, Credit, Insurance, Pension in an affordable manner.",
-                "eligibility": "Must be a citizen of India. Minimum age of applicant is 10 years. Should not hold any other bank account.",
-                "benefits": "Accidental Insurance Cover of Rs. 2 Lakh. Life Cover of Rs. 30,000. Overdraft facility up to Rs. 10,000 to eligible account holders.",
-                "application_process": "Apply at any bank branch or Business Correspondent outlet by submitting the PMJDY account opening form along with KYC documents.",
-                "documents_required": "Aadhaar Card, Passport, Driving License, Voter ID Card, or PAN Card.",
-                "category": "Financial Inclusion & Banking",
-                "jurisdiction": "Central",
-                "effective_date": "2014-08-28",
-                "source_url": "https://www.myscheme.gov.in/schemes/pmjdy"
-            },
-            {
-                "scheme_name": "PM Kisan Samman Nidhi (PM-KISAN)",
-                "description": "Central Sector scheme to provide income support to all landholding farmers' families in the country to supplement their financial needs for procuring various inputs.",
-                "eligibility": "All landholding farmer families having cultivable landholding in their names. Subject to exclusion criteria such as institutional landholders, tax payers.",
-                "benefits": "Financial benefit of Rs. 6000/- per year per family payable in three equal installments of Rs. 2000/- every four months.",
-                "application_process": "Farmers can register online at PM-KISAN portal or through Farmers Corner, or visit nearest CSC center.",
-                "documents_required": "Aadhaar mandatory, Bank account details, Landholding documents.",
-                "category": "Agriculture & Farmer Welfare",
-                "jurisdiction": "Central",
-                "effective_date": "2018-12-01",
-                "source_url": "https://www.myscheme.gov.in/schemes/pm-kisan"
-            },
-            {
-                "scheme_name": "Ladli Laxmi Yojana (Madhya Pradesh)",
-                "description": "State welfare scheme of Madhya Pradesh to lay firm foundation of girls' future through educational and financial assistance.",
-                "eligibility": "Girl child born in Madhya Pradesh. Parents must be native residents of MP and non-income tax payers.",
-                "benefits": "Financial assurance certificates issued; milestone payments at Class 6th, 9th, 11th, 12th and lump sum at age 21.",
-                "application_process": "Apply online through Ladli Laxmi Portal or via Anganwadi centers in MP.",
-                "documents_required": "Birth certificate of girl child, Residence proof of MP, Parents Aadhaar card, Ration card.",
-                "category": "Women and Child Development",
-                "jurisdiction": "Madhya Pradesh",
-                "effective_date": "2007-04-01",
-                "source_url": "https://ladlilaxmi.mp.gov.in/"
-            }
-        ]
+    # Optional: third-party Hugging Face dataset attempt disabled to guarantee authoritative provenance.
+    # hf_url = "https://datasets-server.huggingface.co/rows?dataset=shrijayan/gov_myscheme&config=default&split=train&offset=0&length=50"
 
     with open(cache_path, "w", encoding="utf-8") as f:
         json.dump(schemes, f, indent=2)

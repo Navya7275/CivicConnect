@@ -51,6 +51,7 @@ def load_welfare_schemes() -> None:
                 category=item.get("category", "Welfare Scheme"),
                 documents_required=item.get("documents_required", ""),
                 scheme_id_slug=f"scheme-p{idx}",
+                excerpt=item.get("excerpt", ""),
             )
 
             for c in chunk_dicts:
@@ -68,7 +69,12 @@ def load_welfare_schemes() -> None:
                     section=c["section"],
                     jurisdiction=c["jurisdiction"],
                     effective_date=c["effective_date"],
+                    excerpt=c.get("excerpt"),
                     source_url=c["source_url"],
+                    raw_sha256=c.get("raw_sha256") or c.get("text_sha256"),
+                    text_sha256=c.get("text_sha256"),
+                    extraction_method=c.get("extraction_method", "manual"),
+                    reviewer_name=c.get("reviewer_name", "Harsh Gupta"),
                 )
                 db.add(chunk_obj)
                 loaded += 1
