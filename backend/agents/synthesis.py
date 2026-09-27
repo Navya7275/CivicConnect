@@ -30,7 +30,7 @@ class SynthesisAgent:
         if not retrieved_chunks:
             return {
                 "answer": "The available sources do not contain enough information to answer this question.",
-                "sources": []
+                "citations": []
             }
 
         context = "\n\n".join(
@@ -78,11 +78,12 @@ Mention the relevant Act and Section when available.
 
         answer = response.choices[0].message.content
 
-        sources = [
+        citations = [
             {
                 "chunk_id": chunk["chunk_id"],
                 "act": chunk["act"],
                 "section": chunk["section"],
+                "jurisdiction": chunk["jurisdiction"],
                 "source_url": chunk["source_url"]
             }
             for chunk in retrieved_chunks
@@ -90,5 +91,5 @@ Mention the relevant Act and Section when available.
 
         return {
             "answer": answer,
-            "sources": sources
+            "citations": citations
         }
