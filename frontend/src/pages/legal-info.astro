@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LegalInfoBrowser from '../components/LegalInfoBrowser';
+---
+
+<Layout title="Indian Laws & Acts Directory | CivicConnect" description="Search and browse legal sections of Indian civil legislation and criminal reform codes.">
+  <div class="py-24 px-6 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-12">
+      <span class="text-caption-mono text-accent-breeze tracking-[0.15em] block mb-3">legislative indexes</span>
+      <h1 class="text-display-sm md:text-display-md text-ink mb-4">Browse Indian Laws & Acts</h1>
+      <p class="text-body-md text-mute max-w-xl">
+        Access cataloged chapters, search specific sections, and explore original civil rules with context-specific query options.
+      </p>
+    </div>
+
+    <!-- Interactive React Component -->
+    <LegalInfoBrowser client:load />
+  </div>
+</Layout>
