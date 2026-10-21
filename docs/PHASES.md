@@ -17,7 +17,7 @@ phase, build it, and check it off.
 > The data shapes (API request/response, chunk fields) are defined in `PROJECT_PLAN.md` §3.
 > Everyone follows those so the parts fit together.
 
-**Owner tags:** `[All]` · `[Harsh]` · `[Ayushi]` · `[Navya]` · `[Harshit]`
+**Owner tags:** `[All]` · `[Harshit]` · `[Ayushi]` · `[Navya]` · `[Harshit]`
 
 ---
 
@@ -32,7 +32,7 @@ phase, build it, and check it off.
 
 ---
 
-# Feature A — Data & Database  `[Harsh]`
+# Feature A — Data & Database  `[Harshit]`
 
 ### Phase A1 — Database + Seed Data  (Week 1–2)
 - [ ] A1.1 `data/db/models.py` — SQLAlchemy tables `documents`, `chunks`, `query_logs` (chunk columns: text, act, chapter, section, jurisdiction, effective_date, source_url)
@@ -64,7 +64,7 @@ phase, build it, and check it off.
 
 ### Phase B1 — Dense Retriever  (Week 2)
 - [ ] B1.1 `backend/retrieval/dense.py` — `DenseRetriever`: embed chunks with sentence-transformers, search by similarity, return top-k
-- [ ] B1.2 Load Harsh's seed chunks (A1) and return the top chunks for a query
+- [ ] B1.2 Load Harshit's seed chunks (A1) and return the top chunks for a query
 - [ ] B1.3 Quick test script: query "refund for defective product" → prints the top 3 chunks
 
 **Done when:** dense search returns sensible chunks for 3 test questions.
@@ -106,7 +106,7 @@ phase, build it, and check it off.
 ### Phase C2 — Wire Real Retrieval + Synthesis  (Week 4–5)
 - [ ] C2.1 Replace the retrieval stub with Ayushi's `search()` (B2)
 - [ ] C2.2 Replace the synthesis stub with Ayushi's `SynthesisAgent` (B3)
-- [ ] C2.3 Save each query to `query_logs` (Harsh A3.4)
+- [ ] C2.3 Save each query to `query_logs` (Harshit A3.4)
 - [ ] C2.4 `/query` returns a **real** grounded answer end-to-end
 
 **Done when:** the frontend gets a real answer (not a mock) for the pilot domain.
@@ -178,13 +178,13 @@ phase, build it, and check it off.
 
 | Week | Focus | Active phases |
 |------|-------|---------------|
-| 1 | Setup + database + seed data | P0 `[All]`, A1 `[Harsh]` |
+| 1 | Setup + database + seed data | P0 `[All]`, A1 `[Harshit]` |
 | 2 | Dense retrieval, graph skeleton, chat shell | B1 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
-| 3 | Full ingestion, BM25+RRF, query understanding | A2 `[Harsh]`, B2 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
-| 4 | Indexes, fusion, real API wiring, real frontend | A2/A3 `[Harsh]`, B2 `[Ayushi]`, C2 `[Navya]`, D2 `[Harshit]` |
-| 5 | Metadata filter + synthesis, pipeline end-to-end | B3 `[Ayushi]`, C2 `[Navya]`, A3 `[Harsh]`, D2 `[Harshit]` |
+| 3 | Full ingestion, BM25+RRF, query understanding | A2 `[Harshit]`, B2 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
+| 4 | Indexes, fusion, real API wiring, real frontend | A2/A3 `[Harshit]`, B2 `[Ayushi]`, C2 `[Navya]`, D2 `[Harshit]` |
+| 5 | Metadata filter + synthesis, pipeline end-to-end | B3 `[Ayushi]`, C2 `[Navya]`, A3 `[Harshit]`, D2 `[Harshit]` |
 | 6 | Verification loop, jurisdiction, polish | C3 `[Navya]`, D3 `[Harshit]` |
-| 7 | Scale data, UI polish, integration testing | A3 `[Harsh]`, D3 `[Harshit]`, `[All]` |
+| 7 | Scale data, UI polish, integration testing | A3 `[Harshit]`, D3 `[Harshit]`, `[All]` |
 | 8 | Evaluation + demo | E `[All]` |
 
 ---

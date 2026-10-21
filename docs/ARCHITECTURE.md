@@ -62,7 +62,7 @@ The whole flow is orchestrated as a **LangGraph** state machine.
 | 4 | **Verification agent** | Extracts cited sections, checks each against retrieved chunks, retries if ungrounded, sets `verified`. | Navya |
 | 5 | **Orchestrator (LangGraph)** | Runs the nodes in order with a retry edge; holds shared state. | Navya |
 | 6 | **API (FastAPI)** | `POST /query`, `GET /health`. | Navya |
-| 7 | **Data pipeline** | Scrape → chunk (with metadata) → load to Postgres → build indexes. | Harsh |
+| 7 | **Data pipeline** | Scrape → chunk (with metadata) → load to Postgres → build indexes. | Harshit |
 | 8 | **Frontend (React)** | Chat UI, state selector, citation display, verified badge. | Harshit |
 
 ---
@@ -171,9 +171,9 @@ CivicConnect/
 │   ├── retrieval/        # [Ayushi] dense, bm25, fusion, filters
 │   └── main.py
 ├── data/
-│   ├── ingestion/        # [Harsh]  scraping + chunking
-│   ├── db/               # [Harsh]  models / schema
-│   └── indexing/         # [Harsh]  vector + BM25 index build
+│   ├── ingestion/        # [Harshit] scraping + chunking
+│   ├── db/               # [Harshit] models / schema
+│   └── indexing/         # [Harshit] vector + BM25 index build
 ├── frontend/             # [Harshit] React app
 ├── eval/                 # [Shared]  evaluation
 ├── docs/                 # plans, architecture, figures
