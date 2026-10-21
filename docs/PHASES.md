@@ -111,6 +111,23 @@ phase, build it, and check it off.
 
 **Done when:** the frontend gets a real answer (not a mock) for the pilot domain.
 
+> **Status (Navya):** The wiring is in place but C2 is **not** done — `/query` still
+> serves stub data, because all three real components are missing from `main`.
+> `backend/orchestration/providers.py` tries to load each one at startup, falls back to
+> a stub when it cannot, and reports exactly why on `GET /health`. Nothing further needs
+> coding: each box ticks itself when its blocker clears. Live status right now:
+>
+> ```
+> retrieval     : unavailable — No module named 'bm25'   (needs PR #6, item B1)
+> synthesis     : unavailable — GROQ_API_KEY is not set
+> query_logging : unavailable — No module named 'data.db.database'  (needs the data branch merged)
+> serving_real_answers: false
+> ```
+>
+> So: merge PR #6, merge the `data` branch, set `GROQ_API_KEY`, and C2.1–C2.4 are done.
+> `test_providers.py` already proves the real path works against stand-ins for both
+> components, so the moment they arrive we will know immediately whether it holds.
+
 ### Phase C3 — Verification Loop  (Week 6)
 - [ ] C3.1 `backend/agents/verification.py` — pull cited sections out of the answer (regex) and check each one exists in the retrieved chunks
 - [ ] C3.2 If a citation is not grounded → loop back to synthesis (max 2 retries using `retry_count`)

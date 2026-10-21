@@ -6,10 +6,11 @@ Run it with:
 
 Then open http://localhost:8000/docs for the interactive API documentation.
 
-Phase C1 note: the graph runs end to end, but retrieval and synthesis are
-stubs. Answers come back clearly labelled "STUB". Real answers arrive in
-Phase C2, when Ayushi's retriever and synthesis agent are wired in — that is a
-change to `build_graph()` below, not to any of the agents.
+Phase C2: the app loads the real retriever and synthesis agent at startup when
+they are available, and falls back to clearly-labelled stubs when they are not.
+`GET /health` reports which, so you can always tell whether an answer came from
+real law or a placeholder. Nothing here needs changing as those components land
+— they are picked up automatically.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routes import VERSION, router
 from backend.orchestration.graph import build_graph
+from backend.orchestration.providers import load_all
 
 load_dotenv()
 
@@ -45,19 +47,29 @@ def _cors_origins() -> list[str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Compile the orchestration graph once at startup, not per request.
+    """Load the real components and compile the graph, once, at startup.
 
-    Building the graph is cheap today, but once the real retriever is attached
-    it will load an embedding model and index files. Doing that once here keeps
-    the first request from paying for it.
+    Doing this here rather than per request matters: the real retriever loads an
+    embedding model and reads the FAISS index from disk, which is far too slow to
+    repeat on every question.
+
+    Anything unavailable falls back to a stub and is reported on `/health`, so
+    the API always starts and always says what it is actually serving.
     """
     logger.info("Starting CivicConnect API v%s", VERSION)
 
-    # Phase C2: pass the real implementations here, for example
-    #     build_graph(retriever=HybridRetriever(), synthesizer=SynthesisAgent())
-    app.state.graph = build_graph()
+    retriever, synthesizer, query_logger, status = load_all()
 
-    logger.info("Orchestration graph ready.")
+    app.state.graph = build_graph(retriever=retriever, synthesizer=synthesizer)
+    app.state.query_logger = query_logger
+    app.state.provider_status = status
+
+    logger.info(
+        "Ready. retrieval=%s synthesis=%s query_log=%s",
+        status.retrieval,
+        status.synthesis,
+        status.query_logging,
+    )
     yield
     logger.info("Shutting down.")
 

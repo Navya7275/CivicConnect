@@ -86,14 +86,42 @@ async def post_query(payload: QueryRequest, request: Request) -> QueryResponse:
         logger.error("Graph finished with an error: %s", final_state["error"])
         raise HTTPException(status_code=500, detail=final_state["error"])
 
-    return _to_response(final_state)
+    response = _to_response(final_state)
+
+    # C2.3 — persist the query for evaluation and debugging. Only when the data
+    # layer is available, and never at the cost of the response.
+    #
+    # The loader's own logger already swallows its failures, but we catch here
+    # too: this must hold for *any* logger that gets installed, and a logging
+    # problem turning a good answer into a 500 would be absurd.
+    query_logger = getattr(request.app.state, "query_logger", None)
+    if query_logger is not None and not response.needs_clarification:
+        try:
+            query_logger(
+                query=payload.query,
+                answer=response.answer,
+                cited_chunk_ids=[c.chunk_id for c in response.citations if c.chunk_id],
+                verified=response.verified,
+                state=payload.state,
+            )
+        except Exception:  # noqa: BLE001 - logging must never break the answer
+            logger.exception("Query logging failed; returning the answer anyway.")
+
+    return response
 
 
 @router.get("/health", response_model=HealthResponse, summary="Service health check")
 async def get_health(request: Request) -> HealthResponse:
-    """Report whether the service is up and the graph compiled."""
+    """Report whether the service is up, and whether answers are real or stubs."""
+    app_state = request.app.state
+    providers = getattr(app_state, "provider_status", None)
+
     return HealthResponse(
         status="ok",
         version=VERSION,
-        graph_ready=getattr(request.app.state, "graph", None) is not None,
+        graph_ready=getattr(app_state, "graph", None) is not None,
+        retrieval=providers.retrieval if providers else None,
+        synthesis=providers.synthesis if providers else None,
+        query_logging=providers.query_logging if providers else None,
+        serving_real_answers=providers.fully_real if providers else None,
     )
