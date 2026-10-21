@@ -129,11 +129,36 @@ phase, build it, and check it off.
 > components, so the moment they arrive we will know immediately whether it holds.
 
 ### Phase C3 — Verification Loop  (Week 6)
-- [ ] C3.1 `backend/agents/verification.py` — pull cited sections out of the answer (regex) and check each one exists in the retrieved chunks
-- [ ] C3.2 If a citation is not grounded → loop back to synthesis (max 2 retries using `retry_count`)
-- [ ] C3.3 Set `verified: true/false` in the response
+- [x] C3.1 `backend/agents/verification.py` — pull cited sections out of the answer (regex) and check each one exists in the retrieved chunks
+- [x] C3.2 If a citation is not grounded → loop back to synthesis (max 2 retries using `retry_count`)
+- [x] C3.3 Set `verified: true/false` in the response
 
 **Done when:** an answer that invents a section number gets caught and regenerated, or marked unverified.
+
+> **Status (Navya):** Done. `VerificationAgent` runs two independent checks and both must
+> pass: the citations list must match retrieved chunks, and every section number written in
+> the answer *prose* must too.
+>
+> The second check is the point. C1 only compared the citations list, which left a real
+> hole — a synthesis agent could return a clean list while writing an invented section into
+> the text, and the answer came back `verified: true`. Demonstrated before and after:
+>
+> ```
+> answer   : "Under Section 47 you may appeal to the State Commission."
+> citations: [Consumer Protection Act, 2019, Section 35]   <- clean, was retrieved
+> retrieved: Section 35 only
+>
+> old check (list only) : verified = True    <- the hole
+> new check (list+prose): verified = False   hallucinated_sections = ['47']
+> ```
+>
+> Rejections are recorded in state as `hallucinated_sections` and `ungrounded_citations`,
+> which is where Phase E (#13) gets its hallucination-rate number.
+>
+> Known limitation: grounding matches on section number, not on the act it was attributed
+> to. "Section 35 of the Motor Vehicles Act" passes while CPA Section 35 is in context.
+> Pairing sections to acts from free prose is fragile, and over-strictness causes needless
+> retries — worth revisiting once we index several acts sharing section numbers.
 
 ---
 

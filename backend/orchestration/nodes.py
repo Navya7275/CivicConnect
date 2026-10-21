@@ -19,11 +19,13 @@ import logging
 from typing import Any, Callable, Protocol
 
 from backend.agents.query_understanding import QueryUnderstandingAgent
+from backend.agents.verification import VerificationAgent
 from backend.orchestration.state import MAX_RETRIES, GraphState
 
 logger = logging.getLogger(__name__)
 
 _agent = QueryUnderstandingAgent()
+_verifier = VerificationAgent()
 
 
 # --------------------------------------------------------------------------
@@ -242,39 +244,31 @@ def make_synthesis_node(synthesizer: Synthesizer | None = None) -> Callable[[Gra
 
 
 def verification_node(state: GraphState) -> GraphState:
-    """Check that every citation points at a section we actually retrieved.
+    """Check that the answer only cites law we actually retrieved.
 
-    Phase C1 keeps this simple: a citation counts as grounded when its
-    `chunk_id` matches a retrieved chunk, or failing that when its act and
-    section match one. Phase C3 replaces this with proper extraction of section
-    numbers from the answer text plus a bounded retry loop.
+    Delegates to `VerificationAgent`, which runs two independent checks:
+
+    1. Every entry in the citations list matches a retrieved chunk.
+    2. Every section number written in the answer *prose* matches a retrieved
+       chunk.
+
+    The second check is the one that matters. Phase C1 only did the first, so a
+    synthesis agent could return a clean citations list while writing an
+    invented section number into the text — and the answer came back verified.
     """
-    chunks = state.get("retrieved_chunks", [])
-    citations = state.get("citations", [])
+    result = _verifier.verify(
+        answer=state.get("draft_answer", ""),
+        citations=state.get("citations", []),
+        retrieved_chunks=state.get("retrieved_chunks", []),
+    )
 
-    if not citations:
-        # Nothing was cited. That is not a verification failure on its own —
-        # "we don't have enough information" is a legitimate answer.
-        return GraphState(verification_status="skipped", verified=False)
-
-    known_ids = {chunk.get("chunk_id") for chunk in chunks if chunk.get("chunk_id")}
-    known_sections = {
-        (chunk.get("act"), chunk.get("section"))
-        for chunk in chunks
-    }
-
-    ungrounded = [
-        citation
-        for citation in citations
-        if citation.get("chunk_id") not in known_ids
-        and (citation.get("act"), citation.get("section")) not in known_sections
-    ]
-
-    if ungrounded:
-        logger.warning("Verification found %d ungrounded citation(s)", len(ungrounded))
-        return GraphState(verification_status="ungrounded", verified=False)
-
-    return GraphState(verification_status="verified", verified=True)
+    return GraphState(
+        verification_status=result.status,
+        verified=result.verified,
+        ungrounded_citations=result.ungrounded_citations,
+        hallucinated_sections=result.hallucinated_sections,
+        checked_sections=result.checked_sections,
+    )
 
 
 # --------------------------------------------------------------------------
