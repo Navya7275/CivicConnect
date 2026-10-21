@@ -89,12 +89,19 @@ phase, build it, and check it off.
 # Feature C — Orchestration & Agents  `[Navya]`
 
 ### Phase C1 — Graph Skeleton + Query Understanding  (Week 2–3)
-- [ ] C1.1 `backend/orchestration/graph.py` — LangGraph `StateGraph`; state = {query, intent, jurisdiction, chunks, draft_answer, citations, verification_status, retry_count}
-- [ ] C1.2 Wire nodes: query_understanding → retrieval → synthesis → verification (pass-through stubs first)
-- [ ] C1.3 `backend/agents/query_understanding.py` — detect intent (consumer / welfare / …) + state; rewrite the query; if the law is state-specific and no state is given → set `needs_clarification`
-- [ ] C1.4 `backend/api/routes.py` — `POST /query` runs the graph and returns the agreed response shape
+- [x] C1.1 `backend/orchestration/graph.py` — LangGraph `StateGraph`; state = {query, intent, jurisdiction, chunks, draft_answer, citations, verification_status, retry_count}
+- [x] C1.2 Wire nodes: query_understanding → retrieval → synthesis → verification (pass-through stubs first)
+- [x] C1.3 `backend/agents/query_understanding.py` — detect intent (consumer / welfare / …) + state; rewrite the query; if the law is state-specific and no state is given → set `needs_clarification`
+- [x] C1.4 `backend/api/routes.py` — `POST /query` runs the graph and returns the agreed response shape
 
 **Done when:** a real query flows through all nodes; a state-specific question with no state makes it ask for the state.
+
+> **Status (Navya):** Done. The graph compiles and runs end to end with 58 offline tests
+> passing (`pytest`). Retrieval and synthesis are deliberately stubs, per C1.2 — they are
+> swapped for the real implementations in C2 by passing them to `build_graph()`, with no
+> change to the agents. Also added the shared scaffolding nobody owned: `requirements.txt`,
+> `.env.example`, the `__init__.py` package files, and `backend/api/schemas.py`, which is
+> now the machine-readable version of the API contract in `PROJECT_PLAN.md` §3.
 
 ### Phase C2 — Wire Real Retrieval + Synthesis  (Week 4–5)
 - [ ] C2.1 Replace the retrieval stub with Ayushi's `search()` (B2)
