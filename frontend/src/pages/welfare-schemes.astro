@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WelfareSchemesBrowser from '../components/WelfareSchemesBrowser';
+---
+
+<Layout title="Government Welfare Schemes Directory | CivicConnect" description="Search and discover Indian central and state welfare benefits, pensions, and healthcare aids.">
+  <div class="py-24 px-6 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-12">
+      <span class="text-caption-mono text-accent-sunset tracking-[0.15em] block mb-3">welfare catalog</span>
+      <h1 class="text-display-sm md:text-display-md text-ink mb-4">Discover Government Welfare Schemes</h1>
+      <p class="text-body-md text-mute max-w-xl">
+        Filter through central and state-specific aids to check eligibility specifications, claim criteria, and document requirements.
+      </p>
+    </div>
+
+    <!-- Interactive React Component -->
+    <WelfareSchemesBrowser client:load />
+  </div>
+</Layout>

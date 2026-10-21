@@ -1,0 +1,160 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="CivicConnect | Indian Law & Welfare Schemes Assistant">
+  <!-- Hero Section -->
+  <section class="relative min-h-[85vh] flex flex-col justify-center items-center text-center px-6 overflow-hidden border-b border-hairline bg-canvas">
+    <!-- Sunset soft glow in background, extremely subtle -->
+    <div class="absolute w-[600px] h-[300px] top-[15%] rounded-full bg-accent-sunset/5 blur-[120px] pointer-events-none" aria-hidden="true"></div>
+
+    <div class="max-w-4xl mx-auto flex flex-col items-center relative z-10">
+      <!-- Eyebrow -->
+      <span class="text-caption-mono text-accent-sunset tracking-[0.15em] mb-6">
+        ai-powered transparency for citizens
+      </span>
+      
+      <!-- Headline display-xl -->
+      <h1 class="text-display-sm sm:text-display-md md:text-display-lg text-ink font-normal leading-tight tracking-tight mb-8">
+        Indian laws and welfare benefits, <br/>
+        made clear in <span class="bg-gradient-to-r from-accent-sunset to-accent-dusk bg-clip-text text-transparent">plain language</span>.
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-body-md md:text-body-lg text-mute max-w-2xl mb-12 leading-relaxed">
+        Ask questions and receive straightforward explanations supported by direct citations to legislative acts and official government documentation.
+      </p>
+
+      <!-- Action buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+        <a href="/assistant" class="button-pill button-pill-primary text-caption-mono tracking-wider px-8 py-3.5 hover:scale-105 active:scale-95" aria-label="Start asking questions in the Assistant">
+          start asking assistant
+        </a>
+        <a href="/how-it-works" class="button-pill button-pill-outline text-caption-mono tracking-wider px-8 py-3.5 hover:scale-105 active:scale-95">
+          learn how it works
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Capabilities Feature Grid -->
+  <section class="py-24 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <span class="text-caption-mono text-mute tracking-[0.12em] block mb-3">capabilities</span>
+      <h2 class="text-display-sm text-ink">Engineered for legal and benefit clarity</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Card 1: Legal Information -->
+      <div class="bg-canvas-card border border-hairline rounded-sm p-8 flex flex-col justify-between hover:border-body-mid transition-all duration-300">
+        <div>
+          <!-- Icon -->
+          <div class="w-12 h-12 rounded-full border border-hairline flex items-center justify-center mb-8 text-accent-breeze">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+              <path d="M12 6V12L16 14" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="text-caption-mono-sm text-mute block mb-2">legal acts & guidelines</span>
+          <h3 class="text-display-xs text-ink mb-4">Search Indian Legislation</h3>
+          <p class="text-body-sm text-mute mb-8 leading-relaxed">
+            Query civil laws, criminal code modifications like the Bharatiya Nyaya Sanhita, or the Right to Information Act in simple vocabulary without getting lost in legal jargon.
+          </p>
+        </div>
+        <a href="/legal-info" class="text-caption-mono-sm text-ink hover:text-accent-sunset transition-colors flex items-center gap-1">
+          browse active laws ➔
+        </a>
+      </div>
+
+      <!-- Card 2: Welfare Schemes -->
+      <div class="bg-canvas-card border border-hairline rounded-sm p-8 flex flex-col justify-between hover:border-body-mid transition-all duration-300">
+        <div>
+          <!-- Icon -->
+          <div class="w-12 h-12 rounded-full border border-hairline flex items-center justify-center mb-8 text-accent-sunset">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <span class="text-caption-mono-sm text-mute block mb-2">welfare benefits & aid</span>
+          <h3 class="text-display-xs text-ink mb-4">Discover Welfare Schemes</h3>
+          <p class="text-body-sm text-mute mb-8 leading-relaxed">
+            Find central government healthcare plans and agricultural aids or state-specific Marathi pensions. Check exact eligibility, required documents, and application pipelines instantly.
+          </p>
+        </div>
+        <a href="/welfare-schemes" class="text-caption-mono-sm text-ink hover:text-accent-sunset transition-colors flex items-center gap-1">
+          browse welfare schemes ➔
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Divider Line -->
+  <hr class="border-hairline max-w-7xl mx-auto"/>
+
+  <!-- How It Works Flow Section -->
+  <section class="py-24 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-20">
+      <span class="text-caption-mono text-mute tracking-[0.12em] block mb-3">process flow</span>
+      <h2 class="text-display-sm text-ink">From user question to verified sources</h2>
+    </div>
+
+    <!-- Timeline Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+      <!-- Connection line at desktop, invisible at mobile -->
+      <div class="hidden md:block absolute top-8 left-[12%] right-[12%] h-[1px] bg-hairline z-0" aria-hidden="true"></div>
+
+      <!-- Step 1 -->
+      <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-canvas border border-hairline flex items-center justify-center text-ink text-body-lg font-mono mb-6 bg-canvas-card">
+          01
+        </div>
+        <h4 class="text-body-md text-ink font-medium mb-2">Ask a Question</h4>
+        <p class="text-body-sm text-mute max-w-[200px]">Describe your query or situation in plain language.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-canvas border border-hairline flex items-center justify-center text-ink text-body-lg font-mono mb-6 bg-canvas-card">
+          02
+        </div>
+        <h4 class="text-body-md text-ink font-medium mb-2">Retrieve Sources</h4>
+        <p class="text-body-sm text-mute max-w-[200px]">System fetches official legal texts or scheme guidelines.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-canvas border border-hairline flex items-center justify-center text-ink text-body-lg font-mono mb-6 bg-canvas-card">
+          03
+        </div>
+        <h4 class="text-body-md text-ink font-medium mb-2">Generate Explanation</h4>
+        <p class="text-body-sm text-mute max-w-[200px]">AI summarizes response using retrieved context only.</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-canvas border border-hairline flex items-center justify-center text-ink text-body-lg font-mono mb-6 bg-canvas-card">
+          04
+        </div>
+        <h4 class="text-body-md text-ink font-medium mb-2">Verify Citations</h4>
+        <p class="text-body-sm text-mute max-w-[200px]">Citations are cross-checked and badges are rendered.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Band Section -->
+  <section class="bg-canvas-card border-t border-b border-hairline py-20 px-6 text-center">
+    <div class="max-w-2xl mx-auto">
+      <span class="text-caption-mono text-accent-sunset tracking-[0.15em] block mb-4">ready to try?</span>
+      <h2 class="text-display-sm text-ink mb-6">Interactive assistant is live</h2>
+      <p class="text-body-sm text-mute mb-8 max-w-lg mx-auto">
+        Test our verified source interface offline today. Search local schemes, browse civil acts, and inspect supporting evidence tags.
+      </p>
+      <a href="/assistant" class="button-pill button-pill-outline text-caption-mono tracking-wider px-8 py-3 hover:scale-105 active:scale-95">
+        open assistant dashboard
+      </a>
+    </div>
+  </section>
+</Layout>

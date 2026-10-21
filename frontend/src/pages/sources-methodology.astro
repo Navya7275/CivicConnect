@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Sources & Methodology | CivicConnect" description="Learn about the government datasets, acts, and verification methods used by CivicConnect.">
+  <div class="py-24 px-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-16">
+      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">data standards</span>
+      <h1 class="text-display-md text-ink mb-6">Sources & Methodology</h1>
+      <p class="text-body-lg text-mute leading-relaxed">
+        How CivicConnect retrieves, processes, and displays verified legal texts and welfare benefits.
+      </p>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="space-y-12 text-body-md text-body leading-relaxed">
+      
+      <section>
+        <span class="text-caption-mono text-accent-sunset tracking-wider block mb-2">data sources</span>
+        <h2 class="text-display-xs text-ink mb-4">Official Document Library</h2>
+        <p class="mb-4">
+          CivicConnect utilizes publicly available government databases. Rather than indexing the entire web, we curate and index verified PDF documents and HTML resources directly from primary channels, such as:
+        </p>
+        <ul class="list-disc pl-6 space-y-2 text-body-sm text-mute">
+          <li>**The Gazette of India**: The official public journal carrying newly enacted central acts.</li>
+          <li>**State Government Gazettes**: Gazette publications from states like Maharashtra, providing state-specific legislative modifications and pensions.</li>
+          <li>**National Government Services Portal (services.india.gov.in)**: Official records of central and state citizen welfare eligibility details.</li>
+          <li>**Individual Ministry Portals**: Direct operational manuals from the Ministry of Agriculture, Ministry of Health and Family Welfare, and others.</li>
+        </ul>
+      </section>
+
+      <section>
+        <span class="text-caption-mono text-accent-breeze tracking-wider block mb-2">retrieval pipeline</span>
+        <h2 class="text-display-xs text-ink mb-4">Context-Constrained Synthesis</h2>
+        <p class="mb-4">
+          When you write a question in the assistant, the backend does not rely on pre-trained LLM memory. Instead:
+        </p>
+        <ol class="list-decimal pl-6 space-y-3 text-body-sm text-mute">
+          <li>
+            **Vector and Text Search**: The system matches the query words against the indexed documents database to isolate specific relevant paragraphs and clauses.
+          </li>
+          <li>
+            **Jurisdiction Filtering**: The system matches your chosen jurisdiction (Central or State) to exclude irrelevant laws (e.g. ignoring Kerala land laws if you are asking about Maharashtra).
+          </li>
+          <li>
+            **Context-Closed Answering**: The isolated clauses are sent to the summary generator. The AI is structurally blocked from outputting any details not explicitly documented in the retrieved text.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <span class="text-caption-mono text-accent-dusk tracking-wider block mb-2">system limitations</span>
+        <h2 class="text-display-xs text-ink mb-4">Currency & Document Availability</h2>
+        <p class="mb-4">
+          CivicConnect outputs are only as accurate as the indexed files. Key constraints:
+        </p>
+        <ul class="list-disc pl-6 space-y-2 text-body-sm text-mute">
+          <li>**Update Latency**: Government policies, interest rates, or eligibility criteria can modify. While we strive to update the index files, there may be delays before new modifications appear.</li>
+          <li>**Coverage Gaps**: We are expanding our coverage of states and specific civil legislation categories. If a scheme or law is not yet indexed, the system will return an empty search match.</li>
+          <li>**Formatting Overrides**: Complex legal tables or layout columns are translated into markdown tables for screen readability. Always verify details against the original linked PDF source.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</Layout>
