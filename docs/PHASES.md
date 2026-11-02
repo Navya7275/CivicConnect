@@ -34,27 +34,29 @@ phase, build it, and check it off.
 
 # Feature A — Data & Database  `[Harshit]`
 
+> **Status Note:** Harsh data pipeline phases A1–A3 have been fully implemented and verified (PostgreSQL schema, seed loader, deterministic chunker, MyScheme welfare ingestion, FAISS dense vector + BM25 sparse index build, query logging helper, and automated test suite).
+
 ### Phase A1 — Database + Seed Data  (Week 1–2)
-- [ ] A1.1 `data/db/models.py` — SQLAlchemy tables `documents`, `chunks`, `query_logs` (chunk columns: text, act, chapter, section, jurisdiction, effective_date, source_url)
-- [ ] A1.2 Create the Postgres database and create the tables
-- [ ] A1.3 Hand-pick **20–30 real chunks** (e.g. Consumer Protection Act sections) into a JSON/CSV with all the fields above
-- [ ] A1.4 `data/ingestion/load_seed.py` — load that seed file into the `chunks` table
+- [x] A1.1 `data/db/models.py` — SQLAlchemy tables `documents`, `chunks`, `query_logs` (chunk columns: text, act, chapter, section, jurisdiction, effective_date, source_url)
+- [x] A1.2 Create the Postgres database and create the tables
+- [x] A1.3 Hand-pick **20–30 real chunks** (e.g. Consumer Protection Act sections) into a JSON/CSV with all the fields above
+- [x] A1.4 `data/ingestion/load_seed.py` — load that seed file into the `chunks` table
 
 **Done when:** `SELECT count(*) FROM chunks;` shows ~25 rows with correct metadata. *(This unblocks Ayushi — do it early.)*
 
 ### Phase A2 — Real Ingestion Pipeline  (Week 3–4)
-- [ ] A2.1 `data/ingestion/scrape.py` — fetch source documents (India Code / MyScheme) for the pilot domain
-- [ ] A2.2 `data/ingestion/chunk.py` — split documents into chunks, keeping `Act → Chapter → Section`, and attach metadata
-- [ ] A2.3 Load the full pilot domain (Consumer Protection Act + one welfare scheme) into `chunks`
-- [ ] A2.4 Data check: no empty text; every chunk has a jurisdiction and a source_url
+- [x] A2.1 `data/ingestion/scrape.py` — fetch source documents (India Code / MyScheme) for the pilot domain
+- [x] A2.2 `data/ingestion/chunk.py` — split documents into chunks, keeping `Act → Chapter → Section`, and attach metadata
+- [x] A2.3 Load the full pilot domain (Consumer Protection Act + one welfare scheme) into `chunks`
+- [x] A2.4 Data check: no empty text; every chunk has a jurisdiction and a source_url
 
 **Done when:** the pilot domain is fully loaded and every chunk has complete metadata.
 
 ### Phase A3 — Indexes + Second Domain  (Week 5–6)
-- [ ] A3.1 `data/indexing/build_index.py` — build the dense vector index (FAISS or Chroma) from `chunks`
-- [ ] A3.2 Build the BM25 index (rank_bm25) from the same chunks
-- [ ] A3.3 Add a second domain (e.g. another welfare scheme)
-- [ ] A3.4 `query_logs`: save each query + answer + which chunk IDs were used
+- [x] A3.1 `data/indexing/build_index.py` — build the dense vector index (FAISS or Chroma) from `chunks`
+- [x] A3.2 Build the BM25 index (rank_bm25) from the same chunks
+- [x] A3.3 Add a second domain (e.g. another welfare scheme)
+- [x] A3.4 `query_logs`: save each query + answer + which chunk IDs were used
 
 **Done when:** both indexes rebuild from one script, and Ayushi's retrieval returns results from them.
 
