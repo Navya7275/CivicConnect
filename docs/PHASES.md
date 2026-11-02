@@ -17,7 +17,7 @@ phase, build it, and check it off.
 > The data shapes (API request/response, chunk fields) are defined in `PROJECT_PLAN.md` §3.
 > Everyone follows those so the parts fit together.
 
-**Owner tags:** `[All]` · `[Harsh]` · `[Ayushi]` · `[Navya]` · `[Harshit]`
+**Owner tags:** `[All]` · `[Harshit]` · `[Ayushi]` · `[Navya]` · `[Harshit]`
 
 ---
 
@@ -32,7 +32,7 @@ phase, build it, and check it off.
 
 ---
 
-# Feature A — Data & Database  `[Harsh]`
+# Feature A — Data & Database  `[Harshit]`
 
 ### Phase A1 — Database + Seed Data  (Week 1–2)
 - [ ] A1.1 `data/db/models.py` — SQLAlchemy tables `documents`, `chunks`, `query_logs` (chunk columns: text, act, chapter, section, jurisdiction, effective_date, source_url)
@@ -64,7 +64,7 @@ phase, build it, and check it off.
 
 ### Phase B1 — Dense Retriever  (Week 2)
 - [ ] B1.1 `backend/retrieval/dense.py` — `DenseRetriever`: embed chunks with sentence-transformers, search by similarity, return top-k
-- [ ] B1.2 Load Harsh's seed chunks (A1) and return the top chunks for a query
+- [ ] B1.2 Load Harshit's seed chunks (A1) and return the top chunks for a query
 - [ ] B1.3 Quick test script: query "refund for defective product" → prints the top 3 chunks
 
 **Done when:** dense search returns sensible chunks for 3 test questions.
@@ -106,17 +106,59 @@ phase, build it, and check it off.
 ### Phase C2 — Wire Real Retrieval + Synthesis  (Week 4–5)
 - [ ] C2.1 Replace the retrieval stub with Ayushi's `search()` (B2)
 - [ ] C2.2 Replace the synthesis stub with Ayushi's `SynthesisAgent` (B3)
-- [ ] C2.3 Save each query to `query_logs` (Harsh A3.4)
+- [ ] C2.3 Save each query to `query_logs` (Harshit A3.4)
 - [ ] C2.4 `/query` returns a **real** grounded answer end-to-end
 
 **Done when:** the frontend gets a real answer (not a mock) for the pilot domain.
 
+> **Status (Navya):** The wiring is in place but C2 is **not** done — `/query` still
+> serves stub data, because all three real components are missing from `main`.
+> `backend/orchestration/providers.py` tries to load each one at startup, falls back to
+> a stub when it cannot, and reports exactly why on `GET /health`. Nothing further needs
+> coding: each box ticks itself when its blocker clears. Live status right now:
+>
+> ```
+> retrieval     : unavailable — No module named 'bm25'   (needs PR #6, item B1)
+> synthesis     : unavailable — GROQ_API_KEY is not set
+> query_logging : unavailable — No module named 'data.db.database'  (needs the data branch merged)
+> serving_real_answers: false
+> ```
+>
+> So: merge PR #6, merge the `data` branch, set `GROQ_API_KEY`, and C2.1–C2.4 are done.
+> `test_providers.py` already proves the real path works against stand-ins for both
+> components, so the moment they arrive we will know immediately whether it holds.
+
 ### Phase C3 — Verification Loop  (Week 6)
-- [ ] C3.1 `backend/agents/verification.py` — pull cited sections out of the answer (regex) and check each one exists in the retrieved chunks
-- [ ] C3.2 If a citation is not grounded → loop back to synthesis (max 2 retries using `retry_count`)
-- [ ] C3.3 Set `verified: true/false` in the response
+- [x] C3.1 `backend/agents/verification.py` — pull cited sections out of the answer (regex) and check each one exists in the retrieved chunks
+- [x] C3.2 If a citation is not grounded → loop back to synthesis (max 2 retries using `retry_count`)
+- [x] C3.3 Set `verified: true/false` in the response
 
 **Done when:** an answer that invents a section number gets caught and regenerated, or marked unverified.
+
+> **Status (Navya):** Done. `VerificationAgent` runs two independent checks and both must
+> pass: the citations list must match retrieved chunks, and every section number written in
+> the answer *prose* must too.
+>
+> The second check is the point. C1 only compared the citations list, which left a real
+> hole — a synthesis agent could return a clean list while writing an invented section into
+> the text, and the answer came back `verified: true`. Demonstrated before and after:
+>
+> ```
+> answer   : "Under Section 47 you may appeal to the State Commission."
+> citations: [Consumer Protection Act, 2019, Section 35]   <- clean, was retrieved
+> retrieved: Section 35 only
+>
+> old check (list only) : verified = True    <- the hole
+> new check (list+prose): verified = False   hallucinated_sections = ['47']
+> ```
+>
+> Rejections are recorded in state as `hallucinated_sections` and `ungrounded_citations`,
+> which is where Phase E (#13) gets its hallucination-rate number.
+>
+> Known limitation: grounding matches on section number, not on the act it was attributed
+> to. "Section 35 of the Motor Vehicles Act" passes while CPA Section 35 is in context.
+> Pairing sections to acts from free prose is fragile, and over-strictness causes needless
+> retries — worth revisiting once we index several acts sharing section numbers.
 
 ---
 
@@ -161,13 +203,13 @@ phase, build it, and check it off.
 
 | Week | Focus | Active phases |
 |------|-------|---------------|
-| 1 | Setup + database + seed data | P0 `[All]`, A1 `[Harsh]` |
+| 1 | Setup + database + seed data | P0 `[All]`, A1 `[Harshit]` |
 | 2 | Dense retrieval, graph skeleton, chat shell | B1 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
-| 3 | Full ingestion, BM25+RRF, query understanding | A2 `[Harsh]`, B2 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
-| 4 | Indexes, fusion, real API wiring, real frontend | A2/A3 `[Harsh]`, B2 `[Ayushi]`, C2 `[Navya]`, D2 `[Harshit]` |
-| 5 | Metadata filter + synthesis, pipeline end-to-end | B3 `[Ayushi]`, C2 `[Navya]`, A3 `[Harsh]`, D2 `[Harshit]` |
+| 3 | Full ingestion, BM25+RRF, query understanding | A2 `[Harshit]`, B2 `[Ayushi]`, C1 `[Navya]`, D1 `[Harshit]` |
+| 4 | Indexes, fusion, real API wiring, real frontend | A2/A3 `[Harshit]`, B2 `[Ayushi]`, C2 `[Navya]`, D2 `[Harshit]` |
+| 5 | Metadata filter + synthesis, pipeline end-to-end | B3 `[Ayushi]`, C2 `[Navya]`, A3 `[Harshit]`, D2 `[Harshit]` |
 | 6 | Verification loop, jurisdiction, polish | C3 `[Navya]`, D3 `[Harshit]` |
-| 7 | Scale data, UI polish, integration testing | A3 `[Harsh]`, D3 `[Harshit]`, `[All]` |
+| 7 | Scale data, UI polish, integration testing | A3 `[Harshit]`, D3 `[Harshit]`, `[All]` |
 | 8 | Evaluation + demo | E `[All]` |
 
 ---

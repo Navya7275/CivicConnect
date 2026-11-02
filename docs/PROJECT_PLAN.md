@@ -12,10 +12,17 @@ This document is the single source of truth for **who builds what, in what order
 |---|---|---|
 | **Navya Singhal** | Backend — Orchestration & Agents | LangGraph orchestration, Query Understanding agent, Verification agent, FastAPI API layer |
 | **Ayushi Shrivastava** | Backend — Retrieval & RAG | Dense retriever, BM25, RRF fusion, metadata filtering, Synthesis agent |
-| **Harsh Gupta** | Database & Data Pipeline | Postgres schema, data ingestion & chunking, vector/BM25 index build, query/answer logging |
-| **Harshit Garg** | Frontend | React chat UI, state/jurisdiction selector, citation display, API client, loading/error states |
+| **Harshit Garg** | Frontend, Database & Deployment | React/Astro chat UI, state selector, citation display, API client; Postgres schema, data ingestion & chunking, vector/BM25 index build, query logging; deployment |
 
-Navya and Ayushi share the backend but own **separate folders** (see §4) so they don't collide.
+Navya and Ayushi share the backend but own **separate folders** (see §4) so they don't
+collide. Harshit owns `frontend/` and `data/` end to end.
+
+Evaluation (Phase E) is shared between **Navya and Ayushi**.
+
+> **Note on this section:** the plan originally split the work four ways, with the
+> database as its own role. It is now a three-person project, and the database and
+> deployment work sits with Harshit. The tables in §4 and `PHASES.md` use the same
+> three owners.
 
 ---
 
@@ -23,7 +30,7 @@ Navya and Ayushi share the backend but own **separate folders** (see §4) so the
 
 Every part is tagged with its owner. This is the full scope of what "done" looks like.
 
-**Data Layer — `[Harsh]`**
+**Data Layer — `[Harshit]`**
 - Scrape / collect sources: India Code, MyScheme, Dept. of Consumer Affairs
 - Chunk documents preserving `Act → Chapter → Section` hierarchy
 - Attach metadata to every chunk: jurisdiction, act, section, effective date, source URL
@@ -107,9 +114,9 @@ CivicConnect/
 │   ├── retrieval/        # [Ayushi] dense, bm25, rrf, metadata filter
 │   └── main.py           # [Navya]  app entrypoint
 ├── data/
-│   ├── ingestion/        # [Harsh]  scraping + chunking
-│   ├── db/               # [Harsh]  schema / models / migrations
-│   └── indexing/         # [Harsh]  vector + BM25 index build
+│   ├── ingestion/        # [Harshit] scraping + chunking
+│   ├── db/               # [Harshit] schema / models / migrations
+│   └── indexing/         # [Harshit] vector + BM25 index build
 ├── frontend/             # [Harshit] React app
 ├── eval/                 # [Shared]  RAGAS + citation-accuracy
 ├── docs/                 # [Shared]  this plan, figures, notes
@@ -128,19 +135,19 @@ Timeline is a guide — adjust dates to your semester. Tick boxes on GitHub as y
 - [ ] Agree the API + chunk contracts in §3 — **all**
 - [ ] Scaffold the repo skeleton (run the Claude Code prompt in Appendix A) — **Navya**
 - [ ] Dev environment up: Python venv, Node, `.env` from template — **all**
-- [ ] Confirm data sources; sample-scrape one act end to end — **Harsh**
+- [ ] Confirm data sources; sample-scrape one act end to end — **Harshit**
 - [ ] React app boots with a static chat layout — **Harshit**
 - [ ] Spike: embed sample text with sentence-transformers — **Ayushi**
 - [ ] FastAPI skeleton with `/query` returning a mock response — **Navya**
 
 ### Phase 1 · Weeks 2–3 — Foundations
-- [ ] Full ingestion for **pilot domain** (Consumer Protection Act + one welfare scheme); Postgres schema live; chunks loaded — **Harsh**
-- [ ] Dense retriever + BM25 running over Harsh's chunks; basic RRF — **Ayushi**
+- [ ] Full ingestion for **pilot domain** (Consumer Protection Act + one welfare scheme); Postgres schema live; chunks loaded — **Harshit**
+- [ ] Dense retriever + BM25 running over Harshit's chunks; basic RRF — **Ayushi**
 - [ ] LangGraph skeleton (nodes wired as pass-through); Query Understanding v1 (intent + state extraction) — **Navya**
 - [ ] Chat UI calling the `/query` stub; renders answer + citations from mock; state selector works — **Harshit**
 
 ### Phase 2 · Weeks 4–5 — Core Pipeline
-- [ ] Metadata filtering (jurisdiction / date); index a second domain; `query_logs` table — **Harsh**
+- [ ] Metadata filtering (jurisdiction / date); index a second domain; `query_logs` table — **Harshit**
 - [ ] RRF tuned; Synthesis agent produces grounded plain-language answers with citations — **Ayushi**
 - [ ] Full orchestration + routing; wire retrieval → synthesis; real end-to-end `/query` — **Navya**
 - [ ] Integrate the real API; loading/error states; citation expand; query history — **Harshit**
@@ -148,13 +155,13 @@ Timeline is a guide — adjust dates to your semester. Tick boxes on GitHub as y
 ### Phase 3 · Weeks 6–7 — Verification, Jurisdiction & Integration
 - [ ] Verification agent (citation grounding check + bounded retry loop); ask-for-state clarification flow — **Navya**
 - [ ] Improve retrieval quality and edge cases; eligibility reasoning *(stretch)* — **Ayushi**
-- [ ] Expand corpus; index/performance tuning; data QA — **Harsh**
+- [ ] Expand corpus; index/performance tuning; data QA — **Harshit**
 - [ ] UI polish; "verified" badge; clarification-prompt UI; responsive layout — **Harshit**
 - [ ] Full integration testing — **all**
 
 ### Phase 4 · Week 8 — Evaluation & Demo
 - [ ] RAGAS + citation-accuracy over ~200 queries; record **before/after** numbers — **Navya + Ayushi**
-- [ ] Final data snapshot + reproducible index-build script — **Harsh**
+- [ ] Final data snapshot + reproducible index-build script — **Harshit**
 - [ ] Demo polish, screenshots, short video — **Harshit**
 - [ ] Final README, report figures, merge to `main`, tag a release — **all**
 

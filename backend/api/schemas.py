@@ -80,3 +80,14 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="'ok' when the service is up")
     version: str = Field(..., description="Application version")
     graph_ready: bool = Field(..., description="True when the orchestration graph compiled successfully")
+
+    # Phase C2 diagnostics. These say whether /query is serving real grounded
+    # answers or stub data, and when something is missing, what. Optional so
+    # the frontend never has to depend on them.
+    retrieval: str | None = Field(None, description="'real', or why the real retriever is unavailable")
+    synthesis: str | None = Field(None, description="'real', or why the real synthesis agent is unavailable")
+    query_logging: str | None = Field(None, description="'real', or why query logging is unavailable")
+    serving_real_answers: bool | None = Field(
+        None,
+        description="True only when both retrieval and synthesis are the real implementations",
+    )

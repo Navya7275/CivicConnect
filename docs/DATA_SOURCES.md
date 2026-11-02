@@ -1,7 +1,7 @@
 # CivicConnect — Data Sources
 
 What data the system retrieves from, where it comes from, and what to extract.
-Owner: **Harsh** (with the whole team following the chunk schema).
+Owner: **Harshit** (with the whole team following the chunk schema).
 Companion: `ARCHITECTURE.md` §4 (data model).
 
 ---

@@ -65,6 +65,20 @@ class GraphState(TypedDict, total=False):
     verified: bool
     """True when every cited section was found in the retrieved chunks."""
 
+    ungrounded_citations: list[dict[str, Any]]
+    """Citation entries with no matching retrieved chunk."""
+
+    hallucinated_sections: list[str]
+    """Section numbers written in the answer prose with no supporting chunk.
+
+    The headline number for our central claim. Phase E reports these as the
+    hallucination rate (issue #13); they are not exposed on the API response,
+    because the response shape is fixed by PROJECT_PLAN.md section 3.
+    """
+
+    checked_sections: list[str]
+    """Every section number found in the prose, grounded or not."""
+
     retry_count: int
     """How many times synthesis has been re-run for this query."""
 
@@ -92,6 +106,9 @@ def initial_state(query: str, state: str | None = None) -> GraphState:
         citations=[],
         verification_status="pending",
         verified=False,
+        ungrounded_citations=[],
+        hallucinated_sections=[],
+        checked_sections=[],
         retry_count=0,
         error=None,
     )
