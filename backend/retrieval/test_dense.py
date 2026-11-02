@@ -1,9 +1,23 @@
-from unittest.mock import MagicMock
-import pytest
-import numpy as np
+"""Unit tests for the dense retriever.
 
-from backend.retrieval.chunks import get_mock_chunks
-from backend.retrieval.dense import DenseRetriever
+Fully mocked: the FAISS index and the embedding model are both stand-ins, so
+nothing is loaded from disk and no model is downloaded. The import is still
+guarded, because `dense.py` imports sentence-transformers at module level and
+that is a multi-gigabyte dependency a contributor may not have installed yet.
+"""
+
+from unittest.mock import MagicMock
+
+import numpy as np
+import pytest
+
+pytest.importorskip(
+    "sentence_transformers",
+    reason="sentence-transformers is not installed; pip install -r requirements.txt",
+)
+
+from backend.retrieval.chunks import get_mock_chunks       # noqa: E402
+from backend.retrieval.dense import DenseRetriever         # noqa: E402
 
 
 def test_dense_search():
