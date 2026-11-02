@@ -1,19 +1,25 @@
-from bm25 import BM25Retriever
-from dense import DenseRetriever
-from filters import filter_by_metadata
-from fusion import reciprocal_rank_fusion
+from .bm25 import BM25Retriever
+from .data_loader import load_chunks_from_database
+from .dense import DenseRetriever
+from .filters import filter_by_metadata
+from .fusion import reciprocal_rank_fusion
 
 
 class HybridRetriever:
     """
-    Combines BM25 retrieval, dense retrieval,
-    metadata filtering, and RRF fusion.
+    Hybrid retriever using real database chunks,
+    prebuilt FAISS and BM25 indexes, metadata filtering,
+    date filtering, and RRF fusion.
     """
 
-    def __init__(self, chunks):
+    def __init__(self, chunks=None):
+        # Use real database chunks by default.
+        if chunks is None:
+            chunks = load_chunks_from_database()
+
         self.chunks = chunks
 
-        # Initialize both retrieval systems.
+        # Load the prebuilt retrieval indexes.
         self.bm25 = BM25Retriever(chunks)
         self.dense = DenseRetriever(chunks)
 
@@ -21,42 +27,68 @@ class HybridRetriever:
         self,
         query,
         filters=None,
+        as_of_date=None,
         limit=5
     ):
         """
         Perform hybrid retrieval.
 
         Steps:
-        1. Retrieve using BM25.
-        2. Retrieve using dense embeddings.
-        3. Apply metadata filtering.
-        4. Fuse rankings using RRF.
+        1. Load/filter eligible chunks.
+        2. Search the prebuilt BM25 index.
+        3. Search the prebuilt FAISS index.
+        4. Keep only eligible chunks.
+        5. Fuse results using RRF.
         """
 
-        # BM25 retrieval
+        # Apply metadata and effective-date filters first.
+        filtered_chunks = filter_by_metadata(
+            self.chunks,
+            filters=filters,
+            as_of_date=as_of_date
+        )
+
+        if not filtered_chunks:
+            return []
+
+        eligible_ids = {
+            chunk["chunk_id"]
+            for chunk in filtered_chunks
+        }
+
+        # Retrieve extra candidates so filtering does not
+        # accidentally leave us with too few results.
+        candidate_limit = min(
+            len(self.chunks),
+            max(limit * 5, limit)
+        )
+
+        # Search prebuilt BM25 index.
         bm25_results = self.bm25.search(
             query,
-            limit=limit
+            limit=candidate_limit
         )
 
-        # Dense retrieval
+        # Search prebuilt FAISS index.
         dense_results = self.dense.search(
             query,
-            limit=limit
+            limit=candidate_limit
         )
 
-        # Apply metadata filters.
-        bm25_results = filter_by_metadata(
-            bm25_results,
-            filters
-        )
+        # Keep only chunks that passed metadata/date filters.
+        bm25_results = [
+            chunk
+            for chunk in bm25_results
+            if chunk["chunk_id"] in eligible_ids
+        ]
 
-        dense_results = filter_by_metadata(
-            dense_results,
-            filters
-        )
+        dense_results = [
+            chunk
+            for chunk in dense_results
+            if chunk["chunk_id"] in eligible_ids
+        ]
 
-        # Combine rankings.
+        # Fuse the two ranked lists.
         results = reciprocal_rank_fusion(
             [bm25_results, dense_results],
             limit=limit

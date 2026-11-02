@@ -1,4 +1,4 @@
-"""Comprehensive unit and integration test suite for Harsh's Data Pipeline tasks.
+"""Comprehensive unit and integration test suite for the data pipeline.
 
 Tests:
 1. Database tables creation and models
@@ -12,9 +12,19 @@ Tests:
 import json
 import unittest
 from pathlib import Path
-import faiss
 import pickle
-import numpy as np
+
+import pytest
+
+# build_index imports sentence-transformers at module level, which is a
+# multi-gigabyte dependency. Skip the whole module cleanly when it or FAISS is
+# absent, so `pytest` still works on a checkout that has not installed them.
+faiss = pytest.importorskip("faiss", reason="faiss-cpu not installed")
+np = pytest.importorskip("numpy", reason="numpy not installed")
+pytest.importorskip(
+    "sentence_transformers",
+    reason="sentence-transformers is not installed; pip install -r requirements.txt",
+)
 
 from data.db.database import SessionLocal, init_db
 from data.db.models import Chunk, Document, QueryLog
