@@ -14,13 +14,23 @@ class SynthesisAgent:
 
     def __init__(
         self,
-        model="openai/gpt-oss-20b"
+        model=None
     ):
-        self.client = Groq(
-            api_key=os.getenv("GROQ_API_KEY")
-        )
+        api_key = os.getenv("GROQ_API_KEY")
 
-        self.model = model
+        # Check this ourselves rather than letting the Groq client fail deep
+        # inside its own stack, so the message says what to do about it.
+        if not api_key:
+            raise RuntimeError(
+                "GROQ_API_KEY is not set. Copy .env.example to .env and add a "
+                "key from https://console.groq.com"
+            )
+
+        self.client = Groq(api_key=api_key)
+
+        # Configurable so the model can be swapped without a code change, and
+        # so the report can state which one produced the evaluation numbers.
+        self.model = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     def synthesize(self, query, retrieved_chunks):
         """
