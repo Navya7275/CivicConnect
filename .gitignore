@@ -1,20 +1,13 @@
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
 .env
+__pycache__/
+*.pyc
+*.py[cod]
+venv/
+.venv/
+.pytest_cache/
 
-# Database & artifacts
-*.db
-*.sqlite
-data/indexing/artifacts/
-data/ingestion/raw_data/
-
-# IDE
+# OS / editor
+.DS_Store
 .idea/
 .vscode/

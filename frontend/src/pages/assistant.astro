@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AssistantApp from '../components/AssistantApp';
+---
+
+<Layout title="CivicConnect AI Assistant" description="Get simple, direct answers on Indian laws and government welfare schemes, backed by citations.">
+  <!-- Interactive React Application -->
+  <AssistantApp client:only="react" />
+</Layout>
