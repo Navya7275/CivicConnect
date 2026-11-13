@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type MouseEvent, type SubmitEvent } from 'react';
 import type { Conversation } from '../services/api';
 
 interface SidebarProps {
@@ -33,13 +33,13 @@ export default function Sidebar({
     conv.title.toLowerCase().includes(historySearch.toLowerCase())
   );
 
-  const startRename = (conv: Conversation, e: React.MouseEvent) => {
+  const startRename = (conv: Conversation, e: MouseEvent) => {
     e.stopPropagation();
     setEditingId(conv.id);
     setEditTitle(conv.title);
   };
 
-  const saveRename = (id: string, e: React.FormEvent) => {
+  const saveRename = (id: string, e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (editTitle.trim()) {
       onRenameConversation(id, editTitle.trim());

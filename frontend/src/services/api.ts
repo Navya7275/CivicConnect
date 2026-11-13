@@ -8,6 +8,12 @@
  * Note that `verified` is NOT here: the verification agent checks the whole
  * answer and returns one verdict per response, so it lives on Message.
  */
+export interface RetrievalScores {
+  dense_score?: number;
+  bm25_rank?: number;
+  rrf_rank?: number;
+}
+
 export interface Citation {
   act: string;
   section: string;
@@ -15,6 +21,7 @@ export interface Citation {
   source_url: string;
   chunk_id?: string;      // optional — supplied by the retrieval layer
   excerpt?: string;       // optional — the exact quoted text, when available
+  _retrieval_scores?: RetrievalScores;
 }
 
 export type MessageStatus =

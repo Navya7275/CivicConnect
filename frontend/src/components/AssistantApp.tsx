@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { CivicConnectApi, type Conversation, type Message, type MessageStatus, type WelfareScheme, type LegalAct } from '../services/api';
+import { useState, useEffect } from 'react';
+import { CivicConnectApi, type Conversation, type MessageStatus, type WelfareScheme, type LegalAct } from '../services/api';
 import Sidebar from './Sidebar';
 import ChatView from './ChatView';
 import WelfareSchemesView from './WelfareSchemesView';
@@ -83,7 +83,7 @@ export default function AssistantApp() {
       await api.sendMessageStream(
         activeConversationId, 
         text, 
-        (status, responseText, citations) => {
+        (status) => {
           setActiveStatus(status);
           
           // Re-fetch conversation list to render updated messages and titles in real-time

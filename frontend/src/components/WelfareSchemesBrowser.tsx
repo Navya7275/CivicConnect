@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from 'react';
+import { useState, useTransition, type ChangeEvent } from 'react';
 import { mockWelfareSchemes } from '../services/mockData';
 import type { WelfareScheme } from '../services/api';
 
@@ -7,7 +7,7 @@ export default function WelfareSchemesBrowser() {
   const [selectedState, setSelectedState] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedScheme, setSelectedScheme] = useState<WelfareScheme | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const states = ['All', 'Central', 'Maharashtra'];
   const categories = ['All', 'Healthcare', 'Agriculture', 'Social Welfare & Pension'];
@@ -22,7 +22,7 @@ export default function WelfareSchemesBrowser() {
     return matchesState && matchesCategory && matchesSearch;
   });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     startTransition(() => {
       setSearchQuery(val);

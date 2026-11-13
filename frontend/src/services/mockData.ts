@@ -20,20 +20,31 @@ export const mockConversations: Conversation[] = [
         content: 'Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is a central government scheme providing a health cover of up to ₹5 Lakh per family per year for secondary and tertiary care hospitalization. \n\n### 1. Eligibility Criteria:\n- **Rural Families**: Households living in one-room houses with kucha walls, female-headed households, households with no adult member between ages 16-59, SC/ST households, and landless households deriving major income from manual casual labor.\n- **Urban Families**: Specific occupational categories including ragpickers, beggars, domestic workers, street vendors, construction workers, plumbers, sweepers, and transport workers.\n- **Automatic Inclusion**: Households listed in the SECC 2011 database, bonded laborers, and families residing in primitive tribal groups.\n\n### 2. Required Documents:\n- **Identity Proof**: Aadhaar Card, PAN Card, or Driving License.\n- **Address Proof**: Ration Card, Utility Bills, or Voter ID.\n- **Income/Caste Certificate**: Required to prove eligibility if selected under socio-economic categories.',
         timestamp: '10:15 AM',
         status: 'verified',
+        verified: true,
         citations: [
           {
             act: 'National Health Agency Operational Guidelines',
             section: 'Section 4.2',
             jurisdiction: 'Central',
             excerpt: 'The target beneficiaries under PM-JAY are identified based on select deprivation criteria in rural areas and occupational criteria in urban areas as per the Socio-Economic Caste Census (SECC) database.',
-            source_url: 'https://pmjay.gov.in/'
+            source_url: 'https://pmjay.gov.in/',
+            _retrieval_scores: {
+              dense_score: 0.884,
+              bm25_rank: 1,
+              rrf_rank: 1
+            }
           },
           {
             act: 'Aadhaar (Targeted Delivery of Financial and Other Subsidies, Benefits and Services) Act',
             section: 'Section 7',
             jurisdiction: 'Central',
             excerpt: 'The Central Government or State Government may require that an individual undergo authentication or furnish proof of possession of Aadhaar number as a condition for receiving subsidy, benefit or service.',
-            source_url: 'https://uidai.gov.in/'
+            source_url: 'https://uidai.gov.in/',
+            _retrieval_scores: {
+              dense_score: 0.792,
+              bm25_rank: 3,
+              rrf_rank: 2
+            }
           }
         ],
         feedback: 'helpful'
@@ -59,13 +70,19 @@ export const mockConversations: Conversation[] = [
         content: 'Under the Right to Information (RTI) Act, 2005, a Public Information Officer (PIO) is bound by strict timelines to respond to requests:\n\n1. **Standard Requests**: The response must be provided within **30 days** of receipt of the application.\n2. **Assistant PIO Requests**: If the application is submitted to an Assistant PIO, the response timeline is extended by 5 days, totaling **35 days**.\n3. **Life and Liberty**: If the information sought concerns the **life or liberty of a person**, the PIO must respond within **48 hours**.',
         timestamp: 'Yesterday',
         status: 'verified',
+        verified: true,
         citations: [
           {
             act: 'Right to Information Act, 2005',
             section: 'Section 7(1)',
             jurisdiction: 'Central',
             excerpt: 'Subject to the proviso to sub-section (2) of section 5 or the proviso to sub-section (3) of section 6, the Central Public Information Officer or State Public Information Officer, as the case may be, on receipt of a request under section 6 shall, as expeditiously as possible, and in any case within thirty days of the receipt of the request, either provide the information on payment of such fee as may be prescribed or reject the request for any of the reasons specified in sections 8 and 9: Provided that where the information sought for concerns the life or liberty of a person, the same shall be provided within forty-eight hours of the receipt of the request.',
-            source_url: 'https://rti.gov.in/'
+            source_url: 'https://rti.gov.in/',
+            _retrieval_scores: {
+              dense_score: 0.912,
+              bm25_rank: 1,
+              rrf_rank: 1
+            }
           }
         ]
       }
@@ -198,7 +215,12 @@ export function simulateAiResponse(
           section: 'Section 4.1',
           jurisdiction: 'Central',
           excerpt: 'PM-JAY shall provide health insurance cover of Rs. 5 Lakhs per family per year for secondary and tertiary hospitalization to poor and vulnerable families.',
-          source_url: 'https://pmjay.gov.in/'
+          source_url: 'https://pmjay.gov.in/',
+          _retrieval_scores: {
+            dense_score: 0.884,
+            bm25_rank: 1,
+            rrf_rank: 1
+          }
         }
       ]
     };
@@ -214,7 +236,12 @@ export function simulateAiResponse(
           section: 'Section 7(1)',
           jurisdiction: 'Central',
           excerpt: '...expeditiously as possible, and in any case within thirty days of the receipt of the request: Provided that where the information sought for concerns the life or liberty of a person, the same shall be provided within forty-eight hours...',
-          source_url: 'https://rti.gov.in/'
+          source_url: 'https://rti.gov.in/',
+          _retrieval_scores: {
+            dense_score: 0.912,
+            bm25_rank: 1,
+            rrf_rank: 1
+          }
         }
       ]
     };
