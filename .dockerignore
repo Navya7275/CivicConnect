@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+data/indexing/artifacts/
+data/ingestion/raw_data/
+frontend/
+.DS_Store
