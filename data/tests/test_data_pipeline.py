@@ -31,7 +31,7 @@ from data.db.models import Chunk, Document, QueryLog
 from data.db.logger import log_query
 from data.ingestion.chunk import chunk_law_section, chunk_welfare_scheme
 from data.ingestion.load_seed import load_seed_data
-from data.ingestion.validate import run_data_quality_check
+from data.ingestion.validate import TEMPLATE_MARKERS, run_data_quality_check
 from data.indexing.build_index import build_indexes, tokenize_text, ARTIFACTS_DIR
 
 
@@ -97,7 +97,33 @@ class TestHarshDataPipeline(unittest.TestCase):
         self.assertEqual(chunks[0]["excerpt"], "Section 35: Manner in which complaint shall be made.")
 
     def test_05_index_building_and_retrieval(self):
-        """Verify FAISS and BM25 indexes build cleanly and preserve chunk_id mappings."""
+        """Verify FAISS and BM25 indexes build cleanly and preserve chunk_id mappings.
+
+        This test genuinely builds the index, which means loading the embedding
+        model. sentence-transformers downloads that model from huggingface.co on
+        first use and caches it, so on a machine that has never built the index
+        and has no access to huggingface.co, the download fails and this test
+        errored out with a raw ProxyError or ConnectionError.
+
+        That is an absent prerequisite, not a defect in the pipeline, and the
+        retrieval suite in backend/ already skips for the same reason rather
+        than failing. Match that: probe the model first and skip with an
+        actionable message if it cannot be loaded.
+        """
+        from sentence_transformers import SentenceTransformer
+
+        from data.indexing.build_index import DEFAULT_MODEL_NAME
+
+        try:
+            SentenceTransformer(DEFAULT_MODEL_NAME)
+        except Exception as exc:  # network, auth, corrupt cache — all the same here
+            self.skipTest(
+                f"embedding model {DEFAULT_MODEL_NAME!r} could not be loaded "
+                f"({type(exc).__name__}: {exc}). It downloads from huggingface.co on "
+                f"first use. Run `python -m data.indexing.build_index` once with "
+                f"network access to cache it, then this test will run."
+            )
+
         res = build_indexes()
         self.assertTrue(Path(res["faiss"]).exists())
         self.assertTrue(Path(res["bm25"]).exists())
@@ -145,17 +171,44 @@ class TestHarshDataPipeline(unittest.TestCase):
             db.close()
 
     def test_07_provenance_and_corpus_scale(self):
-        """Verify cryptographic provenance, anti-filler compliance, and authentic corpus loading."""
+        """Verify cryptographic provenance, anti-filler compliance, and authentic corpus loading.
+
+        Runs with verify_network=False. The default, verify_network=True, re-fetches
+        the source URL of every chunk to confirm the stored raw bytes still hash to
+        raw_sha256 -- 116 live HTTP requests to indiacode.gov.in from inside a unit
+        test. That made the suite fail whenever the site was slow, unreachable or
+        behind a proxy, which has nothing to do with whether our code is correct, and
+        it hammers a government website every time anyone runs pytest.
+
+        Everything that checks our own work still runs offline here: text_sha256
+        recomputed from the stored text, hashes present, extraction_method valid,
+        manual extractions carrying a reviewer name.
+
+        The network audit is still worth doing -- it is what would catch a source
+        being edited or withdrawn after we ingested it -- so run it deliberately
+        rather than incidentally:
+
+            python -m data.ingestion.verify_provenance
+
+        Issue #22 is open on exactly that audit: all 116 html chunks currently share
+        one raw_sha256 across 107 distinct URLs, which needs a human to confirm in a
+        browser.
+        """
         from data.ingestion.verify_provenance import run_provenance_verification
-        self.assertTrue(run_provenance_verification(), "Provenance verification script must pass cleanly.")
+
+        self.assertTrue(
+            run_provenance_verification(verify_network=False),
+            "Offline provenance verification must pass cleanly.",
+        )
 
         db = SessionLocal()
         try:
             total_chunks = db.query(Chunk).count()
             self.assertGreaterEqual(total_chunks, 147, "Database must contain at least 147 authentic clean statutory chunks.")
 
-            # Assert 0 filler template markers across all database chunks
-            TEMPLATE_MARKERS = ["Statutory provision regulating rights, duties", "Provision under this Act"]
+            # Imported, not redefined. This test used to carry its own copy with
+            # two of the four markers, so a chunk containing either of the other
+            # two would fail validation while passing here.
             for chunk in db.query(Chunk).all():
                 for marker in TEMPLATE_MARKERS:
                     self.assertNotIn(marker, chunk.text, f"Chunk {chunk.chunk_id} contains placeholder template filler.")
