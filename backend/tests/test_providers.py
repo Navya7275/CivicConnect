@@ -374,12 +374,35 @@ def test_citations_without_scores_report_none(real_components) -> None:
     assert body["citations"][0]["retrieval_scores"] is None
 
 
-def test_stub_citations_carry_no_scores() -> None:
-    """Phase C1 stubs have nothing to score, so the table stays hidden."""
+def test_stub_citations_carry_no_scores(monkeypatch) -> None:
+    """Phase C1 stubs have nothing to score, so the table stays hidden.
+
+    The stub path has to be forced. This test used to take no fixture at all,
+    which meant it tested whatever the machine happened to load: stubs on a
+    clone with no index built, the real hybrid retriever on a working install.
+    So it passed only where retrieval was broken and failed once the project
+    started working -- the assertion was backwards on exactly the installs we
+    care about.
+
+    Forcing the stub the way the rest of this file does makes it a real test of
+    the stub contract: no scores invented when nothing measured the chunk.
+    """
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.setattr(
+        providers, "load_retriever", lambda: (None, "unavailable: index artifacts missing")
+    )
+
     import backend.main as main_module
 
     with TestClient(main_module.app) as client:
         body = client.post("/query", json={"query": "The seller refused a refund"}).json()
 
+    # Guard the premise: if this ever loads real components the assertion below
+    # would pass for the wrong reason, and we would be back to a test that goes
+    # green when the pipeline breaks.
+    with TestClient(main_module.app) as client:
+        assert client.get("/health").json()["serving_real_answers"] is False
+
+    assert body["citations"], "the stub path should still return citations"
     for citation in body["citations"]:
         assert citation.get("retrieval_scores") is None
