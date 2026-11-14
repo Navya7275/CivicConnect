@@ -30,7 +30,12 @@ class SynthesisAgent:
 
         # Configurable so the model can be swapped without a code change, and
         # so the report can state which one produced the evaluation numbers.
-        self.model = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        # Groq retires model IDs on a schedule, and a retired ID turns every
+        # /query into a 500. llama-3.3-70b-versatile, the previous default here,
+        # was shut down on 2026-08-16. If synthesis starts failing with a 404
+        # saying `model_not_found`, this ID has been retired too — see the
+        # GROQ_MODEL block in .env.example for how to list what a key can serve.
+        self.model = model or os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
     def synthesize(self, query, retrieved_chunks):
         """
