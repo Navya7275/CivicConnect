@@ -276,6 +276,22 @@ def rewrite_query(text: str, intent: str, state: str | None) -> str:
     return rewritten
 
 
+# Central welfare schemes / national programmes that apply uniformly across all states.
+# Asking for a state when the user is specifically querying a central scheme causes false clarification requests.
+CENTRAL_SCHEME_KEYWORDS: tuple[str, ...] = (
+    "pm-kisan", "pm kisan", "kisan samman",
+    "pmjdy", "jan dhan", "jan-dhan",
+    "ayushman", "pm-jay", "pmjay", "jan arogya",
+    "pmuy", "ujjwala",
+    "pmmvy", "matru vandana",
+    "pmsvanidhi", "pm svanidhi", "svanidhi", "street vendor",
+    "stand up india", "standup india",
+    "pm-poshan", "pm poshan", "mid day meal", "mid-day meal",
+    "pm-vishwakarma", "pm vishwakarma", "vishwakarma",
+    "pmay", "pm awas", "awas yojana",
+)
+
+
 # --------------------------------------------------------------------------
 # The agent
 # --------------------------------------------------------------------------
@@ -302,7 +318,14 @@ class QueryUnderstandingAgent:
         mentioned_state = detect_state(query)
         resolved_state = supplied_state or mentioned_state
 
-        state_specific = intent in STATE_SPECIFIC_INTENTS
+        # Check if the query specifically refers to a nationwide central scheme
+        lowered = query.lower()
+        is_central_scheme = (
+            intent == "welfare" 
+            and any(_contains_word(lowered, kw) for kw in CENTRAL_SCHEME_KEYWORDS)
+        )
+
+        state_specific = intent in STATE_SPECIFIC_INTENTS and not is_central_scheme
         needs_clarification = state_specific and resolved_state is None
 
         if needs_clarification:
@@ -310,7 +333,7 @@ class QueryUnderstandingAgent:
             reason = _CLARIFICATION_REASONS.get(intent, "the rules differ between states")
             clarification = CLARIFICATION_TEMPLATE.format(reason=reason)
         else:
-            # With no state involved, we are looking at central law.
+            # With no state involved or a nationwide central scheme, we are looking at central law.
             jurisdiction = resolved_state or CENTRAL
             clarification = None
 
