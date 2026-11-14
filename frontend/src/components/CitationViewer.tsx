@@ -36,31 +36,34 @@ export default function CitationViewer({ citations, verified = false }: Citation
   };
 
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5 items-center">
-      <span className="text-[10px] font-mono uppercase tracking-wider text-mute/70 shrink-0">sources:</span>
+    <div className="mt-4 pt-2.5 border-t border-hairline/40 flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm leading-normal">
+      <span className="font-semibold text-ink text-body-sm shrink-0">Sources:</span>
       
       {citations.map((cit, idx) => {
-        // Compact label: e.g. "CPA 2019 • Sec 2" or "PM-JAY"
-        const compactAct = cit.act.length > 20 ? cit.act.slice(0, 18).trim() + '…' : cit.act;
-        const label = cit.section ? `${compactAct} • ${cit.section}` : compactAct;
+        const title = cit.section ? `${cit.act} (${cit.section})` : cit.act;
+        const isLast = idx === citations.length - 1;
 
         return (
-          <button 
-            key={citationKey(cit, idx)}
-            type="button"
-            onClick={() => setActiveCitation(cit)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-canvas-soft/80 hover:bg-canvas-soft border border-hairline/60 hover:border-hairline rounded text-[11px] font-mono text-mute hover:text-ink transition-colors outline-none focus-visible:ring-1 focus-visible:ring-primary shadow-xs"
-            aria-label={`View citation details from ${cit.act} ${cit.section}`}
-            title={`${cit.act} ${cit.section}`}
-          >
-            {/* Verified Check Icon */}
-            {verified && (
-              <svg className="w-2.5 h-2.5 text-accent-sunset shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+          <span key={citationKey(cit, idx)} className="inline-flex items-center">
+            <button
+              type="button"
+              onClick={() => setActiveCitation(cit)}
+              className="inline-flex items-center gap-1 text-ink/90 hover:text-ink underline decoration-hairline/80 hover:decoration-ink underline-offset-3 transition-colors text-body-sm cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
+              title={cit.excerpt || title}
+            >
+              <span>{title}</span>
+              <svg 
+                className="w-3.5 h-3.5 text-mute hover:text-ink shrink-0 -translate-y-0.5 inline-block" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 17L17 7M17 7H7M17 7V17" />
               </svg>
-            )}
-            <span className="truncate max-w-[180px]">{label}</span>
-          </button>
+            </button>
+            {!isLast && <span className="text-mute/60 mx-1 select-none font-bold">·</span>}
+          </span>
         );
       })}
 
