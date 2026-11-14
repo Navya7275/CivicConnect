@@ -127,7 +127,31 @@ The database contains **147 clean, verbatim statutory chunks** and **18 hand-cur
 
 ---
 
-## Future Production Data Updates (PLANNED)
+## Automated Weekly Synchronization Engine (`weekly_sync.py`)
+
+A fully automated, scheduled synchronization pipeline updates welfare schemes and statutory data on a recurring weekly basis without human intervention:
+
+- **Script:** `python -m data.ingestion.weekly_sync`
+- **Schedule:** Runs every Sunday at 02:00 AM UTC via `APScheduler` cron trigger.
+- **Workflow:**
+  1. **Robots Compliance:** Validates `robots.txt` compliance against government portals (`indiacode.gov.in`, `myscheme.gov.in`).
+  2. **Automated Ingestion:** Fetches schemes from MyScheme / regional portals, calculates SHA-256 provenance hashes, and upserts changes into the PostgreSQL/SQLite `chunks` and `documents` tables.
+  3. **Quality & Anti-Filler Audit:** Runs `data.ingestion.validate` to confirm 0 empty fields, 0 broken foreign keys, and 0 placeholder templates.
+  4. **Cryptographic Provenance Verification:** Verifies text and raw document SHA-256 integrity (`data.ingestion.verify_provenance`).
+  5. **Automated Index Rebuild:** Automatically recompiles FAISS dense vector embeddings and BM25 sparse index into `data/indexing/artifacts/` so the assistant immediately retrieves the newly updated schemes.
+
+### CLI Usage:
+```bash
+# Run weekly sync on-demand immediately:
+python -m data.ingestion.weekly_sync --run-now
+
+# Start background cron scheduler (executes every Sunday at 02:00 AM UTC):
+python -m data.ingestion.weekly_sync --schedule
+```
+
+---
+
+## Future Production Data Updates
 
 *This section describes the conceptual architecture for scaling data updates in production beyond initial development.*
 

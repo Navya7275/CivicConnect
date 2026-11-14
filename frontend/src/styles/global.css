@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
-
 @import "tailwindcss";
 
 @theme {
@@ -22,8 +20,9 @@
   --color-accent-breeze: #a0c3ec;
   --color-accent-midnight: #0d1726;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  /* Apple SF Pro Display / Text and SF Mono system typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
 
   --radius-sm: 8px;
   --radius-pill: 9999px;
@@ -32,6 +31,10 @@
 
 /* Global Reset & Base Styles */
 @layer base {
+  *, *::before, *::after {
+    font-family: var(--font-sans);
+  }
+
   html, body {
     background-color: var(--color-canvas);
     color: var(--color-body);
@@ -40,6 +43,13 @@
     padding: 0;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  code, pre, kbd, samp {
+    font-family: var(--font-mono);
   }
 
   h1, h2, h3, h4, h5, h6 {

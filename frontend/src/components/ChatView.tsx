@@ -1,8 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import type { Conversation, Message, MessageStatus } from '../services/api';
 import Composer from './Composer';
 import CitationViewer from './CitationViewer';
 import FeedbackModal from './FeedbackModal';
+
+// Configure marked with GitHub-flavored markdown and breaks
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+});
+
+/**
+ * Pre-process model markdown text to fix common AI run-together inline list artifacts
+ * like "1. Item: - **Sub** text - **Sub2** text" by expanding them into proper lines.
+ */
+function normalizeMarkdown(content: string): string {
+  if (!content) return '';
+  return content
+    // Replace inline " - **" with newlines when preceded by text or other bullets
+    .replace(/([^\n])\s+-\s+\*\*/g, '$1\n- **')
+    // Replace inline " - " bullets with newlines
+    .replace(/([^\n])\s+-\s+([A-Za-z])/g, '$1\n- $2')
+    // Ensure headings have newlines before them
+    .replace(/([^\n])\s*(###\s+)/g, '$1\n\n$2');
+}
+
+function renderFormattedMessage(rawContent: string): string {
+  const normalized = normalizeMarkdown(rawContent);
+  const rawHtml = marked.parse(normalized, { async: false }) as string;
+  return DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true },
+  });
+}
 
 interface ChatViewProps {
   conversation: Conversation | null;
@@ -164,33 +195,18 @@ export default function ChatView({
                     </div>
                   )}
 
-                  {/* Markdown summaries rendered cleanly */}
-                  <div className="prose prose-invert max-w-none text-body-sm space-y-4">
-                    {msg.content.split('\n\n').map((paragraph, pIdx) => {
-                      if (paragraph.startsWith('###')) {
-                        return <h3 key={pIdx} className="text-body-md text-ink font-semibold mt-4 mb-2">{paragraph.replace('###', '').trim()}</h3>;
-                      }
-                      if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
-                        return (
-                          <ul key={pIdx} className="list-disc pl-5 space-y-1.5 my-2">
-                            {paragraph.split('\n').map((li, liIdx) => (
-                              <li key={liIdx}>{li.replace(/^[\-\*]\s+/, '')}</li>
-                            ))}
-                          </ul>
-                        );
-                      }
-                      if (paragraph.startsWith('1. ') || paragraph.startsWith('2. ') || paragraph.startsWith('3. ')) {
-                        return (
-                          <ol key={pIdx} className="list-decimal pl-5 space-y-1.5 my-2">
-                            {paragraph.split('\n').map((li, liIdx) => (
-                              <li key={liIdx}>{li.replace(/^\d+\.\s+/, '')}</li>
-                            ))}
-                          </ol>
-                        );
-                      }
-                      return <p key={pIdx} className="whitespace-pre-wrap">{paragraph}</p>;
-                    })}
-                  </div>
+                  {/* Formatted Markdown answer with rich lists, bold tags, and headers */}
+                  <div
+                    className="prose prose-invert max-w-none text-body-sm leading-relaxed text-ink/90
+                      [&>h3]:text-body-md [&>h3]:font-semibold [&>h3]:text-ink [&>h3]:mt-4 [&>h3]:mb-2
+                      [&>h4]:text-body-sm [&>h4]:font-semibold [&>h4]:text-ink [&>h4]:mt-3 [&>h4]:mb-1.5
+                      [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1.5 [&>ul]:my-2.5
+                      [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2 [&>ol]:my-2.5
+                      [&_li]:text-ink/90 [&_li::marker]:text-accent-sunset
+                      [&_strong]:font-semibold [&_strong]:text-ink
+                      [&>p]:my-2.5 [&>p]:leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: renderFormattedMessage(msg.content) }}
+                  />
 
                   {/* Clarification prompt: the backend needs the user's state
                       before it can answer safely, so there are no citations to
