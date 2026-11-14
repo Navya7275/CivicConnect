@@ -30,7 +30,7 @@ class SynthesisAgent:
 
         # Configurable so the model can be swapped without a code change, and
         # so the report can state which one produced the evaluation numbers.
-        self.model = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        self.model = model or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
     def synthesize(self, query, retrieved_chunks):
         """
