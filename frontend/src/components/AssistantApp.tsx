@@ -243,7 +243,7 @@ export default function AssistantApp() {
           </div>
 
           {/* Active Jurisdiction Selector widget */}
-          <div className="flex-grow max-w-lg md:max-w-xl mx-auto md:mx-0">
+          <div className="flex-grow max-w-2xl mx-auto md:mx-0">
             <JurisdictionSelector 
               jurisdiction={jurisdiction}
               stateName={stateName}
