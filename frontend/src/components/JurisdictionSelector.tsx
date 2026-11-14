@@ -63,13 +63,13 @@ export default function JurisdictionSelector({
               id="state-select"
               value={stateName || 'Madhya Pradesh'} 
               onChange={handleStateChange}
-              className="appearance-none bg-canvas-soft border border-hairline hover:border-hairline/80 rounded-sm pl-3 pr-8 py-1.5 text-body-sm text-ink focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
+              className="appearance-none bg-canvas-soft border border-hairline hover:border-hairline/80 rounded-sm pl-3.5 pr-10 py-1.5 min-w-[170px] text-body-sm text-ink focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
             >
               {INDIAN_STATES.map(st => (
                 <option key={st} value={st} className="bg-canvas-card text-ink">{st}</option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-mute">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-mute">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
