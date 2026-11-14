@@ -334,5 +334,6 @@
     "scheme-p18-1": 164
   },
   "total_chunks": 165,
-  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "tokenizer_version": 2
 }

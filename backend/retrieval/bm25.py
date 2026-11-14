@@ -53,6 +53,25 @@ class BM25Retriever:
         with open(CHUNK_IDS_PATH, "r", encoding="utf-8") as file:
             mapping = json.load(file)
 
+        # The BM25 index stores documents already tokenized, so it is only
+        # valid for the tokenizer that built it. Querying a v1 index with the
+        # v2 tokenizer does not raise anything on its own -- it just stops
+        # matching, because one side has "request." and the other has
+        # "request". Retrieval quietly gets worse and every test still passes.
+        # Refuse to load instead, and say exactly what to run.
+        from data.indexing.build_index import TOKENIZER_VERSION
+
+        index_tokenizer = mapping.get("tokenizer_version")
+        if index_tokenizer != TOKENIZER_VERSION:
+            raise RuntimeError(
+                f"BM25 index was built with tokenizer version "
+                f"{index_tokenizer if index_tokenizer is not None else '1 (unversioned)'}, "
+                f"but this code uses version {TOKENIZER_VERSION}. The stored "
+                f"tokens no longer match the ones queries produce, so keyword "
+                f"search would silently return the wrong results.\n"
+                f"Rebuild the index:  python -m data.indexing.build_index"
+            )
+
         self.index_to_chunk_id = {
             int(index): chunk_id
             for index, chunk_id
@@ -68,11 +87,18 @@ class BM25Retriever:
             its BM25 score.
         """
 
-        query_tokens = [
-            token.lower()
-            for token in query.split()
-            if token.strip()
-        ]
+        # Use the same tokenizer the index was built with. BM25 matches tokens
+        # literally, so the query side and the document side have to agree
+        # exactly -- "request." and "request?" and "request" are three
+        # different terms as far as it is concerned.
+        #
+        # This used to be a second, inlined copy of the tokenizer logic
+        # (`query.split()`), independent of build_index.tokenize_text. The two
+        # agreed only by coincidence, with nothing keeping them in step, so
+        # changing one silently broke matching without failing anything.
+        from data.indexing.build_index import tokenize_text
+
+        query_tokens = tokenize_text(query)
 
         scores = self.bm25.get_scores(query_tokens)
 

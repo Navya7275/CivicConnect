@@ -111,3 +111,118 @@ def test_limit_is_respected_after_skipping_unavailable_chunks():
 
     assert len(results) == 1
     assert results[0]["chunk_id"] == subset[0]["chunk_id"]
+
+
+# --------------------------------------------------------------------------
+# Tokenizer agreement between the index and the query
+#
+# BM25 matches tokens literally, so the documents and the query must be
+# tokenized identically. These guard the bug where they were not: the query
+# path had its own inlined copy of the tokenizer, so "request?" in a question
+# never matched "request." in a statute, and the provision that answered the
+# question ranked 54th instead of 2nd.
+# --------------------------------------------------------------------------
+
+import json
+from pathlib import Path
+
+import pytest
+
+from data.indexing.build_index import TOKENIZER_VERSION, tokenize_text
+
+ARTIFACTS = Path(__file__).resolve().parents[2] / "data" / "indexing" / "artifacts"
+
+
+def test_tokenizer_strips_punctuation() -> None:
+    """Punctuation must never stay glued to a word."""
+    assert tokenize_text("an RTI request?") == ["an", "rti", "request"]
+    assert tokenize_text("receipt of request.") == ["receipt", "of", "request"]
+    assert tokenize_text("Section 7, sub-section (1)") == [
+        "section", "7", "sub", "section", "1",
+    ]
+
+
+def test_query_and_document_tokenizers_are_the_same_function() -> None:
+    """The query path must not carry its own copy of the tokenizer.
+
+    The two drifted apart once already. This asserts the shared function is
+    what actually runs on a query, so a second implementation reappearing is a
+    failing test rather than a silent retrieval regression.
+    """
+    import inspect
+
+    from backend.retrieval import bm25 as bm25_module
+
+    source = inspect.getsource(bm25_module.BM25Retriever.search)
+    # Strip comments, so the prose explaining the old bug does not trip this.
+    code = "\n".join(
+        line.split("#", 1)[0] for line in source.splitlines()
+    )
+
+    assert "tokenize_text(query)" in code, "search() must use the shared tokenizer"
+    assert ".split()" not in code, "search() has its own tokenizer again"
+
+
+@pytest.mark.skipif(
+    not (ARTIFACTS / "bm25.pkl").exists() or not (ARTIFACTS / "chunk_ids.json").exists(),
+    reason="index artifacts missing; run `python -m data.indexing.build_index` first",
+)
+def test_index_records_the_tokenizer_it_was_built_with() -> None:
+    """A stale index must be detectable, not silently wrong."""
+    mapping = json.loads((ARTIFACTS / "chunk_ids.json").read_text(encoding="utf-8"))
+    assert mapping.get("tokenizer_version") == TOKENIZER_VERSION, (
+        "index tokenizer_version does not match the code; "
+        "run `python -m data.indexing.build_index`"
+    )
+
+
+@pytest.mark.skipif(
+    not (ARTIFACTS / "bm25.pkl").exists() or not (ARTIFACTS / "chunk_ids.json").exists(),
+    reason="index artifacts missing; run `python -m data.indexing.build_index` first",
+)
+def test_rti_response_time_question_retrieves_section_7() -> None:
+    """Regression: the question that exposed the tokenizer bug.
+
+    "How long does a public authority have to respond to an RTI request?" is
+    answered by RTI Act Section 7, which says "within thirty days of receipt of
+    request". With punctuation glued to tokens it ranked 54th, far outside any
+    candidate limit, so synthesis correctly answered that it did not have the
+    provision -- a right answer to the wrong retrieval.
+    """
+    from data.db.database import SessionLocal
+    from data.db.models import Chunk
+
+    db = SessionLocal()
+    try:
+        chunks = [
+            {
+                "chunk_id": c.chunk_id,
+                "text": c.text,
+                "act": c.act,
+                "section": c.section,
+                "jurisdiction": c.jurisdiction,
+                "source_url": c.source_url,
+            }
+            for c in db.query(Chunk).all()
+        ]
+    finally:
+        db.close()
+
+    if not chunks:
+        pytest.skip("database is empty; run `python -m data.ingestion.load_seed` first")
+
+    retriever = BM25Retriever(chunks)
+    results = retriever.search(
+        "How long does a public authority have to respond to an RTI request?",
+        limit=8,
+    )
+
+    found = [
+        r.get("chunk", r) for r in results
+        if (r.get("chunk", r)).get("section") == "Section 7"
+        and "Right to Information" in str((r.get("chunk", r)).get("act"))
+    ]
+    assert found, (
+        "RTI Act Section 7 is not in the top 8 for the question it answers. "
+        "The query and document tokenizers have probably diverged again."
+    )

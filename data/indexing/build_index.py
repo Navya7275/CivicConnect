@@ -12,6 +12,7 @@ Features:
 import json
 import os
 import pickle
+import re
 import sys
 from pathlib import Path
 from typing import Dict, List
@@ -33,9 +34,43 @@ ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
 
+# Incremented whenever tokenize_text changes behaviour. Written into
+# chunk_ids.json at build time and checked when the BM25 index is loaded, so a
+# tokenizer change cannot silently mismatch an index built by the old one.
+#   1 = text.split(), punctuation left attached to words
+#   2 = alphanumeric runs, punctuation stripped
+TOKENIZER_VERSION = 2
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
 def tokenize_text(text: str) -> List[str]:
-    """Tokenize text for BM25 indexing (lowercased alphanumeric tokens)."""
-    return [token.lower() for token in text.split() if token.strip()]
+    """Tokenize text for BM25 indexing (lowercased alphanumeric tokens).
+
+    Splits on anything that is not a letter or digit, so punctuation never ends
+    up glued to a word. This function is used for both the documents and the
+    query, so the two sides have to agree -- a token only matches if it is
+    produced identically on both.
+
+    It previously did `text.split()`, which splits on whitespace alone and
+    keeps punctuation attached. That silently broke keyword matching for any
+    word next to punctuation, which in practice is every sentence-final word in
+    a statute and every word before a question mark in a query:
+
+        document "...receipt of request."  ->  "request."
+        query    "...an RTI request?"      ->  "request?"
+
+    Neither matches the other, nor the bare "request". For the question "How
+    long does a public authority have to respond to an RTI request?", the RTI
+    Act Section 7 chunk -- which is exactly the provision that answers it, and
+    contains "request" twice -- ranked 54th. With punctuation stripped it ranks
+    1st.
+
+    Note that stopwords are deliberately NOT removed. BM25 already down-weights
+    common terms through IDF, and in statutory text the small words carry real
+    meaning: "not", "shall", "may" and "within" change what a provision does.
+    """
+    return _TOKEN_RE.findall(text.lower())
 
 
 def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:
@@ -89,6 +124,13 @@ def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:
             "chunk_id_to_index": {cid: idx for idx, cid in enumerate(chunk_ids)},
             "total_chunks": len(chunk_ids),
             "embedding_model": model_name,
+            # Bump TOKENIZER_VERSION whenever tokenize_text changes. The BM25
+            # index stores documents already tokenized, so an index built by an
+            # older tokenizer cannot be queried by a newer one: the two sides
+            # produce different tokens for the same word and matching silently
+            # degrades. The loader refuses to use an index whose version does
+            # not match, which turns that into a clear error.
+            "tokenizer_version": TOKENIZER_VERSION,
         }
 
         with open(mapping_file, "w", encoding="utf-8") as f:
