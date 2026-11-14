@@ -8,10 +8,17 @@
  * Note that `verified` is NOT here: the verification agent checks the whole
  * answer and returns one verdict per response, so it lives on Message.
  */
+/**
+ * Per-retriever scores for the chunk behind a citation.
+ *
+ * Field names match the backend's RetrievalScores model exactly (see
+ * backend/api/schemas.py). All three are scores, not ranks — the backend has
+ * no rank to give, and the fused rank is simply the order citations arrive in.
+ */
 export interface RetrievalScores {
-  dense_score?: number;
-  bm25_rank?: number;
-  rrf_rank?: number;
+  dense?: number;   // cosine similarity from the FAISS index
+  bm25?: number;    // BM25 relevance score
+  rrf?: number;     // fused Reciprocal Rank Fusion score
 }
 
 export interface Citation {
@@ -21,7 +28,7 @@ export interface Citation {
   source_url: string;
   chunk_id?: string;      // optional — supplied by the retrieval layer
   excerpt?: string;       // optional — the exact quoted text, when available
-  _retrieval_scores?: RetrievalScores;
+  retrieval_scores?: RetrievalScores;
 }
 
 export type MessageStatus =

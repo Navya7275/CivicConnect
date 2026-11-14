@@ -28,10 +28,10 @@ export const mockConversations: Conversation[] = [
             jurisdiction: 'Central',
             excerpt: 'The target beneficiaries under PM-JAY are identified based on select deprivation criteria in rural areas and occupational criteria in urban areas as per the Socio-Economic Caste Census (SECC) database.',
             source_url: 'https://pmjay.gov.in/',
-            _retrieval_scores: {
-              dense_score: 0.884,
-              bm25_rank: 1,
-              rrf_rank: 1
+            retrieval_scores: {
+              dense: 0.884,
+              bm25: 7.412,
+              rrf: 0.03279
             }
           },
           {
@@ -40,10 +40,10 @@ export const mockConversations: Conversation[] = [
             jurisdiction: 'Central',
             excerpt: 'The Central Government or State Government may require that an individual undergo authentication or furnish proof of possession of Aadhaar number as a condition for receiving subsidy, benefit or service.',
             source_url: 'https://uidai.gov.in/',
-            _retrieval_scores: {
-              dense_score: 0.792,
-              bm25_rank: 3,
-              rrf_rank: 2
+            retrieval_scores: {
+              dense: 0.792,
+              bm25: 4.108,
+              rrf: 0.03227
             }
           }
         ],
@@ -78,10 +78,10 @@ export const mockConversations: Conversation[] = [
             jurisdiction: 'Central',
             excerpt: 'Subject to the proviso to sub-section (2) of section 5 or the proviso to sub-section (3) of section 6, the Central Public Information Officer or State Public Information Officer, as the case may be, on receipt of a request under section 6 shall, as expeditiously as possible, and in any case within thirty days of the receipt of the request, either provide the information on payment of such fee as may be prescribed or reject the request for any of the reasons specified in sections 8 and 9: Provided that where the information sought for concerns the life or liberty of a person, the same shall be provided within forty-eight hours of the receipt of the request.',
             source_url: 'https://rti.gov.in/',
-            _retrieval_scores: {
-              dense_score: 0.912,
-              bm25_rank: 1,
-              rrf_rank: 1
+            retrieval_scores: {
+              dense: 0.912,
+              bm25: 8.330,
+              rrf: 0.03279
             }
           }
         ]
@@ -216,10 +216,10 @@ export function simulateAiResponse(
           jurisdiction: 'Central',
           excerpt: 'PM-JAY shall provide health insurance cover of Rs. 5 Lakhs per family per year for secondary and tertiary hospitalization to poor and vulnerable families.',
           source_url: 'https://pmjay.gov.in/',
-          _retrieval_scores: {
-            dense_score: 0.884,
-            bm25_rank: 1,
-            rrf_rank: 1
+          retrieval_scores: {
+            dense: 0.884,
+            bm25: 7.412,
+            rrf: 0.03279
           }
         }
       ]
@@ -237,10 +237,10 @@ export function simulateAiResponse(
           jurisdiction: 'Central',
           excerpt: '...expeditiously as possible, and in any case within thirty days of the receipt of the request: Provided that where the information sought for concerns the life or liberty of a person, the same shall be provided within forty-eight hours...',
           source_url: 'https://rti.gov.in/',
-          _retrieval_scores: {
-            dense_score: 0.912,
-            bm25_rank: 1,
-            rrf_rank: 1
+          retrieval_scores: {
+            dense: 0.912,
+            bm25: 8.330,
+            rrf: 0.03279
           }
         }
       ]

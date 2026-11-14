@@ -215,7 +215,7 @@ export default function ChatView({
                   )}
 
                   {/* Hybrid Retrieval Breakdown Table (Dense Score, BM25 Rank, Fused RRF Rank) */}
-                  {msg.role === 'assistant' && msg.citations && msg.citations.some(c => c._retrieval_scores) && (
+                  {msg.role === 'assistant' && msg.citations && msg.citations.some(c => c.retrieval_scores) && (
                     <details className="mt-4 pt-3 border-t border-hairline/60 group">
                       <summary className="cursor-pointer text-caption-mono-sm text-mute hover:text-ink transition-colors flex items-center gap-1.5 select-none">
                         <span className="group-open:rotate-90 transition-transform duration-150 inline-block text-[10px]">▶</span>
@@ -225,24 +225,28 @@ export default function ChatView({
                         <table className="w-full text-left text-xs font-mono text-mute/80 border border-hairline/60 rounded">
                           <thead className="bg-canvas-soft text-[10px] uppercase tracking-wider text-mute border-b border-hairline/60">
                             <tr>
+                              <th className="py-1.5 px-3">Rank</th>
                               <th className="py-1.5 px-3">Source Chunk</th>
                               <th className="py-1.5 px-3">Dense Score</th>
-                              <th className="py-1.5 px-3">BM25 Rank</th>
-                              <th className="py-1.5 px-3">Fused RRF Rank</th>
+                              <th className="py-1.5 px-3">BM25 Score</th>
+                              <th className="py-1.5 px-3">Fused RRF Score</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-hairline/40 text-[11px]">
                             {msg.citations.map((c, idx) => (
                               <tr key={idx} className="hover:bg-canvas-soft/50">
+                                {/* Citations arrive already fused-ranked, so the
+                                    row position IS the fused rank. */}
+                                <td className="py-1.5 px-3 text-mute">#{idx + 1}</td>
                                 <td className="py-1.5 px-3 text-ink">{c.act} {c.section}</td>
                                 <td className="py-1.5 px-3">
-                                  {c._retrieval_scores?.dense_score !== undefined ? c._retrieval_scores.dense_score.toFixed(3) : '—'}
+                                  {c.retrieval_scores?.dense !== undefined ? c.retrieval_scores.dense.toFixed(3) : '—'}
                                 </td>
                                 <td className="py-1.5 px-3">
-                                  {c._retrieval_scores?.bm25_rank !== undefined ? `#${c._retrieval_scores.bm25_rank}` : '—'}
+                                  {c.retrieval_scores?.bm25 !== undefined ? c.retrieval_scores.bm25.toFixed(3) : '—'}
                                 </td>
                                 <td className="py-1.5 px-3 text-accent-sunset font-semibold">
-                                  {c._retrieval_scores?.rrf_rank !== undefined ? `#${c._retrieval_scores.rrf_rank}` : `#${idx + 1}`}
+                                  {c.retrieval_scores?.rrf !== undefined ? c.retrieval_scores.rrf.toFixed(5) : '—'}
                                 </td>
                               </tr>
                             ))}
