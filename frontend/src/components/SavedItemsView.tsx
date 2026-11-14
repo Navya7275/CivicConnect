@@ -1,4 +1,3 @@
-import React from 'react';
 import type { WelfareScheme, LegalAct } from '../services/api';
 
 interface SavedItemsViewProps {

@@ -11,3 +11,17 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Local database fallback (DATABASE_URL defaults to SQLite)
+*.db
+*.sqlite
+
+# Generated index artifacts and cached downloads
+data/indexing/artifacts/
+data/ingestion/raw_data/
+
+# Agent skills and customizations
+.gemini/
+skills/
+.skills/
+unslop/

@@ -34,8 +34,10 @@ Every part is tagged with its owner. This is the full scope of what "done" looks
 - Scrape / collect sources: India Code, MyScheme, Dept. of Consumer Affairs
 - Chunk documents preserving `Act → Chapter → Section` hierarchy
 - Attach metadata to every chunk: jurisdiction, act, section, effective date, source URL
-- Postgres schema: `documents`, `chunks`, `query_logs`
-- Build the vector index (FAISS/Chroma) and the BM25 index
+- Postgres schema: `documents`, `chunks`, `query_logs` (implemented via SQLAlchemy 2.x in `data/db/models.py`)
+- Build the vector index (FAISS) and the BM25 index (implemented in `data/indexing/build_index.py`)
+- Loaded 147 verbatim statutory chunks: Consumer Protection Act, 2019 (116) and RTI Act, 2005 (31), plus 3 hand-curated welfare schemes (PMJDY, PM-KISAN, Ladli Laxmi Yojana)
+- Saved query logging support utility (`data/db/logger.py`)
 
 **Retrieval Layer — `[Ayushi]`**
 - Dense retriever (sentence-transformers)

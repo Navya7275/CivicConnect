@@ -14,13 +14,23 @@ class SynthesisAgent:
 
     def __init__(
         self,
-        model="openai/gpt-oss-20b"
+        model=None
     ):
-        self.client = Groq(
-            api_key=os.getenv("GROQ_API_KEY")
-        )
+        api_key = os.getenv("GROQ_API_KEY")
 
-        self.model = model
+        # Check this ourselves rather than letting the Groq client fail deep
+        # inside its own stack, so the message says what to do about it.
+        if not api_key:
+            raise RuntimeError(
+                "GROQ_API_KEY is not set. Copy .env.example to .env and add a "
+                "key from https://console.groq.com"
+            )
+
+        self.client = Groq(api_key=api_key)
+
+        # Configurable so the model can be swapped without a code change, and
+        # so the report can state which one produced the evaluation numbers.
+        self.model = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     def synthesize(self, query, retrieved_chunks):
         """
@@ -30,7 +40,7 @@ class SynthesisAgent:
         if not retrieved_chunks:
             return {
                 "answer": "The available sources do not contain enough information to answer this question.",
-                "sources": []
+                "citations": []
             }
 
         context = "\n\n".join(
@@ -78,17 +88,23 @@ Mention the relevant Act and Section when available.
 
         answer = response.choices[0].message.content
 
-        sources = [
+        citations = [
             {
                 "chunk_id": chunk["chunk_id"],
                 "act": chunk["act"],
                 "section": chunk["section"],
-                "source_url": chunk["source_url"]
+                "jurisdiction": chunk["jurisdiction"],
+                "source_url": chunk["source_url"],
+                # Carry the retriever diagnostics through. The hybrid retriever
+                # attaches these; without them the API cannot show how a source
+                # was found, and the Phase E comparison has nothing to measure.
+                "_retrieval_scores": chunk.get("_retrieval_scores"),
+                "_rrf_score": chunk.get("_rrf_score"),
             }
             for chunk in retrieved_chunks
         ]
 
         return {
             "answer": answer,
-            "sources": sources
+            "citations": citations
         }

@@ -90,6 +90,11 @@ The whole flow is orchestrated as a **LangGraph** state machine.
 
 Vectors live in the **vector index** (FAISS/Chroma); metadata and logs live in **Postgres**.
 
+> **Implementation Status (Harsh):**
+> - PostgreSQL schema (`documents`, `chunks`, `query_logs`) is fully implemented (`data/db/models.py`, `database.py`).
+> - Pilot dataset loaded: 25 statutory sections (Consumer Protection Act, 2019) and 3 welfare schemes (PMJDY, PM-KISAN, Ladli Laxmi Yojana).
+> - FAISS (`IndexFlatIP` on 384-dim `all-MiniLM-L6-v2` embeddings) and BM25 (`rank_bm25`) indexes built from database chunks with bidirectional `chunk_id` mappings stored in `data/indexing/artifacts/chunk_ids.json`.
+
 ---
 
 ## 5. API contract

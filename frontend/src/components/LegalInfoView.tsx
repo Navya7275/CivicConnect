@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from 'react';
+import { useState, useTransition, type ChangeEvent } from 'react';
 import { mockLegalActs } from '../services/mockData';
 import type { LegalAct, LegalSection } from '../services/api';
 
@@ -16,7 +16,7 @@ export default function LegalInfoView({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAct, setSelectedAct] = useState<LegalAct | null>(null);
   const [activeSection, setActiveSection] = useState<LegalSection | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const filteredActs = mockLegalActs.filter(a => 
     searchQuery.trim() === '' ||
@@ -24,7 +24,7 @@ export default function LegalInfoView({
     a.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     startTransition(() => {
       setSearchQuery(val);
