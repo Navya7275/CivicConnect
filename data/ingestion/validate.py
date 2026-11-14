@@ -23,6 +23,25 @@ from data.db.database import SessionLocal
 from data.db.models import Chunk, Document
 
 
+# Phrases that only ever appear in generated placeholder text, never in real
+# statute. Any chunk containing one is rejected outright.
+#
+# Each of these got into the corpus at some point and had to be removed again,
+# so they stay here permanently as a tripwire. If a future ingestion run
+# produces filler, this is what catches it.
+#
+# Module level, not local to run_data_quality_check, so the test suite asserts
+# against this same list rather than its own copy. The test used to duplicate
+# two of the four, which meant a chunk carrying either of the other two would
+# fail validation but pass the tests.
+TEMPLATE_MARKERS = [
+    "Statutory provision regulating rights, duties",
+    "Provision under this Act",
+    "applies to all specified entities and citizens",
+    "Definitions and interpretation clause under",
+]
+
+
 def run_data_quality_check() -> bool:
     """Perform comprehensive data quality audit on chunks table."""
     db = SessionLocal()
@@ -50,19 +69,6 @@ def run_data_quality_check() -> bool:
         missing_manual_reviewer = 0
         template_text_errors = 0
         invalid_provenance_errors = 0
-
-        # Phrases that only ever appear in generated placeholder text, never in
-        # real statute. Any chunk containing one is rejected outright.
-        #
-        # Each of these got into the corpus at some point and had to be removed
-        # again, so they stay here permanently as a tripwire. If a future
-        # ingestion run produces filler, this is what catches it.
-        TEMPLATE_MARKERS = [
-            "Statutory provision regulating rights, duties",
-            "Provision under this Act",
-            "applies to all specified entities and citizens",
-            "Definitions and interpretation clause under",
-        ]
 
         for c in chunks:
             if not c.text or not c.text.strip():
