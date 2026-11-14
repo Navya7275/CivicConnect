@@ -14,13 +14,27 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, field_validator
 
 
+class RetrievalScores(BaseModel):
+    """How each retriever scored the chunk behind a citation.
+
+    These exist to make hybrid retrieval inspectable rather than a claim: the
+    UI shows them per citation, and Phase E uses them to compare dense-only
+    against hybrid. All optional — a citation from a non-hybrid path (or the
+    Phase C1 stub) simply has none.
+    """
+
+    dense: float | None = Field(None, description="Cosine similarity from the FAISS index")
+    bm25: float | None = Field(None, description="BM25 relevance score")
+    rrf: float | None = Field(None, description="Fused Reciprocal Rank Fusion score")
+
+
 class Citation(BaseModel):
     """One statutory source backing part of an answer.
 
-    The first four fields are the agreed contract. `chunk_id` and `excerpt`
-    are optional extras: the retrieval layer may supply them, and the
-    verification agent uses `chunk_id` to check groundedness, but the frontend
-    must not depend on them being present.
+    The first four fields are the agreed contract. `chunk_id`, `excerpt` and
+    `retrieval_scores` are optional extras: the retrieval layer may supply
+    them, and the verification agent uses `chunk_id` to check groundedness,
+    but the frontend must not depend on them being present.
     """
 
     act: str = Field(..., description="Name of the Act or scheme, e.g. 'Consumer Protection Act, 2019'")
@@ -30,6 +44,9 @@ class Citation(BaseModel):
 
     chunk_id: str | None = Field(None, description="Internal chunk identifier, used for verification")
     excerpt: str | None = Field(None, description="The exact quoted text this citation refers to")
+    retrieval_scores: RetrievalScores | None = Field(
+        None, description="Per-retriever scores, when the hybrid retriever supplied them"
+    )
 
 
 class QueryRequest(BaseModel):

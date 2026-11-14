@@ -285,3 +285,101 @@ def test_a_logging_failure_does_not_break_the_response(real_components, monkeypa
 
     assert response.status_code == 200, "a query-logging failure must not fail the request"
     assert "District Commission" in response.json()["answer"]
+
+
+# --------------------------------------------------------------------------
+# Retrieval score passthrough (issue #12's hybrid breakdown table)
+# --------------------------------------------------------------------------
+
+class ScoringSynthesizer:
+    """Mimics the real agent: carries the retriever diagnostics into citations."""
+
+    def synthesize(self, query: str, retrieved_chunks):
+        return {
+            "answer": "You may file a complaint with the District Commission.",
+            "citations": [
+                {
+                    "act": c["act"],
+                    "section": c["section"],
+                    "jurisdiction": c["jurisdiction"],
+                    "source_url": c["source_url"],
+                    "chunk_id": c["chunk_id"],
+                    "_retrieval_scores": c.get("_retrieval_scores"),
+                    "_rrf_score": c.get("_rrf_score"),
+                }
+                for c in retrieved_chunks
+            ],
+        }
+
+
+class ScoringRetriever:
+    """Returns a chunk tagged the way the hybrid retriever tags them."""
+
+    def search(self, query: str, filters=None, limit: int = 5):
+        return [
+            {
+                **REAL_CHUNK,
+                "_retrieval_scores": {"dense": 0.884, "bm25": 7.412},
+                "_rrf_score": 0.03279,
+                "_retriever": "dense",
+            }
+        ]
+
+
+@pytest.fixture
+def scoring_components(monkeypatch):
+    retrieval_mod = types.ModuleType("backend.retrieval.hybrid_search")
+    retrieval_mod.HybridRetriever = ScoringRetriever
+    monkeypatch.setitem(sys.modules, "backend.retrieval.hybrid_search", retrieval_mod)
+
+    synthesis_mod = types.ModuleType("backend.agents.synthesis")
+    synthesis_mod.SynthesisAgent = ScoringSynthesizer
+    monkeypatch.setitem(sys.modules, "backend.agents.synthesis", synthesis_mod)
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key-not-a-real-one")
+
+
+def test_retrieval_scores_reach_the_api_response(scoring_components) -> None:
+    """The scores must survive synthesis, the schema and the route.
+
+    They used to be dropped at every one of those three steps, which meant the
+    UI's hybrid breakdown table could never render -- it gated on a field the
+    backend never sent. This asserts the whole path, not just one hop.
+    """
+    import backend.main as main_module
+
+    with TestClient(main_module.app) as client:
+        body = client.post("/query", json={"query": "The seller refused a refund"}).json()
+
+    citation = body["citations"][0]
+    assert "retrieval_scores" in citation, "scores were dropped before the response"
+
+    scores = citation["retrieval_scores"]
+    assert scores["dense"] == pytest.approx(0.884)
+    assert scores["bm25"] == pytest.approx(7.412)
+    assert scores["rrf"] == pytest.approx(0.03279)
+
+
+def test_citations_without_scores_report_none(real_components) -> None:
+    """A citation from a non-hybrid path must not invent scores.
+
+    The frontend gates its table on this field, so it has to be absent rather
+    than zero-filled when nothing measured the chunk.
+    """
+    import backend.main as main_module
+
+    with TestClient(main_module.app) as client:
+        body = client.post("/query", json={"query": "The seller refused a refund"}).json()
+
+    assert body["citations"][0]["retrieval_scores"] is None
+
+
+def test_stub_citations_carry_no_scores() -> None:
+    """Phase C1 stubs have nothing to score, so the table stays hidden."""
+    import backend.main as main_module
+
+    with TestClient(main_module.app) as client:
+        body = client.post("/query", json={"query": "The seller refused a refund"}).json()
+
+    for citation in body["citations"]:
+        assert citation.get("retrieval_scores") is None

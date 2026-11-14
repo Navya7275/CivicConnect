@@ -94,7 +94,12 @@ Mention the relevant Act and Section when available.
                 "act": chunk["act"],
                 "section": chunk["section"],
                 "jurisdiction": chunk["jurisdiction"],
-                "source_url": chunk["source_url"]
+                "source_url": chunk["source_url"],
+                # Carry the retriever diagnostics through. The hybrid retriever
+                # attaches these; without them the API cannot show how a source
+                # was found, and the Phase E comparison has nothing to measure.
+                "_retrieval_scores": chunk.get("_retrieval_scores"),
+                "_rrf_score": chunk.get("_rrf_score"),
             }
             for chunk in retrieved_chunks
         ]

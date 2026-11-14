@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SettingsViewProps {
   language: string;
   onLanguageChange: (lang: string) => void;
