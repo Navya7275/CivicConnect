@@ -134,7 +134,7 @@ export class CivicConnectApi {
   private conversations: Conversation[] = [];
 
   constructor() {
-    this.conversations = [...mockConversations];
+    this.conversations = [];
   }
 
   async getConversations(): Promise<Conversation[]> {
