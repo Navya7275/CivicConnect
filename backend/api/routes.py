@@ -75,6 +75,7 @@ def _to_response(state: GraphState) -> QueryResponse:
             section=raw.get("section", ""),
             jurisdiction=raw.get("jurisdiction", state.get("jurisdiction", "")),
             source_url=raw.get("source_url", ""),
+            reference_url=raw.get("reference_url") or None,
             chunk_id=raw.get("chunk_id"),
             excerpt=raw.get("excerpt"),
             retrieval_scores=_to_retrieval_scores(raw),

@@ -112,6 +112,7 @@ def load_seed_data(seed_path: Path = SEED_FILE_PATH, db: Session = None) -> Dict
                 assent_date=item.get("assent_date", "").strip() if item.get("assent_date") else None,
                 excerpt=item.get("excerpt", "").strip() if item.get("excerpt") else None,
                 source_url=item["source_url"].strip(),
+                reference_url=(item.get("reference_url") or "").strip() or None,
                 raw_sha256=raw_hash,
                 text_sha256=item.get("text_sha256") or computed_text_hash,
                 extraction_method=item.get("extraction_method", "manual"),

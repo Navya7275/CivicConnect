@@ -204,16 +204,16 @@ export default function CitationViewer({ citations, verified = false }: Citation
                 </div>
               )}
 
-              {activeCitation.source_url && (
+              {(activeCitation.reference_url || activeCitation.source_url) && (
                 <div>
                   <span className="text-xs text-white/40 tracking-wider block mb-1 font-mono uppercase">documentation</span>
-                  <a 
-                    href={activeCitation.source_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                  <a
+                    href={activeCitation.reference_url || activeCitation.source_url}
+                    target="_blank"
+                    rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-white hover:text-accent-sunset underline underline-offset-4"
                   >
-                    <span>Visit government portal</span>
+                    <span>Read the law yourself</span>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>

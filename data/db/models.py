@@ -54,6 +54,21 @@ class Chunk(Base):
     excerpt: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)  # Quoted text snippet for precise citation
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
 
+    # Where a reader can actually open this law today.
+    #
+    # Deliberately separate from source_url, which records where the text was
+    # fetched from and is what raw_sha256 is the hash of. The two are not always
+    # the same page: India Code serves whole Acts at a handle URL, and those
+    # handle pages now fail with a CDN error, so every citation in the product
+    # was a dead end for users.
+    #
+    # Overwriting source_url with a working link would have made raw_sha256 the
+    # hash of a page we no longer point at -- the same incoherence #22 resolved.
+    # So source_url keeps its provenance meaning and this carries the link the
+    # UI offers. Null means there is no better link and the UI falls back to
+    # source_url.
+    reference_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)
+
     # Cryptographic Provenance Metadata (Issue #5)
     raw_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
     text_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
@@ -76,6 +91,8 @@ class Chunk(Base):
             "effective_date": self.effective_date,
             "source_url": self.source_url,
         }
+        if self.reference_url:
+            res["reference_url"] = self.reference_url
         if self.assent_date:
             res["assent_date"] = self.assent_date
         if self.excerpt:

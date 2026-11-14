@@ -134,6 +134,7 @@ def _stub_synthesize(
                 "section": chunk["section"],
                 "jurisdiction": chunk["jurisdiction"],
                 "source_url": chunk["source_url"],
+                "reference_url": chunk.get("reference_url"),
                 "chunk_id": chunk.get("chunk_id"),
             }
             for chunk in retrieved_chunks
