@@ -16,7 +16,13 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from backend.api.schemas import Citation, HealthResponse, QueryRequest, QueryResponse
+from backend.api.schemas import (
+    Citation,
+    HealthResponse,
+    QueryRequest,
+    QueryResponse,
+    RetrievalScores,
+)
 from backend.orchestration.state import GraphState, initial_state
 
 logger = logging.getLogger(__name__)
@@ -24,6 +30,27 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 VERSION = "0.1.0"
+
+
+def _to_retrieval_scores(raw: dict) -> RetrievalScores | None:
+    """Pull the retriever diagnostics off a citation, if it carries any.
+
+    The retrieval layer tags each chunk with `_retrieval_scores` (keyed by
+    retriever name) and `_rrf_score`. Those are internal names with leading
+    underscores; this flattens them into the public shape so the frontend has
+    one documented field to read rather than depending on retrieval internals.
+    """
+    per_retriever = raw.get("_retrieval_scores") or {}
+    rrf = raw.get("_rrf_score")
+
+    if not per_retriever and rrf is None:
+        return None
+
+    return RetrievalScores(
+        dense=per_retriever.get("dense"),
+        bm25=per_retriever.get("bm25"),
+        rrf=rrf,
+    )
 
 
 def _to_response(state: GraphState) -> QueryResponse:
@@ -50,6 +77,7 @@ def _to_response(state: GraphState) -> QueryResponse:
             source_url=raw.get("source_url", ""),
             chunk_id=raw.get("chunk_id"),
             excerpt=raw.get("excerpt"),
+            retrieval_scores=_to_retrieval_scores(raw),
         )
         for raw in state.get("citations", [])
     ]

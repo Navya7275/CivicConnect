@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { Conversation, Message, MessageStatus, Citation } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import type { Conversation, Message, MessageStatus } from '../services/api';
 import Composer from './Composer';
 import CitationViewer from './CitationViewer';
 import FeedbackModal from './FeedbackModal';
@@ -85,7 +85,7 @@ export default function ChatView({
     <div className="flex flex-col h-full bg-canvas relative overflow-hidden min-w-0 flex-grow" aria-label="Conversation Window">
       
       {/* Scrollable Message Canvas */}
-      <div className="flex-grow overflow-y-auto px-6 py-8 space-y-8 select-text">
+      <div className="flex-grow overflow-y-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8 select-text">
         {!conversation || conversation.messages.length === 0 ? (
           /* Empty / Welcome State Card */
           <div className="max-w-xl mx-auto py-12 space-y-10">
@@ -128,12 +128,42 @@ export default function ChatView({
                   <span>{msg.role === 'user' ? 'citizen' : 'assistant'}</span>
                   <span>•</span>
                   <span>{msg.timestamp}</span>
+                  {msg.role === 'assistant' && msg.verified && (
+                    <>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1 text-accent-sunset bg-accent-sunset/10 border border-accent-sunset/30 px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-semibold">
+                        <svg className="w-3 h-3 text-accent-sunset" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        verified
+                      </span>
+                    </>
+                  )}
+                  {msg.role === 'assistant' && msg.verified === false && !msg.needsClarification && (
+                    <>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1 text-mute bg-canvas-soft border border-hairline px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase">
+                        unverified
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {/* Message bubble */}
                 <div 
                   className={`w-full max-w-full px-5 py-4 border rounded-sm text-body-sm leading-relaxed ${msg.role === 'user' ? 'bg-canvas border-hairline/80 text-ink max-w-[85%] sm:max-w-[70%]' : 'bg-canvas-card border-hairline text-body'}`}
                 >
+                  {/* Verified Answer Headline Banner (Visible at a glance without opening drawer) */}
+                  {msg.role === 'assistant' && msg.verified && (
+                    <div className="mb-3.5 flex items-center gap-2 text-xs font-mono text-accent-sunset bg-accent-sunset/10 border border-accent-sunset/20 rounded px-2.5 py-1.5 w-fit">
+                      <svg className="w-3.5 h-3.5 text-accent-sunset shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span className="font-semibold uppercase tracking-wider text-[11px]">Verified Statutory Answer</span>
+                      <span className="text-mute/60 hidden sm:inline">— grounded in official statutory sources</span>
+                    </div>
+                  )}
+
                   {/* Markdown summaries rendered cleanly */}
                   <div className="prose prose-invert max-w-none text-body-sm space-y-4">
                     {msg.content.split('\n\n').map((paragraph, pIdx) => {
@@ -182,6 +212,48 @@ export default function ChatView({
                   {/* Inline Citations cards list */}
                   {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
                     <CitationViewer citations={msg.citations} verified={msg.verified} />
+                  )}
+
+                  {/* Hybrid Retrieval Breakdown Table (Dense Score, BM25 Rank, Fused RRF Rank) */}
+                  {msg.role === 'assistant' && msg.citations && msg.citations.some(c => c.retrieval_scores) && (
+                    <details className="mt-4 pt-3 border-t border-hairline/60 group">
+                      <summary className="cursor-pointer text-caption-mono-sm text-mute hover:text-ink transition-colors flex items-center gap-1.5 select-none">
+                        <span className="group-open:rotate-90 transition-transform duration-150 inline-block text-[10px]">▶</span>
+                        <span>Hybrid Retrieval Breakdown (Dense + BM25 + RRF)</span>
+                      </summary>
+                      <div className="mt-2.5 overflow-x-auto">
+                        <table className="w-full text-left text-xs font-mono text-mute/80 border border-hairline/60 rounded">
+                          <thead className="bg-canvas-soft text-[10px] uppercase tracking-wider text-mute border-b border-hairline/60">
+                            <tr>
+                              <th className="py-1.5 px-3">Rank</th>
+                              <th className="py-1.5 px-3">Source Chunk</th>
+                              <th className="py-1.5 px-3">Dense Score</th>
+                              <th className="py-1.5 px-3">BM25 Score</th>
+                              <th className="py-1.5 px-3">Fused RRF Score</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-hairline/40 text-[11px]">
+                            {msg.citations.map((c, idx) => (
+                              <tr key={idx} className="hover:bg-canvas-soft/50">
+                                {/* Citations arrive already fused-ranked, so the
+                                    row position IS the fused rank. */}
+                                <td className="py-1.5 px-3 text-mute">#{idx + 1}</td>
+                                <td className="py-1.5 px-3 text-ink">{c.act} {c.section}</td>
+                                <td className="py-1.5 px-3">
+                                  {c.retrieval_scores?.dense !== undefined ? c.retrieval_scores.dense.toFixed(3) : '—'}
+                                </td>
+                                <td className="py-1.5 px-3">
+                                  {c.retrieval_scores?.bm25 !== undefined ? c.retrieval_scores.bm25.toFixed(3) : '—'}
+                                </td>
+                                <td className="py-1.5 px-3 text-accent-sunset font-semibold">
+                                  {c.retrieval_scores?.rrf !== undefined ? c.retrieval_scores.rrf.toFixed(5) : '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
                   )}
                 </div>
 
@@ -251,7 +323,7 @@ export default function ChatView({
       </div>
 
       {/* Message Composer Bar Wrapper */}
-      <div className="p-6 border-t border-hairline bg-canvas shrink-0">
+      <div className="p-3 sm:p-6 border-t border-hairline bg-canvas shrink-0">
         <div className="max-w-2xl mx-auto">
           <Composer 
             onSend={onSendMessage}

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState, type SubmitEvent } from 'react';
 
 interface FeedbackModalProps {
-  messageId: string;
+  messageId?: string;
   rating: 'helpful' | 'not-helpful';
   onClose: () => void;
   onSubmit: (comment: string, selectedIssues: string[]) => void;
@@ -17,7 +17,6 @@ const COMMON_ISSUES = [
 ];
 
 export default function FeedbackModal({ 
-  messageId, 
   rating, 
   onClose, 
   onSubmit 
@@ -33,7 +32,7 @@ export default function FeedbackModal({
     );
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     
