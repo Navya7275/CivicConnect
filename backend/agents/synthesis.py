@@ -35,7 +35,13 @@ class SynthesisAgent:
         # was shut down on 2026-08-16. If synthesis starts failing with a 404
         # saying `model_not_found`, this ID has been retired too — see the
         # GROQ_MODEL block in .env.example for how to list what a key can serve.
-        self.model = model or os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+        #
+        # qwen3.8-27b is the default because the answer formatting above was
+        # written and checked against it. openai/gpt-oss-120b is the other
+        # verified option and needs no code change, just GROQ_MODEL in .env.
+        # Whichever produces the Phase E numbers has to be named in the report:
+        # the figures are not reproducible without it.
+        self.model = model or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
     def synthesize(self, query, retrieved_chunks):
         """
@@ -60,8 +66,7 @@ class SynthesisAgent:
         )
 
         prompt = f"""
-You are CivicConnect, an AI assistant that answers questions
-about Indian laws and government information.
+You are CivicConnect, an authoritative legal and civic assistant for Indian citizens.
 
 Answer the user's question using ONLY the provided context.
 
@@ -70,14 +75,19 @@ say that the available sources do not provide enough information.
 
 Do not invent laws, sections, penalties, dates, or facts.
 
+Formatting and Structure Rules:
+1. Always structure the response cleanly using proper GitHub Flavored Markdown:
+   - Use concise headings (e.g. `### Overview`, `### Eligibility Criteria`, `### Required Documents`, `### How to Apply`, `### Key Benefits`) when explaining schemes or multi-step legal procedures.
+   - For lists, use standard bullet points (`- Item`) with line breaks between items. NEVER run bullets together on the same line (e.g. avoid "1. Topic: - Subitem - Subitem"). Put every list item and sub-bullet on its own separate line.
+   - Use **bold** labels for clarity (e.g. `- **Aadhaar Card**: Proof of identity`).
+2. Mention the relevant Act and Section or Welfare Scheme name explicitly.
+3. Keep the language direct, structured, professional, and easy to read.
+
 User question:
 {query}
 
 Retrieved context:
 {context}
-
-Provide a clear and concise answer.
-Mention the relevant Act and Section when available.
 """
 
         response = self.client.chat.completions.create(

@@ -194,7 +194,7 @@ def make_retrieval_node(retriever: Retriever | None = None) -> Callable[[GraphSt
             chunks = search(
                 state.get("rewritten_query") or state.get("query", ""),
                 filters=filters,
-                limit=5,
+                limit=8,
             )
         except Exception as exc:  # noqa: BLE001 - we want any failure surfaced as state
             logger.exception("Retrieval failed")

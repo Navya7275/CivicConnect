@@ -1,26 +1,22 @@
-# Python
-.env
+# Python runtime / caches
 __pycache__/
-*.pyc
 *.py[cod]
+*$py.class
 venv/
 .venv/
 .pytest_cache/
 
-# OS / editor
+# OS / IDE
 .DS_Store
 .idea/
 .vscode/
 
-# Local database fallback (DATABASE_URL defaults to SQLite)
-*.db
-*.sqlite
+# Node dependencies & caches
+node_modules/
+.astro/
+dist/
 
-# Generated index artifacts and cached downloads
-data/indexing/artifacts/
-data/ingestion/raw_data/
-
-# Agent skills and customizations
+# Agent skills & customizations
 .gemini/
 skills/
 .skills/

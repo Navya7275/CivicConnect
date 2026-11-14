@@ -34,21 +34,21 @@ export default function JurisdictionSelector({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-canvas-card border border-hairline rounded-sm p-3 min-w-0">
+    <div className="flex items-center gap-3 bg-canvas-card border border-hairline rounded-sm px-3 py-1.5 w-fit max-w-full">
       
       {/* Toggle Buttons */}
-      <div className="flex items-center bg-canvas-soft border border-hairline rounded-sm p-0.5" role="group" aria-label="Legislative Jurisdiction Selection">
+      <div className="flex items-center bg-canvas-soft border border-hairline rounded-sm p-0.5 shrink-0" role="group" aria-label="Legislative Jurisdiction Selection">
         <button 
           type="button"
           onClick={() => handleTypeChange('central')}
-          className={`flex-1 sm:flex-initial px-4 py-1.5 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'central' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
+          className={`px-3 py-1 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'central' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
         >
           central
         </button>
         <button 
           type="button"
           onClick={() => handleTypeChange('state')}
-          className={`flex-1 sm:flex-initial px-4 py-1.5 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'state' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
+          className={`px-3 py-1 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'state' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
         >
           state
         </button>
@@ -56,25 +56,32 @@ export default function JurisdictionSelector({
 
       {/* State Dropdown (Conditional) */}
       {jurisdiction === 'state' && (
-        <div className="flex-grow flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <label htmlFor="state-select" className="text-caption-mono-sm text-mute shrink-0 lowercase">state:</label>
-          <select 
-            id="state-select"
-            value={stateName || 'Maharashtra'} 
-            onChange={handleStateChange}
-            className="flex-grow min-w-0 px-3 py-1.5 bg-canvas-soft border border-hairline rounded-sm text-body-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-          >
-            {INDIAN_STATES.map(st => (
-              <option key={st} value={st}>{st}</option>
-            ))}
-          </select>
+          <div className="relative inline-flex items-center">
+            <select 
+              id="state-select"
+              value={stateName || 'Madhya Pradesh'} 
+              onChange={handleStateChange}
+              className="appearance-none bg-canvas-soft border border-hairline hover:border-hairline/80 rounded-sm pl-2.5 pr-7 py-1 text-body-sm text-ink focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
+            >
+              {INDIAN_STATES.map(st => (
+                <option key={st} value={st} className="bg-canvas-card text-ink">{st}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-mute">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Indicator summary */}
-      <div className="hidden lg:flex items-center gap-1.5 text-caption-mono-sm text-mute shrink-0 ml-auto select-none lowercase">
+      <div className="hidden sm:inline-flex items-center gap-1.5 text-caption-mono-sm text-mute shrink-0 whitespace-nowrap select-none lowercase pl-1">
         <span className="w-1.5 h-1.5 rounded-full bg-accent-sunset animate-pulse" aria-hidden="true"></span>
-        active: {jurisdiction === 'central' ? 'central legislation' : `${stateName} context`}
+        active: {jurisdiction === 'central' ? 'central legislation' : `${stateName || 'state'} context`}
       </div>
 
     </div>
