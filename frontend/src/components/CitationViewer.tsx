@@ -36,26 +36,33 @@ export default function CitationViewer({ citations, verified = false }: Citation
   };
 
   return (
-    <div className="mt-4 flex flex-wrap gap-2 items-center">
-      <span className="text-caption-mono-sm text-mute shrink-0 lowercase">sources:</span>
+    <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+      <span className="text-[10px] font-mono uppercase tracking-wider text-mute/70 shrink-0">sources:</span>
       
-      {citations.map((cit, idx) => (
-        <button 
-          key={citationKey(cit, idx)}
-          type="button"
-          onClick={() => setActiveCitation(cit)}
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-canvas-soft border border-hairline hover:border-body-mid rounded-full text-caption-mono-sm text-body-md transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          aria-label={`View citation details from ${cit.act} ${cit.section}`}
-        >
-          {/* Verified Check Icon */}
-          {verified && (
-            <svg className="w-3.5 h-3.5 text-accent-sunset" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-            </svg>
-          )}
-          <span>{cit.act.slice(0, 15)}… {cit.section}</span>
-        </button>
-      ))}
+      {citations.map((cit, idx) => {
+        // Compact label: e.g. "CPA 2019 • Sec 2" or "PM-JAY"
+        const compactAct = cit.act.length > 20 ? cit.act.slice(0, 18).trim() + '…' : cit.act;
+        const label = cit.section ? `${compactAct} • ${cit.section}` : compactAct;
+
+        return (
+          <button 
+            key={citationKey(cit, idx)}
+            type="button"
+            onClick={() => setActiveCitation(cit)}
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-canvas-soft/80 hover:bg-canvas-soft border border-hairline/60 hover:border-hairline rounded text-[11px] font-mono text-mute hover:text-ink transition-colors outline-none focus-visible:ring-1 focus-visible:ring-primary shadow-xs"
+            aria-label={`View citation details from ${cit.act} ${cit.section}`}
+            title={`${cit.act} ${cit.section}`}
+          >
+            {/* Verified Check Icon */}
+            {verified && (
+              <svg className="w-2.5 h-2.5 text-accent-sunset shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            )}
+            <span className="truncate max-w-[180px]">{label}</span>
+          </button>
+        );
+      })}
 
       {/* Citation Details Drawer (Overlay Panel) */}
       {activeCitation && (
