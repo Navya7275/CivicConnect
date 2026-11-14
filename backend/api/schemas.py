@@ -40,7 +40,15 @@ class Citation(BaseModel):
     act: str = Field(..., description="Name of the Act or scheme, e.g. 'Consumer Protection Act, 2019'")
     section: str = Field(..., description="Section reference, e.g. 'Section 35'")
     jurisdiction: str = Field(..., description="'Central' or a state name, e.g. 'Madhya Pradesh'")
-    source_url: str = Field(..., description="Link to the specific section on the source site")
+    source_url: str = Field(..., description="Where the text was fetched from; what raw_sha256 hashes")
+    reference_url: str | None = Field(
+        None,
+        description=(
+            "A link a reader can actually open today, when it differs from source_url. "
+            "Kept separate so source_url keeps its provenance meaning. Falls back to "
+            "source_url when absent."
+        ),
+    )
 
     chunk_id: str | None = Field(None, description="Internal chunk identifier, used for verification")
     excerpt: str | None = Field(None, description="The exact quoted text this citation refers to")

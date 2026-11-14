@@ -25,7 +25,8 @@ export interface Citation {
   act: string;
   section: string;
   jurisdiction: string;   // "Central" or a state name, e.g. "Madhya Pradesh"
-  source_url: string;
+  source_url: string;        // where the text was fetched from; what raw_sha256 hashes
+  reference_url?: string;    // a link a reader can actually open; falls back to source_url
   chunk_id?: string;      // optional — supplied by the retrieval layer
   excerpt?: string;       // optional — the exact quoted text, when available
   retrieval_scores?: RetrievalScores;

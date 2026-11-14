@@ -143,6 +143,7 @@ Retrieved context:
                 "section": chunk["section"],
                 "jurisdiction": chunk["jurisdiction"],
                 "source_url": chunk["source_url"],
+                "reference_url": chunk.get("reference_url"),
                 # Carry the retriever diagnostics through. The hybrid retriever
                 # attaches these; without them the API cannot show how a source
                 # was found, and the Phase E comparison has nothing to measure.
