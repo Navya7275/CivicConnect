@@ -91,7 +91,7 @@ export default function AssistantApp() {
             setConversations(convs);
           });
 
-          if (status === 'verified' || status === 'error') {
+          if (status === 'verified' || status === 'error' || status === 'needs-clarification') {
             setSubmitting(false);
           }
         }
@@ -135,12 +135,14 @@ export default function AssistantApp() {
     setJurisdiction(jur);
     setStateName(stName);
     
-    // Save state on active conversation if it is empty (new session)
-    if (activeConversation && activeConversation.messages.length === 0) {
+    // Save state on active conversation
+    if (activeConversation) {
       activeConversation.jurisdiction = jur;
       activeConversation.stateName = stName;
       // Persist in localStorage
       localStorage.setItem('civicconnect_history', JSON.stringify(conversations));
+      // Trigger conversation update re-render
+      setConversations([...conversations]);
     }
   };
 

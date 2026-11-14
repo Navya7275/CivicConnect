@@ -56,16 +56,16 @@ export default function JurisdictionSelector({
 
       {/* State Dropdown (Conditional) */}
       {jurisdiction === 'state' && (
-        <div className="flex-grow flex items-center gap-2 min-w-0">
+        <div className="flex-grow flex items-center gap-2 min-w-[200px]">
           <label htmlFor="state-select" className="text-caption-mono-sm text-mute shrink-0 lowercase">state:</label>
           <select 
             id="state-select"
-            value={stateName || 'Maharashtra'} 
+            value={stateName || 'Madhya Pradesh'} 
             onChange={handleStateChange}
-            className="flex-grow min-w-0 px-3 py-1.5 bg-canvas-soft border border-hairline rounded-sm text-body-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            className="flex-grow min-w-[150px] px-3 py-1.5 bg-canvas-soft border border-hairline rounded-sm text-body-sm text-ink focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
           >
             {INDIAN_STATES.map(st => (
-              <option key={st} value={st}>{st}</option>
+              <option key={st} value={st} className="bg-canvas-card text-ink">{st}</option>
             ))}
           </select>
         </div>
