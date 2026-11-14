@@ -1,16 +1,17 @@
-"""Provenance Verification Utility for CivicConnect (Issue #5).
+"""Provenance Verification Utility for CivicConnect (Issue #5, Issue #18).
 
 Verifies the cryptographic integrity and provenance of all stored chunks:
 1. Recalculates SHA-256 hash of stored chunk text (text_sha256) and verifies match.
 2. Verifies presence of raw document SHA-256 hash (raw_sha256).
-3. Verifies that manual extractions record a valid reviewer_name.
-4. Audits raw cached files in raw_data/ for content integrity.
+3. Verifies that manual extractions record a valid active reviewer_name.
+4. Audits raw cached files / live network source documents for content integrity.
 """
 
+import argparse
 import hashlib
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import requests
 
 # Add project root to path
@@ -30,7 +31,7 @@ def compute_sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def run_provenance_verification(verify_network: bool = False) -> bool:
+def run_provenance_verification(verify_network: bool = True) -> bool:
     """Perform comprehensive provenance audit on database chunks."""
     db = SessionLocal()
     try:
@@ -47,6 +48,7 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
 
         valid_methods = {"html", "pdf", "api", "manual"}
         url_cache: Dict[str, bytes] = {}
+        session = requests.Session()
 
         for c in chunks:
             # 1. Text SHA-256 verification
@@ -68,8 +70,8 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
 
             # 4. Manual reviewer check
             if method == "manual":
-                if not c.reviewer_name or not c.reviewer_name.strip():
-                    print(f"[FAIL] Manual extraction missing reviewer_name for chunk {c.chunk_id}")
+                if not c.reviewer_name or not c.reviewer_name.strip() or c.reviewer_name.strip() == "Harsh Gupta":
+                    print(f"[FAIL] Manual extraction missing valid reviewer_name for chunk {c.chunk_id}")
                     missing_reviewer_manual += 1
 
             # 5. Network / Cache Source Re-verification
@@ -78,20 +80,21 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
                 if url and url not in url_cache:
                     try:
                         headers = {"User-Agent": "CivicConnect-AcademicPipeline/1.0 (Indian Legal Research)"}
-                        resp = requests.get(url, headers=headers, timeout=10)
+                        resp = session.get(url, headers=headers, timeout=10)
                         if resp.status_code == 200:
                             url_cache[url] = resp.content
                         else:
-                            print(f"[WARN] Network fetch status {resp.status_code} for URL: {url}")
+                            print(f"[FAIL] Network fetch status {resp.status_code} for URL: {url}")
                             network_fetch_failures += 1
                     except Exception as err:
-                        print(f"[WARN] Network fetch exception for {url}: {err}")
+                        print(f"[FAIL] Network fetch exception for {url}: {err}")
                         network_fetch_failures += 1
 
                 if url in url_cache:
                     fetched_raw_hash = hashlib.sha256(url_cache[url]).hexdigest()
                     if c.raw_sha256 and c.raw_sha256 != fetched_raw_hash:
-                        print(f"[WARN] Raw SHA-256 updated/changed for URL {url}: stored={c.raw_sha256}, fetched={fetched_raw_hash}")
+                        print(f"[FAIL] Raw SHA-256 mismatch for URL {url}: stored={c.raw_sha256}, fetched={fetched_raw_hash}")
+                        raw_hash_mismatches += 1
 
         print("\nProvenance Verification Report")
         print("-------------------------------")
@@ -101,6 +104,7 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
         print(f"Missing Raw SHA-256         : {missing_raw_hash}")
         print(f"Missing Reviewer (Manual)   : {missing_reviewer_manual}")
         print(f"Invalid Extraction Methods : {invalid_extraction_methods}")
+        print(f"Raw Hash Mismatches         : {raw_hash_mismatches}")
         print(f"Network Fetch Failures      : {network_fetch_failures}\n")
 
         critical_errors = (
@@ -109,6 +113,8 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
             + missing_raw_hash
             + missing_reviewer_manual
             + invalid_extraction_methods
+            + raw_hash_mismatches
+            + network_fetch_failures
         )
 
         if critical_errors > 0:
@@ -123,6 +129,14 @@ def run_provenance_verification(verify_network: bool = False) -> bool:
 
 
 if __name__ == "__main__":
-    success = run_provenance_verification()
+    parser = argparse.ArgumentParser(description="Cryptographic Provenance Verification Utility")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Skip live network source verification (fast local-only mode)",
+    )
+    args = parser.parse_args()
+
+    success = run_provenance_verification(verify_network=not args.offline)
     if not success:
         sys.exit(1)

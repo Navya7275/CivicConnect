@@ -19,3 +19,9 @@ venv/
 # Generated index artifacts and cached downloads
 data/indexing/artifacts/
 data/ingestion/raw_data/
+
+# Agent skills and customizations
+.gemini/
+skills/
+.skills/
+unslop/

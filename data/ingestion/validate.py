@@ -111,7 +111,7 @@ def run_data_quality_check() -> bool:
 
             method = (c.extraction_method or "manual").lower()
             if method == "manual":
-                if not c.reviewer_name or not c.reviewer_name.strip():
+                if not c.reviewer_name or not c.reviewer_name.strip() or c.reviewer_name.strip() == "Harsh Gupta":
                     missing_manual_reviewer += 1
             elif method in ("html", "pdf", "api"):
                 # Non-manual extractions must have a raw source document distinct from text

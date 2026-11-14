@@ -90,20 +90,40 @@ empty; you can add scheme `category` and `documents_required` as extra metadata 
 
 ---
 
-## Current Ingested Pilot Dataset Status (Harsh)
-- **Statutory Law:** Consumer Protection Act, 2019 (25 sections loaded, Jurisdiction: `Central`, Sourced from India Code, Commencement Date: `2020-07-20` / `2020-07-24`).
-- **Welfare Schemes (3 pilot schemes loaded from `seed_schemes.json`):**
-  - Pradhan Mantri Jan Dhan Yojana (PMJDY) — Jurisdiction: `Central`
-  - PM Kisan Samman Nidhi (PM-KISAN) — Jurisdiction: `Central`
-  - Ladli Laxmi Yojana — Jurisdiction: `Madhya Pradesh`
-- **Total Corpus Size:** 28 chunks across 4 documents.
+## Current Ingested Corpus Status (Harshit)
 
----
+The database contains **147 clean, verbatim statutory chunks** and **18 hand-curated welfare schemes**:
 
-## Suggested order (fits `PHASES.md` Feature A)
-1. **A1 (seed):** hand-pick ~25 Consumer Protection Act sections → load. Unblocks retrieval. *(Done)*
-2. **A2 (real):** full Consumer Protection Act from India Code + ~50 schemes from the MyScheme dataset. *(Done for pilot)*
-3. **A3 (scale):** add a second scheme category / second act; build the indexes. *(Done for pilot)*
+### 1. Statutory Acts (`seed_chunks.json`)
+- **Consumer Protection Act, 2019** (116 chunks)
+  - **Jurisdiction:** Central
+  - **Source Portal:** `https://indiacode.gov.in/show-data?actid=AC_CEN_4_68_00003_201935_1566472428611`
+  - **Extraction Method:** `html` (raw document SHA-256 recorded)
+  - ⚠️ **Provenance caveat — unresolved:** all 116 chunks share a single identical `raw_sha256`,
+    across 107 distinct `source_url` values. A per-page hash should differ per page, so either every
+    one of those URLs returns identical bytes (which would mean the links do not serve individual
+    sections), or the hash was not computed per URL. Until someone opens two of these links in a
+    browser and confirms they show different sections, treat "verified against the live portal" as
+    unproven. Tracked in issue #22.
+  - **Commencement Date:** `2020-07-20` via Notification S.O. 2351(E) (and `2020-07-24` via S.O. 2421(E) for Central Consumer Protection Authority under Section 10).
+  - **Assent Date:** `2019-08-09`
+- **Right to Information Act, 2005** (31 chunks)
+  - **Jurisdiction:** Central
+  - **Source Portal:** `https://indiacode.gov.in/show-data?actid=AC_CEN_26_36_00004_200522_1517807322955`
+  - **Extraction Method:** `manual` (reviewed & curated by Harshit Garg)
+  - **Commencement Date:** `2005-10-12`
+  - **Assent Date:** `2005-06-15`
+
+### 2. Welfare Schemes (`seed_schemes.json`)
+- **Corpus:** 18 welfare schemes across Central and state jurisdictions:
+  - Central: PMJDY, PM-KISAN, Ayushman Bharat (PM-JAY), Atal Pension Yojana, PM Awas Yojana (Gramin & Urban), PM Mudra Yojana, Sukanya Samriddhi Yojana, etc.
+  - State schemes: Ladli Laxmi Yojana (MP), Mukhyamantri Medhavi Vidyarthi Yojana (MP), Delhi Ladli Scheme, Jai Bhim Mukhyamantri Pratibha Vikas Yojana (Delhi), Sanjay Gandhi Niradhar Anudan Yojana (Maharashtra), Kalaignar Magalir Urimai Thittam (Tamil Nadu), Gruha Lakshmi Scheme (Karnataka).
+- **Source:** Hand-curated from official MyScheme listings and ministry notifications with exact eligibility criteria, benefit amounts, and application processes.
+
+### 3. Cryptographic Provenance Verification
+- **Provenance Script:** `python -m data.ingestion.verify_provenance`
+- **Integrity Guarantee:** Every chunk records `raw_sha256`, `text_sha256`, `fetched_at`, and `extraction_method`.
+- **Absolute Rule:** Zero AI/LLM-generated or placeholder filler text. Every chunk is a deterministic verbatim extract from an authoritative government publication.
 
 ---
 

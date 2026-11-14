@@ -39,11 +39,13 @@ def load_welfare_schemes() -> None:
                 db.add(doc)
                 db.flush()
 
-            raw_file_path = Path(__file__).resolve().parent / "raw_data" / "myscheme_pilot.json"
-            raw_sha = ""
-            if raw_file_path.exists():
-                import hashlib
-                raw_sha = hashlib.sha256(raw_file_path.read_bytes()).hexdigest()
+            extraction_method = item.get("extraction_method", "manual")
+            raw_sha = item.get("raw_sha256") or ""
+            if not raw_sha:
+                raw_file_path = Path(__file__).resolve().parent / "raw_data" / "myscheme_pilot.json"
+                if raw_file_path.exists():
+                    import hashlib
+                    raw_sha = hashlib.sha256(raw_file_path.read_bytes()).hexdigest()
 
             chunk_dicts = chunk_welfare_scheme(
                 scheme_name=scheme_name,
@@ -59,8 +61,8 @@ def load_welfare_schemes() -> None:
                 scheme_id_slug=f"scheme-p{idx}",
                 excerpt=item.get("excerpt", ""),
                 raw_sha256=raw_sha,
-                extraction_method="api",
-                reviewer_name="Harsh Gupta",
+                extraction_method=extraction_method,
+                reviewer_name=item.get("reviewer_name", "Harshit Garg"),
             )
 
             for c in chunk_dicts:
@@ -82,8 +84,8 @@ def load_welfare_schemes() -> None:
                     source_url=c["source_url"],
                     raw_sha256=c.get("raw_sha256") or c.get("text_sha256"),
                     text_sha256=c.get("text_sha256"),
-                    extraction_method=c.get("extraction_method", "manual"),
-                    reviewer_name=c.get("reviewer_name", "Harsh Gupta"),
+                    extraction_method=c.get("extraction_method", extraction_method),
+                    reviewer_name=c.get("reviewer_name", "Harshit Garg"),
                 )
                 db.add(chunk_obj)
                 loaded += 1

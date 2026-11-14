@@ -115,7 +115,7 @@ def load_seed_data(seed_path: Path = SEED_FILE_PATH, db: Session = None) -> Dict
                 raw_sha256=raw_hash,
                 text_sha256=item.get("text_sha256") or computed_text_hash,
                 extraction_method=item.get("extraction_method", "manual"),
-                reviewer_name=item.get("reviewer_name", "Harsh Gupta"),
+                reviewer_name=item.get("reviewer_name", "Harshit Garg"),
             )
             db.add(new_chunk)
             chunks_loaded += 1
