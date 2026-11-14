@@ -98,7 +98,13 @@ The database contains **147 clean, verbatim statutory chunks** and **18 hand-cur
 - **Consumer Protection Act, 2019** (116 chunks)
   - **Jurisdiction:** Central
   - **Source Portal:** `https://indiacode.gov.in/show-data?actid=AC_CEN_4_68_00003_201935_1566472428611`
-  - **Extraction Method:** `html` (raw document SHA-256 recorded and verified against live portal)
+  - **Extraction Method:** `html` (raw document SHA-256 recorded)
+  - ⚠️ **Provenance caveat — unresolved:** all 116 chunks share a single identical `raw_sha256`,
+    across 107 distinct `source_url` values. A per-page hash should differ per page, so either every
+    one of those URLs returns identical bytes (which would mean the links do not serve individual
+    sections), or the hash was not computed per URL. Until someone opens two of these links in a
+    browser and confirms they show different sections, treat "verified against the live portal" as
+    unproven. Tracked in issue #22.
   - **Commencement Date:** `2020-07-20` via Notification S.O. 2351(E) (and `2020-07-24` via S.O. 2421(E) for Central Consumer Protection Authority under Section 10).
   - **Assent Date:** `2019-08-09`
 - **Right to Information Act, 2005** (31 chunks)
