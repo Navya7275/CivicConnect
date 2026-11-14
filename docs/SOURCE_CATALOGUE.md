@@ -11,6 +11,31 @@ we have already shipped a URL from a search result that turned out to return 404
 
 ---
 
+## Checking a source is genuinely official
+
+Two tests, in order.
+
+**The domain.** An authentic Indian government site ends in `.gov.in` or
+`.nic.in`. Everything else is a mirror, a commercial aggregator, or worse,
+however official the page design looks. This is a necessary test, not a
+sufficient one — a `.gov.in` page can still be out of date.
+
+**IGOD — `igod.gov.in`.** The Integrated Government Online Directory: the
+government's own index of verified URLs for ministries, state departments,
+courts and public portals.
+
+This is the answer to a problem that has cost this project real time. Issues
+#22 and #31 were both guessed URLs that turned out to be wrong, and #31 shipped
+a 404 to 116 chunks. Looking a department up in IGOD instead of searching for it
+removes that whole class of mistake. **Use IGOD first, search second.**
+
+Where a rule or circular is not published anywhere, the escalation path is
+**RTI Online — `rtionline.gov.in`** — file a Right to Information request for
+it. Worth noting in the report: a system built to explain the RTI Act can use
+the RTI Act to obtain the text it is missing.
+
+---
+
 ## The rule that decides everything else
 
 Two different things get called "the source", and conflating them is what went
@@ -42,6 +67,11 @@ law chunks came from.
 - Handle URLs serve whole Acts, not individual sections. This is why all 116
   Consumer Protection chunks share one `raw_sha256`, which is correct rather
   than a bug (issue #22).
+- It is often described as holding **State** Acts as well as Central ones. If
+  so, it would be a second route to the MP state law we are missing. We have
+  only ever fetched Central Acts from it, so this is unverified — and MP Code
+  is the state's own repository, which is the better provenance either way.
+  Worth checking once the host is reachable again.
 
 ### NyayKosh — `lawascode.negd.in`
 
@@ -57,6 +87,18 @@ National e-Governance Division. The only genuinely official API found.
   Worth citing in the report's future work: as the government's own law-as-code
   programme expands, ingestion could consume Akoma Ntoso directly instead of
   scraping HTML.
+
+### Legislative Department — `legislative.gov.in`, `lawmin.gov.in/acts-rules`
+
+Ministry of Law and Justice. Constitutional documents, central Acts, and —
+unusually useful — **lists of repealed laws**.
+
+That last one deserves attention. A repealed Act that is still in a corpus is
+worse than a missing one: the system would answer confidently with law that no
+longer exists, and every provenance check would pass, because the text really
+did come from a government source and really does hash correctly. Nothing in
+our current pipeline would catch it. Worth a check against this list before any
+corpus expansion.
 
 ### Statute-specific official sites
 
@@ -135,6 +177,46 @@ schemes** with structured eligibility. Our 18 pilot schemes came from here.
 
 ---
 
+## Citizen rights and legal aid
+
+A category we have no data for at all, and arguably the one closest to what
+this project is for.
+
+### NALSA — `nalsa.gov.in`
+
+National Legal Services Authority. Free legal aid, Lok Adalats, and the rights
+of women, children and marginalised groups.
+
+Worth considering above almost anything else on this page, for one reason: a
+person who asks "my landlord is evicting me" or "the shop refused my refund"
+usually needs two things — what the law says, and **what they can actually do
+about it with no money**. We answer the first and say nothing about the second,
+even though free legal aid is a statutory entitlement under the Legal Services
+Authorities Act, 1987, and most people do not know they have it.
+
+Adding "and you may be eligible for free legal aid, here is who qualifies"
+turns an informational answer into an actionable one. It is also naturally
+state-aware, since legal services authorities are organised by state and
+district — which fits the jurisdiction logic we already have and cannot
+currently use.
+
+### National Portal — `india.gov.in`
+
+Single-window gateway to central, state and local government sites, and a
+**Schemes Directory** organised ministry-wise with eligibility and application
+links. Its "Your Rights and the Law" section covers fundamental rights,
+consumer protection, cybercrime reporting and tribunals.
+
+Useful mainly as an index for finding the authoritative site for a subject.
+
+### UMANG — `web.umang.gov.in`
+
+Hundreds of central and state services, pension records and grievance tools in
+one place. Service delivery rather than legal text, so it is a place to point
+someone *after* an answer, not a source of chunks.
+
+---
+
 ## Third-party aggregators
 
 Acceptable as `reference_url`. Never as provenance, never as chunk text.
@@ -180,8 +262,19 @@ case law — with a lawyer involved.
 2. **A working Consumer Protection link.** 116 of 147 citations currently have
    nowhere to send a reader (issue #31).
 3. **More MP schemes.** Three today. Samagra and MP e-District are the sources.
-4. **Rules and notifications.** An Act often leaves the operative detail to
+4. **Legal aid eligibility, from NALSA.** The smallest addition with the
+   largest effect on whether an answer is useful: it tells someone what they
+   can do next when they have no money, which is the position most people
+   asking these questions are in.
+5. **Rules and notifications.** An Act often leaves the operative detail to
    rules made under it. We have no rules at all.
+
+One check that belongs alongside any expansion: verify nothing in the corpus
+has been **repealed**, using the Legislative Department's list. A repealed Act
+would pass every provenance check we have — the text genuinely came from a
+government source and genuinely hashes correctly — while being law that no
+longer exists. It is the one category of wrong answer our current validation
+cannot detect.
 
 **Do not act on this list before Phase E (#13).** Every chunk added changes what
 the evaluation measures, and an evaluation over a moving corpus is not a result.
