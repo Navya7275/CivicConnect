@@ -14,8 +14,16 @@ export default function CitationViewer({ citations, verified = false }: Citation
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   if (!citations || citations.length === 0) return null;
+
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   // Close popover when clicking outside or pressing Escape
   useEffect(() => {
@@ -38,6 +46,21 @@ export default function CitationViewer({ citations, verified = false }: Citation
     };
   }, []);
 
+  const handleMouseEnter = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setPopoverOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // 200ms grace period so moving cursor to popover doesn't trigger sudden flickering
+    closeTimerRef.current = setTimeout(() => {
+      setPopoverOpen(false);
+    }, 200);
+  };
+
   const primaryCitation = citations[0];
   const moreCount = citations.length - 1;
   const primaryLabel = primaryCitation.act.length > 20 
@@ -58,11 +81,16 @@ export default function CitationViewer({ citations, verified = false }: Citation
   };
 
   return (
-    <div ref={containerRef} className="relative mt-3 inline-block">
+    <div 
+      ref={containerRef} 
+      className="relative mt-3 inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Sleek compact source pill matching Perplexity/Apple design */}
       <button
         type="button"
-        onClick={() => setPopoverOpen(!popoverOpen)}
+        onClick={() => setPopoverOpen(prev => !prev)}
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#2a2a2a] hover:bg-[#333333] text-[#e0e0e0] border border-white/10 transition-colors text-xs font-medium cursor-pointer shadow-sm select-none"
         aria-label="View sources"
         aria-expanded={popoverOpen}
@@ -75,62 +103,66 @@ export default function CitationViewer({ citations, verified = false }: Citation
         )}
       </button>
 
-      {/* Floating Popover Box */}
-      {popoverOpen && (
-        <div className="absolute left-0 bottom-full mb-2 z-40 w-80 max-w-[90vw] rounded-xl bg-[#1c1c1e] border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-          <div className="p-3 border-b border-white/5 flex items-center justify-between">
-            <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
-              Sources ({citations.length})
-            </span>
-            <span className="text-[11px] text-accent-sunset bg-accent-sunset/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
-              {verified ? 'verified' : 'sources'}
-            </span>
-          </div>
-
-          <div className="max-h-64 overflow-y-auto divide-y divide-white/5">
-            {citations.map((cit, idx) => {
-              const displayTitle = cit.act;
-              const subtext = cit.section ? `Section: ${cit.section}` : cit.jurisdiction;
-
-              return (
-                <div
-                  key={cit.chunk_id || `${cit.act}-${idx}`}
-                  onClick={() => {
-                    setActiveCitation(cit);
-                    setPopoverOpen(false);
-                  }}
-                  className="p-3 hover:bg-white/5 cursor-pointer transition-colors group flex items-start gap-2.5 text-left"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent-sunset/80 mt-1.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-white group-hover:text-accent-sunset transition-colors leading-snug line-clamp-2">
-                      {displayTitle}
-                    </div>
-                    <div className="text-[11px] text-white/50 mt-0.5 truncate font-mono">
-                      {subtext}
-                    </div>
-                  </div>
-                  <svg 
-                    className="w-3.5 h-3.5 text-white/40 group-hover:text-white shrink-0 mt-0.5 transition-colors" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              );
-            })}
-          </div>
+      {/* Floating Popover Box with smooth opacity & scale transitions */}
+      <div 
+        className={`absolute left-0 bottom-full mb-2 z-40 w-80 max-w-[90vw] rounded-xl bg-[#1c1c1e] border border-white/10 shadow-2xl overflow-hidden transition-all duration-200 ease-out origin-bottom-left ${
+          popoverOpen 
+            ? 'opacity-100 scale-100 pointer-events-auto translate-y-0' 
+            : 'opacity-0 scale-95 pointer-events-none translate-y-1'
+        }`}
+      >
+        <div className="p-3 border-b border-white/5 flex items-center justify-between">
+          <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
+            Sources ({citations.length})
+          </span>
+          <span className="text-[11px] text-accent-sunset bg-accent-sunset/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
+            {verified ? 'verified' : 'sources'}
+          </span>
         </div>
-      )}
+
+        <div className="max-h-64 overflow-y-auto divide-y divide-white/5">
+          {citations.map((cit, idx) => {
+            const displayTitle = cit.act;
+            const subtext = cit.section ? `Section: ${cit.section}` : cit.jurisdiction;
+
+            return (
+              <div
+                key={cit.chunk_id || `${cit.act}-${idx}`}
+                onClick={() => {
+                  setActiveCitation(cit);
+                  setPopoverOpen(false);
+                }}
+                className="p-3 hover:bg-white/5 cursor-pointer transition-colors group flex items-start gap-2.5 text-left"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-sunset/80 mt-1.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-white group-hover:text-accent-sunset transition-colors leading-snug line-clamp-2">
+                    {displayTitle}
+                  </div>
+                  <div className="text-[11px] text-white/50 mt-0.5 truncate font-mono">
+                    {subtext}
+                  </div>
+                </div>
+                <svg 
+                  className="w-3.5 h-3.5 text-white/40 group-hover:text-white shrink-0 mt-0.5 transition-colors" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Citation Details Drawer (when item in popover is clicked) */}
       {activeCitation && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
           <div className="absolute inset-0" onClick={() => setActiveCitation(null)} />
           
-          <div className="relative bg-[#18181b] border-l border-white/10 w-full max-w-md h-full flex flex-col justify-between shadow-2xl z-10">
+          <div className="relative bg-[#18181b] border-l border-white/10 w-full max-w-md h-full flex flex-col justify-between shadow-2xl z-10 animate-slide-left">
             {/* Header */}
             <div className="p-6 border-b border-white/10 flex items-start justify-between">
               <div>
