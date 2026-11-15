@@ -1,0 +1,417 @@
+[
+  {
+    "id": "scheme_1",
+    "name": "Pradhan Mantri Jan Dhan Yojana (PMJDY)",
+    "description": "National Mission for Financial Inclusion providing Rs. 2 Lakh accident cover, Rs. 30,000 life cover, and Rs. 10,000 overdraft.",
+    "eligibility": "Indian citizen aged 10+ without bank account.",
+    "benefits": "Rs 2 Lakh insurance, overdraft facility.",
+    "requiredDocuments": [
+      "Aadhaar",
+      "Voter ID",
+      "PAN."
+    ],
+    "state": "Central",
+    "category": "Financial Inclusion",
+    "applicationProcess": "Apply at bank branch.",
+    "sources": [
+      {
+        "act": "Pradhan Mantri Jan Dhan Yojana (PMJDY)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "Pradhan Mantri Jan Dhan Yojana (PMJDY) (Central) under Financial Inclusion: Rs 2 Lakh insurance, overdraft facility.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmjdy"
+      }
+    ]
+  },
+  {
+    "id": "scheme_2",
+    "name": "PM Kisan Samman Nidhi (PM-KISAN)",
+    "description": "Income support scheme providing Rs. 6000 per year per family in three equal installments of Rs. 2000.",
+    "eligibility": "Landholding farmer families.",
+    "benefits": "Rs 6000 per year income support.",
+    "requiredDocuments": [
+      "Land documents",
+      "Aadhaar",
+      "Bank account."
+    ],
+    "state": "Central",
+    "category": "Agriculture",
+    "applicationProcess": "Register at PM-KISAN portal or CSC.",
+    "sources": [
+      {
+        "act": "PM Kisan Samman Nidhi (PM-KISAN)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "PM Kisan Samman Nidhi (PM-KISAN) (Central) under Agriculture: Rs 6000 per year income support.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pm-kisan"
+      }
+    ]
+  },
+  {
+    "id": "scheme_3",
+    "name": "Ayushman Bharat PM-JAY",
+    "description": "Health insurance scheme offering coverage up to Rs. 5 Lakh per family per year for secondary and tertiary hospitalization.",
+    "eligibility": "SECC 2011 low-income households.",
+    "benefits": "Rs 5 Lakh cashless health cover.",
+    "requiredDocuments": [
+      "Aadhaar Card",
+      "Ration Card."
+    ],
+    "state": "Central",
+    "category": "Health & Medical",
+    "applicationProcess": "Check eligibility at PM-JAY portal.",
+    "sources": [
+      {
+        "act": "Ayushman Bharat PM-JAY",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "Ayushman Bharat PM-JAY (Central) under Health & Medical: Rs 5 Lakh cashless health cover.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmjay"
+      }
+    ]
+  },
+  {
+    "id": "scheme_4",
+    "name": "PM Awas Yojana (PMAY-Urban)",
+    "description": "Housing for all mission providing interest subsidy on home loans for EWS, LIG, and MIG families.",
+    "eligibility": "Families not owning pucca house in India.",
+    "benefits": "Up to Rs 2.67 Lakh interest subsidy.",
+    "requiredDocuments": [
+      "Aadhaar",
+      "Income Certificate."
+    ],
+    "state": "Central",
+    "category": "Housing & Urban",
+    "applicationProcess": "Apply online at PMAY portal.",
+    "sources": [
+      {
+        "act": "PM Awas Yojana (PMAY-Urban)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "PM Awas Yojana (PMAY-Urban) (Central) under Housing & Urban: Up to Rs 2.67 Lakh interest subsidy.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmay-u"
+      }
+    ]
+  },
+  {
+    "id": "scheme_5",
+    "name": "Pradhan Mantri Ujjwala Yojana (PMUY)",
+    "description": "Free deposit-free LPG connection to adult women from BPL households.",
+    "eligibility": "Adult woman of BPL family.",
+    "benefits": "Free LPG connection with financial support of Rs 1600.",
+    "requiredDocuments": [
+      "BPL Ration Card",
+      "Aadhaar."
+    ],
+    "state": "Central",
+    "category": "Energy & Social Welfare",
+    "applicationProcess": "Apply at LPG distributor.",
+    "sources": [
+      {
+        "act": "Pradhan Mantri Ujjwala Yojana (PMUY)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "Pradhan Mantri Ujjwala Yojana (PMUY) (Central) under Energy & Social Welfare: Free LPG connection with financial support of Rs 1600.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmuy"
+      }
+    ]
+  },
+  {
+    "id": "scheme_6",
+    "name": "Pradhan Mantri Matru Vandana Yojana (PMMVY)",
+    "description": "Maternity benefit scheme providing cash incentive of Rs. 5000 directly to bank accounts of pregnant women and lactating mothers.",
+    "eligibility": "Pregnant women for first child.",
+    "benefits": "Rs 5000 in three installments.",
+    "requiredDocuments": [
+      "MCP Card",
+      "Aadhaar."
+    ],
+    "state": "Central",
+    "category": "Women & Child Development",
+    "applicationProcess": "Register at Anganwadi Centre.",
+    "sources": [
+      {
+        "act": "Pradhan Mantri Matru Vandana Yojana (PMMVY)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "Pradhan Mantri Matru Vandana Yojana (PMMVY) (Central) under Women & Child Development: Rs 5000 in three installments.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmmvy"
+      }
+    ]
+  },
+  {
+    "id": "scheme_7",
+    "name": "PM SVANidhi (Street Vendor Special Micro-Credit)",
+    "description": "Special micro-credit facility providing collateral-free working capital loan up to Rs. 10,000 for street vendors.",
+    "eligibility": "Urban street vendors with vending certificate.",
+    "benefits": "Collateral-free working capital loan.",
+    "requiredDocuments": [
+      "Certificate of Vending",
+      "Aadhaar."
+    ],
+    "state": "Central",
+    "category": "Micro Credit & Livelihood",
+    "applicationProcess": "Apply at PM SVANidhi portal.",
+    "sources": [
+      {
+        "act": "PM SVANidhi (Street Vendor Special Micro-Credit)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "PM SVANidhi (Street Vendor Special Micro-Credit) (Central) under Micro Credit & Livelihood: Collateral-free working capital loan.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pmsvanidhi"
+      }
+    ]
+  },
+  {
+    "id": "scheme_8",
+    "name": "Stand Up India Scheme",
+    "description": "Bank loans between Rs. 10 Lakh and Rs. 1 Crore to SC/ST or woman borrowers for setting up greenfield enterprise.",
+    "eligibility": "SC/ST and/or woman entrepreneur aged 18+.",
+    "benefits": "Rs 10 Lakh to Rs 1 Crore greenfield loan.",
+    "requiredDocuments": [
+      "Project report",
+      "Caste certificate."
+    ],
+    "state": "Central",
+    "category": "Banking & Entrepreneurship",
+    "applicationProcess": "Apply at Stand Up India portal.",
+    "sources": [
+      {
+        "act": "Stand Up India Scheme",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "Stand Up India Scheme (Central) under Banking & Entrepreneurship: Rs 10 Lakh to Rs 1 Crore greenfield loan.",
+        "source_url": "https://www.myscheme.gov.in/schemes/standupindia"
+      }
+    ]
+  },
+  {
+    "id": "scheme_9",
+    "name": "PM POSHAN (Mid Day Meal Scheme)",
+    "description": "National scheme for providing cooked nutritious meal to children studying in classes I to VIII in government schools.",
+    "eligibility": "Children enrolled in primary/upper primary govt schools.",
+    "benefits": "Free hot cooked nutritious meal.",
+    "requiredDocuments": [
+      "School admission record."
+    ],
+    "state": "Central",
+    "category": "Education & Nutrition",
+    "applicationProcess": "Automatic through school enrollment.",
+    "sources": [
+      {
+        "act": "PM POSHAN (Mid Day Meal Scheme)",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "PM POSHAN (Mid Day Meal Scheme) (Central) under Education & Nutrition: Free hot cooked nutritious meal.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pm-poshan"
+      }
+    ]
+  },
+  {
+    "id": "scheme_10",
+    "name": "PM Vishwakarma Scheme",
+    "description": "Comprehensive scheme providing skill training, toolkit incentive of Rs. 15,000, and collateral-free credit support to traditional artisans.",
+    "eligibility": "Artisans working in 18 traditional trades.",
+    "benefits": "Rs 15,000 toolkit digital voucher.",
+    "requiredDocuments": [
+      "Aadhaar",
+      "Bank account."
+    ],
+    "state": "Central",
+    "category": "Skill Development & Artisans",
+    "applicationProcess": "Register at PM Vishwakarma portal.",
+    "sources": [
+      {
+        "act": "PM Vishwakarma Scheme",
+        "section": "Overview",
+        "jurisdiction": "Central",
+        "excerpt": "PM Vishwakarma Scheme (Central) under Skill Development & Artisans: Rs 15,000 toolkit digital voucher.",
+        "source_url": "https://www.myscheme.gov.in/schemes/pm-vishwakarma"
+      }
+    ]
+  },
+  {
+    "id": "scheme_11",
+    "name": "Ladli Laxmi Yojana (Madhya Pradesh)",
+    "description": "State welfare scheme of Madhya Pradesh offering educational and financial milestone payments up to age 21 for girl child.",
+    "eligibility": "Girl child born in MP to non-taxpayer resident parents.",
+    "benefits": "Milestone educational grants and Rs 1 Lakh at age 21.",
+    "requiredDocuments": [
+      "Birth certificate",
+      "MP Domicile."
+    ],
+    "state": "Madhya Pradesh",
+    "category": "Women & Child Development",
+    "applicationProcess": "Apply online or Anganwadi.",
+    "sources": [
+      {
+        "act": "Ladli Laxmi Yojana (Madhya Pradesh)",
+        "section": "Overview",
+        "jurisdiction": "Madhya Pradesh",
+        "excerpt": "Ladli Laxmi Yojana (Madhya Pradesh) (Madhya Pradesh) under Women & Child Development: Milestone educational grants and Rs 1 Lakh at age 21.",
+        "source_url": "https://ladlilaxmi.mp.gov.in/"
+      }
+    ]
+  },
+  {
+    "id": "scheme_12",
+    "name": "Mukhyamantri Ladli Behna Yojana (Madhya Pradesh)",
+    "description": "Financial assistance scheme providing Rs. 1250 per month directly to eligible women of Madhya Pradesh.",
+    "eligibility": "Resident women of MP aged 21-60.",
+    "benefits": "Rs 1250 per month direct bank transfer.",
+    "requiredDocuments": [
+      "Samagra ID",
+      "Aadhaar."
+    ],
+    "state": "Madhya Pradesh",
+    "category": "Women Welfare",
+    "applicationProcess": "Apply at Gram Panchayat camp.",
+    "sources": [
+      {
+        "act": "Mukhyamantri Ladli Behna Yojana (Madhya Pradesh)",
+        "section": "Overview",
+        "jurisdiction": "Madhya Pradesh",
+        "excerpt": "Mukhyamantri Ladli Behna Yojana (Madhya Pradesh) (Madhya Pradesh) under Women Welfare: Rs 1250 per month direct bank transfer.",
+        "source_url": "https://cmladlibehna.mp.gov.in/"
+      }
+    ]
+  },
+  {
+    "id": "scheme_13",
+    "name": "MP Mukhyamantri Kanya Vivah Yojana",
+    "description": "Financial assistance of Rs. 51,000 for marriage of destitute, widowed or divorced women in Madhya Pradesh.",
+    "eligibility": "Resident bride of MP aged 18+ from BPL family.",
+    "benefits": "Rs 51,000 financial assistance.",
+    "requiredDocuments": [
+      "BPL Card",
+      "Age proof."
+    ],
+    "state": "Madhya Pradesh",
+    "category": "Social Security",
+    "applicationProcess": "Apply at local Janpad Panchayat.",
+    "sources": [
+      {
+        "act": "MP Mukhyamantri Kanya Vivah Yojana",
+        "section": "Overview",
+        "jurisdiction": "Madhya Pradesh",
+        "excerpt": "MP Mukhyamantri Kanya Vivah Yojana (Madhya Pradesh) under Social Security: Rs 51,000 financial assistance.",
+        "source_url": "https://mp.gov.in/kanyavivah"
+      }
+    ]
+  },
+  {
+    "id": "scheme_14",
+    "name": "Delhi Ladli Scheme",
+    "description": "Financial assistance deposited in name of girl child born in Delhi at milestones of birth, school admission, and class 12 completion.",
+    "eligibility": "Girl child born in Delhi with family income under Rs 1 Lakh.",
+    "benefits": "Up to Rs 100,000 maturity benefit at age 18.",
+    "requiredDocuments": [
+      "Birth certificate",
+      "Delhi residence proof."
+    ],
+    "state": "Delhi",
+    "category": "Women & Child Development",
+    "applicationProcess": "Apply through school or WCD Delhi office.",
+    "sources": [
+      {
+        "act": "Delhi Ladli Scheme",
+        "section": "Overview",
+        "jurisdiction": "Delhi",
+        "excerpt": "Delhi Ladli Scheme (Delhi) under Women & Child Development: Up to Rs 100,000 maturity benefit at age 18.",
+        "source_url": "https://wcd.delhi.gov.in/ladli"
+      }
+    ]
+  },
+  {
+    "id": "scheme_15",
+    "name": "Delhi Pension Scheme for Persons with Disabilities",
+    "description": "Monthly pension of Rs. 2500 for persons with 40% or more disability residing in Delhi.",
+    "eligibility": "Delhi resident disabled person (40%+ disability).",
+    "benefits": "Rs 2500 monthly pension.",
+    "requiredDocuments": [
+      "Disability certificate",
+      "Delhi Residence proof."
+    ],
+    "state": "Delhi",
+    "category": "Social Welfare",
+    "applicationProcess": "Apply at e-District Delhi portal.",
+    "sources": [
+      {
+        "act": "Delhi Pension Scheme for Persons with Disabilities",
+        "section": "Overview",
+        "jurisdiction": "Delhi",
+        "excerpt": "Delhi Pension Scheme for Persons with Disabilities (Delhi) under Social Welfare: Rs 2500 monthly pension.",
+        "source_url": "https://edistrict.delhigovt.nic.in/"
+      }
+    ]
+  },
+  {
+    "id": "scheme_16",
+    "name": "Maharashtra Majhi Kanya Bhagya Shree Scheme",
+    "description": "Financial assistance of Rs. 50,000 deposited in bank for single girl child family in Maharashtra.",
+    "eligibility": "BPL family in Maharashtra with girl child.",
+    "benefits": "Rs 50,000 fixed deposit.",
+    "requiredDocuments": [
+      "BPL card",
+      "Birth certificate."
+    ],
+    "state": "Maharashtra",
+    "category": "Women & Child Development",
+    "applicationProcess": "Apply at Women & Child Development office.",
+    "sources": [
+      {
+        "act": "Maharashtra Majhi Kanya Bhagya Shree Scheme",
+        "section": "Overview",
+        "jurisdiction": "Maharashtra",
+        "excerpt": "Maharashtra Majhi Kanya Bhagya Shree Scheme (Maharashtra) under Women & Child Development: Rs 50,000 fixed deposit.",
+        "source_url": "https://maharashtra.gov.in/"
+      }
+    ]
+  },
+  {
+    "id": "scheme_17",
+    "name": "Tamil Nadu Pudhumai Penn Scheme",
+    "description": "Monthly financial assistance of Rs. 1000 for girl students pursuing higher education who studied in TN govt schools.",
+    "eligibility": "Girl student in TN pursuing degree/diploma.",
+    "benefits": "Rs 1000 per month.",
+    "requiredDocuments": [
+      "Govt school study certificate",
+      "Aadhaar."
+    ],
+    "state": "Tamil Nadu",
+    "category": "Education",
+    "applicationProcess": "Apply through college portal.",
+    "sources": [
+      {
+        "act": "Tamil Nadu Pudhumai Penn Scheme",
+        "section": "Overview",
+        "jurisdiction": "Tamil Nadu",
+        "excerpt": "Tamil Nadu Pudhumai Penn Scheme (Tamil Nadu) under Education: Rs 1000 per month.",
+        "source_url": "https://penkalvi.tn.gov.in/"
+      }
+    ]
+  },
+  {
+    "id": "scheme_18",
+    "name": "Karnataka Gruha Lakshmi Scheme",
+    "description": "Financial assistance of Rs. 2000 per month to female head of household in Karnataka.",
+    "eligibility": "Women household head in Karnataka.",
+    "benefits": "Rs 2000 monthly direct bank transfer.",
+    "requiredDocuments": [
+      "Ration Card",
+      "Aadhaar."
+    ],
+    "state": "Karnataka",
+    "category": "Women Empowerment",
+    "applicationProcess": "Apply at Seva Sindhu portal.",
+    "sources": [
+      {
+        "act": "Karnataka Gruha Lakshmi Scheme",
+        "section": "Overview",
+        "jurisdiction": "Karnataka",
+        "excerpt": "Karnataka Gruha Lakshmi Scheme (Karnataka) under Women Empowerment: Rs 2000 monthly direct bank transfer.",
+        "source_url": "https://sevasindhugs.karnataka.gov.in/"
+      }
+    ]
+  }
+]
