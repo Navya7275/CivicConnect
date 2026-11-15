@@ -166,3 +166,115 @@ python -m data.ingestion.weekly_sync --schedule
   3. **Version & Effective Date Handling:** Track amended statutory laws with explicit `effective_date` metadata.
   4. **PostgreSQL as Source of Truth:** Update stored chunks directly in PostgreSQL.
   5. **Incremental Index Synchronization:** Rebuild or incrementally update FAISS vector index and BM25 sparse index whenever database chunks are modified.
+
+---
+
+# The official Act PDF, and what our stored text actually is
+
+## Our RTI text is condensed, not verbatim
+
+This needs stating plainly, because the project's central claim depends on it.
+
+On 2026-11-15 the official RTI Act PDF was obtained from the Central
+Information Commission and compared against our stored chunks. They are not
+the same thing.
+
+**Section 3** happens to match, because it is one sentence long:
+
+> *"Subject to the provisions of this Act, all citizens shall have the right to
+> information."*
+
+**Section 6** is reworded. We store *"A person desiring information under this
+Act shall make a request in writing or electronically…"*; the Act says *"A
+person, who desires to obtain any information under this Act, shall make a
+request in writing or through electronic means…"*, and then continues through
+clauses (a) and (b), a proviso on oral requests, and two further sub-sections
+we do not hold at all.
+
+**Section 7** is heavily condensed. We store 166 characters. Sub-section (1)
+alone is roughly 450, and the section runs to eight sub-sections. Missing from
+our copy:
+
+- the **48-hour rule** — *"where the information sought for concerns the life or
+  liberty of a person, the same shall be provided within forty-eight hours"*
+- **deemed refusal** — failing to answer in time counts as a refusal, which can
+  be appealed
+- **free of charge** — information must be provided free where the authority
+  misses the deadline
+
+Those last two are exactly what someone in difficulty needs to know, and the
+assistant cannot tell them, because the text is not in the corpus.
+
+So the corpus is mixed: short sections are verbatim by coincidence, longer ones
+are summaries. **Do not describe the law chunks as verbatim statutory extracts.**
+They are accurate plain-language condensations of real provisions, which is a
+weaker and different claim. `extraction_method` records `manual` for these,
+which is correct — a person wrote them from the source.
+
+This also explains a real exchange. Asked how long an authority has to respond,
+the assistant answered thirty days and added that its sources did not cover
+urgent life-or-liberty cases. That was correct: the proviso genuinely is not in
+our data.
+
+## The PDF ships with the application
+
+`frontend/public/acts/rti-act-2005.pdf`, served at `/acts/rti-act-2005.pdf`.
+
+| | |
+|---|---|
+| obtained from | `https://cic.gov.in/sites/default/files/RTI-Act_English.pdf` |
+| obtained on | 2026-11-15 |
+| sha256 | `e0b70162cb414d26455b86ee566db5f918bcd2bbcdc1b24d331e1a5a3933e577` |
+| pages | 27 |
+
+Indian Acts are government works and may be reproduced, so committing it is
+permitted. It is held in the repository rather than linked for a practical
+reason: every external link we have tried has failed. India Code returns CDN
+errors on both of its domains, `consumeraffairs.nic.in` did not load, and
+`ncdrc.nic.in/bare_acts/CPA2019.pdf` returns 404. A file we ship cannot go
+down, cannot be moved, and cannot be quietly edited underneath us.
+
+### Section-level links
+
+Each RTI chunk's `reference_url` points at the page of the PDF where its
+section begins, using the PDF viewer's page anchor:
+
+```
+Section 3   /acts/rti-act-2005.pdf#page=8
+Section 7   /acts/rti-act-2005.pdf#page=11
+Section 20  /acts/rti-act-2005.pdf#page=20
+```
+
+This restores the section-level precision lost in issue #22, when per-section
+India Code links turned out never to have worked. A reader clicking a citation
+now lands on the government's own printed text of that section.
+
+Note what this means for verification. Because our own text is condensed, the
+PDF is not a convenience here — it is the authority. Our chunk says what the
+provision means; the PDF shows what it says.
+
+The page mapping was derived by locating each section heading in the PDF's text
+layer. Five headings were too damaged by OCR to match (`Ftight to information`
+for Section 3, and Sections 8, 14, 17 and 27) and were confirmed by reading the
+page images directly.
+
+### Why the text was not re-extracted from the PDF
+
+Re-extracting verbatim text from this PDF was attempted and set aside. Its text
+layer is OCR output with a consistent error rate: `(1)` is read as `(/)` in 56
+places, and the word *information* appears misread as `infbrmation`,
+`intbrmation`, `inthrmation` and `informatiOn`. Headings are affected too —
+`Bar of judisdiction of courts`, `Powers and 'Unctions of Information
+Commissions`.
+
+Most of these are mechanically correctable, but not all. `Sashtra` in the
+Section 24 list of exempt organisations is probably *Rashtra*, and guessing the
+name of an organisation inside a statutory exemption is not acceptable. Past a
+certain number of corrections the result is a reconstruction rather than an
+extract, and "the government's exact words, after our corrections" is a weaker
+claim than the one it appears to make.
+
+Proper verbatim extraction remains worth doing, with a human proofreading pass
+against the page images. Until then the honest arrangement is the one now in
+place: our condensed text, labelled as such, beside a link to the authoritative
+original.
