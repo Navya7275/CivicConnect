@@ -1,0 +1,362 @@
+"""Phase E — measure whether hybrid retrieval and verification actually help.
+
+The project claims three things: that hybrid retrieval beats dense alone, that
+answers are grounded in real statutory sources, and that the verification agent
+catches answers which are not. None of those is currently a number. This script
+turns them into one.
+
+It runs every question in `questions.json` through three arms and scores them:
+
+    dense                 FAISS only -- semantic similarity on its own
+    hybrid                FAISS + BM25 fused with RRF
+    hybrid+verification   the same, with the verification agent judging the answer
+
+What gets measured, and why these and not others:
+
+  recall@k            Did retrieval return the chunk that answers the question
+                      at all? Pure retrieval, no LLM involved, so it is cheap
+                      and deterministic.
+
+  citation correctness  Did the answer cite the section that actually answers
+                      the question?
+
+  citation groundedness Was every section the answer cited actually among the
+                      retrieved chunks? This is the hallucination measure.
+
+  refusal correctness For questions the corpus genuinely cannot answer, did the
+                      system say so instead of inventing something?
+
+Recall and citation accuracy are reported separately on purpose. If recall is
+high and citation accuracy is low, synthesis is misusing chunks it was given.
+If recall is low, retrieval never gave it a chance. Those have completely
+different fixes, and a single combined score hides which one you have.
+
+Running it:
+
+    python -m data.eval.run_eval                 # all three arms
+    python -m data.eval.run_eval --no-synthesis  # retrieval only, no API key needed
+    python -m data.eval.run_eval --limit 8 --out results.json
+
+`--no-synthesis` exists because retrieval metrics need no network at all. It is
+the fast loop while tuning retrieval, and it still produces recall@k, which is
+the number that would have caught the tokenizer bug in #30.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import statistics
+import sys
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+EVAL_DIR = Path(__file__).resolve().parent
+REPO_ROOT = EVAL_DIR.parents[1]
+QUESTIONS_PATH = EVAL_DIR / "questions.json"
+
+# Phrases the synthesis prompt tells the model to use when the context does not
+# answer the question. Matching is deliberately loose: we are asking "did it
+# decline", not "did it decline in exactly these words".
+REFUSAL_MARKERS = (
+    "do not cover",
+    "does not cover",
+    "do not contain",
+    "does not contain",
+    "not provide enough information",
+    "do not provide enough",
+    "sources i have do not",
+    "cannot answer",
+)
+
+
+def normalise_section(value: str | None) -> str | None:
+    """'Section 7' / 'sec. 7' / '7' all become '7'."""
+    if not value:
+        return None
+    m = re.search(r"(\d+[A-Z]?)", str(value), re.IGNORECASE)
+    return m.group(1).upper() if m else None
+
+
+def same_provision(a_act: str, a_sec: str, b_act: str, b_sec: str) -> bool:
+    """Do two (act, section) pairs refer to the same provision?
+
+    Act names are compared loosely -- "Right to Information Act, 2005" and
+    "The Right to Information Act, 2005" are the same Act, and an evaluation
+    that counted them as different would measure punctuation.
+    """
+    if normalise_section(a_sec) != normalise_section(b_sec):
+        return False
+    norm = lambda s: re.sub(r"[^a-z0-9]", "", (s or "").lower()).removeprefix("the")
+    return norm(a_act) in norm(b_act) or norm(b_act) in norm(a_act)
+
+
+@dataclass
+class QuestionResult:
+    """What happened for one question in one arm."""
+
+    qid: str
+    answerable: bool
+    retrieved: list[tuple[str, str]] = field(default_factory=list)
+    recall_hit: bool = False
+    cited: list[tuple[str, str]] = field(default_factory=list)
+    citation_correct: bool = False
+    citation_grounded: bool = True
+    refused: bool = False
+    verified: bool | None = None
+    hallucinated_sections: list[str] = field(default_factory=list)
+    error: str | None = None
+    seconds: float = 0.0
+
+
+def load_questions() -> list[dict[str, Any]]:
+    if not QUESTIONS_PATH.exists():
+        sys.exit(f"No question set at {QUESTIONS_PATH}")
+    questions = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    if not questions:
+        sys.exit("Question set is empty.")
+    return questions
+
+
+def load_corpus() -> list[dict[str, Any]]:
+    from backend.retrieval.data_loader import load_chunks_from_database
+
+    chunks = load_chunks_from_database()
+    if not chunks:
+        sys.exit(
+            "The chunks table is empty. Run:\n"
+            "  python -m data.ingestion.load_seed\n"
+            "  python -m data.ingestion.load_welfare"
+        )
+    return chunks
+
+
+def build_arms(chunks: list[dict[str, Any]], want: list[str]) -> dict[str, Any]:
+    """Construct the retrievers, skipping any that cannot be built.
+
+    A missing arm is reported rather than fatal: retrieval-only runs are useful
+    on a machine that cannot reach the embedding model, and reporting two arms
+    honestly beats refusing to run.
+    """
+    arms: dict[str, Any] = {}
+
+    if "dense" in want:
+        try:
+            from backend.retrieval.dense import DenseRetriever
+
+            arms["dense"] = DenseRetriever(chunks)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [skip] dense: {exc.__class__.__name__}: {exc}")
+
+    if "hybrid" in want or "hybrid+verification" in want:
+        try:
+            from backend.retrieval.hybrid_search import HybridRetriever
+
+            hybrid = HybridRetriever(chunks)
+            if "hybrid" in want:
+                arms["hybrid"] = hybrid
+            if "hybrid+verification" in want:
+                arms["hybrid+verification"] = hybrid
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [skip] hybrid: {exc.__class__.__name__}: {exc}")
+
+    return arms
+
+
+def as_chunk(item: Any) -> dict[str, Any]:
+    """Retrievers return either a chunk dict or {'chunk': ..., 'score': ...}."""
+    if isinstance(item, dict) and "chunk" in item and isinstance(item["chunk"], dict):
+        return item["chunk"]
+    return item
+
+
+def run_one(
+    question: dict[str, Any],
+    arm_name: str,
+    retriever: Any,
+    synthesizer: Any | None,
+    verifier: Any | None,
+    limit: int,
+) -> QuestionResult:
+    res = QuestionResult(qid=question["id"], answerable=question.get("answerable", True))
+    started = time.perf_counter()
+
+    try:
+        raw = retriever.search(question["question"], limit=limit)
+        chunks = [as_chunk(r) for r in raw]
+        res.retrieved = [(c.get("act", ""), c.get("section", "")) for c in chunks]
+
+        if res.answerable:
+            res.recall_hit = any(
+                same_provision(a, s, question["expected_act"], question["expected_section"])
+                for a, s in res.retrieved
+            )
+
+        if synthesizer is None:
+            res.seconds = time.perf_counter() - started
+            return res
+
+        out = synthesizer.synthesize(question["question"], chunks)
+        answer = out.get("answer") or ""
+        citations = out.get("citations") or []
+
+        res.refused = any(m in answer.lower() for m in REFUSAL_MARKERS)
+        res.cited = [(c.get("act", ""), c.get("section", "")) for c in citations]
+
+        if res.answerable:
+            res.citation_correct = any(
+                same_provision(a, s, question["expected_act"], question["expected_section"])
+                for a, s in res.cited
+            )
+
+        retrieved_keys = {(normalise_section(s), (a or "").lower()) for a, s in res.retrieved}
+        res.citation_grounded = all(
+            (normalise_section(s), (a or "").lower()) in retrieved_keys for a, s in res.cited
+        )
+
+        if verifier is not None:
+            v = verifier.verify(answer, citations, chunks)
+            res.verified = v.verified
+            res.hallucinated_sections = list(v.hallucinated_sections)
+
+    except Exception as exc:  # noqa: BLE001 - one bad question must not kill the run
+        res.error = f"{exc.__class__.__name__}: {exc}"
+
+    res.seconds = time.perf_counter() - started
+    return res
+
+
+def pct(n: int, d: int) -> str:
+    return f"{100.0 * n / d:5.1f}%" if d else "    --"
+
+
+def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> None:
+    print()
+    print("=" * 78)
+    print("PHASE E RESULTS")
+    print("=" * 78)
+
+    header = f"{'arm':<22} {'recall@k':>9} {'cite ok':>9} {'grounded':>9} {'refusal':>9} {'errors':>7}"
+    print(header)
+    print("-" * len(header))
+
+    for arm, rows in results.items():
+        answerable = [r for r in rows if r.answerable and not r.error]
+        unanswerable = [r for r in rows if not r.answerable and not r.error]
+        errors = sum(1 for r in rows if r.error)
+
+        recall = pct(sum(r.recall_hit for r in answerable), len(answerable))
+        if synthesis_ran:
+            cite = pct(sum(r.citation_correct for r in answerable), len(answerable))
+            grounded = pct(sum(r.citation_grounded for r in rows if not r.error), len(rows) - errors)
+            refusal = pct(sum(r.refused for r in unanswerable), len(unanswerable))
+        else:
+            cite = grounded = refusal = "    --"
+
+        print(f"{arm:<22} {recall:>9} {cite:>9} {grounded:>9} {refusal:>9} {errors:>7}")
+
+    if synthesis_ran and "hybrid+verification" in results:
+        rows = [r for r in results["hybrid+verification"] if not r.error]
+        flagged = [r for r in rows if r.verified is False]
+        hallucinated = [r for r in rows if r.hallucinated_sections]
+        print()
+        print(f"verification flagged {len(flagged)} of {len(rows)} answers as ungrounded")
+        print(f"prose cited a section not retrieved in {len(hallucinated)} answers")
+        if hallucinated:
+            for r in hallucinated[:5]:
+                print(f"    {r.qid}: {', '.join(r.hallucinated_sections)}")
+
+    times = [r.seconds for rows in results.values() for r in rows]
+    if times:
+        print()
+        print(f"median {statistics.median(times):.2f}s per question, {len(times)} runs total")
+
+    print()
+    print("recall@k   did retrieval return the chunk that answers the question")
+    print("cite ok    did the answer cite the section that answers it")
+    print("grounded   was every cited section actually among the retrieved chunks")
+    print("refusal    for unanswerable questions, did it correctly decline")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Phase E evaluation")
+    ap.add_argument("--limit", type=int, default=5, help="chunks retrieved per question (k)")
+    ap.add_argument(
+        "--arms",
+        default="dense,hybrid,hybrid+verification",
+        help="comma-separated subset of arms to run",
+    )
+    ap.add_argument(
+        "--no-synthesis",
+        action="store_true",
+        help="retrieval metrics only; needs no API key and no network",
+    )
+    ap.add_argument("--out", help="write full per-question results to this JSON file")
+    args = ap.parse_args()
+
+    os.chdir(REPO_ROOT)
+    want = [a.strip() for a in args.arms.split(",") if a.strip()]
+
+    questions = load_questions()
+    answerable = sum(1 for q in questions if q.get("answerable", True))
+    print(f"{len(questions)} questions ({answerable} answerable, {len(questions) - answerable} not)")
+
+    chunks = load_corpus()
+    print(f"{len(chunks)} chunks in the corpus")
+
+    arms = build_arms(chunks, want)
+    if not arms:
+        sys.exit("No arm could be constructed. Build the index first:\n  python -m data.indexing.build_index")
+
+    synthesizer = verifier = None
+    if not args.no_synthesis:
+        try:
+            from backend.agents.synthesis import SynthesisAgent
+
+            synthesizer = SynthesisAgent()
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [skip] synthesis: {exc.__class__.__name__}: {exc}")
+            print("         running retrieval metrics only; set GROQ_API_KEY for the rest")
+    if synthesizer is not None:
+        from backend.agents.verification import VerificationAgent
+
+        verifier = VerificationAgent()
+
+    print(f"arms: {', '.join(arms)}")
+    print()
+
+    results: dict[str, list[QuestionResult]] = {}
+    for arm_name, retriever in arms.items():
+        use_verifier = verifier if arm_name == "hybrid+verification" else None
+        rows = []
+        for i, q in enumerate(questions, 1):
+            rows.append(run_one(q, arm_name, retriever, synthesizer, use_verifier, args.limit))
+            print(f"\r  {arm_name}: {i}/{len(questions)}", end="", flush=True)
+        print()
+        results[arm_name] = rows
+
+    report(results, synthesis_ran=synthesizer is not None)
+
+    if args.out:
+        payload = {
+            "k": args.limit,
+            "questions": len(questions),
+            "corpus_chunks": len(chunks),
+            "model": os.getenv("GROQ_MODEL", "(default)"),
+            "synthesis_ran": synthesizer is not None,
+            "arms": {
+                arm: [vars(r) for r in rows] for arm, rows in results.items()
+            },
+        }
+        Path(args.out).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        print(f"\nfull results written to {args.out}")
+        print("Record the GROQ_MODEL and the index's corpus fingerprint alongside")
+        print("these numbers -- they are not reproducible without both.")
+
+
+if __name__ == "__main__":
+    main()
