@@ -27,6 +27,8 @@ from sentence_transformers import SentenceTransformer
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from sqlalchemy.exc import OperationalError
+
 from data.db.database import SessionLocal
 from data.db.models import Chunk
 
@@ -114,10 +116,29 @@ def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:
     print(f"Connecting to database to fetch searchable chunks...")
     db = SessionLocal()
 
+    SETUP_HINT = (
+        "The corpus has not been loaded into the database yet. Run:\n"
+        "    python -m data.ingestion.load_seed\n"
+        "    python -m data.ingestion.load_welfare\n"
+        "    python -m data.ingestion.validate\n"
+        "and then build the index again.\n\n"
+        "civicconnect.db is no longer tracked in git (it is a generated file, and\n"
+        "committing it meant every run showed up as a change), so a fresh clone or\n"
+        "a pull that removed it has no database until those commands create one."
+    )
+
     try:
-        chunks: List[Chunk] = db.query(Chunk).order_by(Chunk.id).all()
+        try:
+            chunks: List[Chunk] = db.query(Chunk).order_by(Chunk.id).all()
+        except OperationalError as exc:
+            # The table does not exist, which is a missing database rather than a
+            # broken one. Without this the user gets forty lines of SQLAlchemy
+            # traceback ending in "no such table: chunks", which says what failed
+            # but not what to do.
+            raise SystemExit(f"\n{SETUP_HINT}\n") from exc
+
         if not chunks:
-            raise ValueError("No chunks found in database. Load seed/ingestion data first.")
+            raise SystemExit(f"\nThe chunks table exists but is empty.\n\n{SETUP_HINT}\n")
 
         chunk_ids = [c.chunk_id for c in chunks]
         texts = [c.text for c in chunks]

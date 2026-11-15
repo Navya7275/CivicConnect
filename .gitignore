@@ -31,3 +31,6 @@ dist/
 skills/
 .skills/
 unslop/
+
+# Phase E evaluation output
+results.json
