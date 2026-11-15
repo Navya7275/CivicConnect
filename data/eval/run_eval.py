@@ -383,6 +383,15 @@ def main() -> None:
     )
     ap.add_argument("--out", help="write full per-question results to this JSON file")
     ap.add_argument(
+        "--sample",
+        type=int,
+        help=(
+            "run only this many answerable questions, keeping every unanswerable "
+            "one. Use it for the synthesis arms on a rate-limited tier: the full "
+            "set is 308 LLM calls, which a free key will not serve"
+        ),
+    )
+    ap.add_argument(
         "--sleep",
         type=float,
         default=0.0,
@@ -394,6 +403,27 @@ def main() -> None:
     want = [a.strip() for a in args.arms.split(",") if a.strip()]
 
     questions = load_questions()
+
+    if args.sample:
+        # Keep every unanswerable question and evenly space the answerable ones.
+        #
+        # Evenly spaced rather than random so the sample is the same on every
+        # run and the numbers are comparable, and because questions.json is
+        # ordered by act and then by section -- taking the first N would test
+        # only the RTI Act.
+        #
+        # The unanswerable ones are always kept: there are only eight, they
+        # cost one call each, and refusal correctness is the one synthesis
+        # metric that is not partly a restatement of recall.
+        answerable_qs = [q for q in questions if q.get("answerable", True)]
+        unanswerable_qs = [q for q in questions if not q.get("answerable", True)]
+        n = min(args.sample, len(answerable_qs))
+        step = len(answerable_qs) / n
+        picked = [answerable_qs[int(i * step)] for i in range(n)]
+        questions = picked + unanswerable_qs
+        print(f"sampling {n} of {len(answerable_qs)} answerable, plus all "
+              f"{len(unanswerable_qs)} unanswerable")
+
     answerable = sum(1 for q in questions if q.get("answerable", True))
     print(f"{len(questions)} questions ({answerable} answerable, {len(questions) - answerable} not)")
 
