@@ -155,5 +155,7 @@
   },
   "total_chunks": 75,
   "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-  "tokenizer_version": 2
+  "tokenizer_version": 2,
+  "corpus_sha256": "5449b15302e543203345edd8e3e55d80a961ab01790680c659557deb64e53ee4",
+  "built_at": "2026-11-15T11:25:00Z"
 }
