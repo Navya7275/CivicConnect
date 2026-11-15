@@ -59,7 +59,20 @@ class BM25Retriever:
         # matching, because one side has "request." and the other has
         # "request". Retrieval quietly gets worse and every test still passes.
         # Refuse to load instead, and say exactly what to run.
+        import hashlib
         from data.indexing.build_index import TOKENIZER_VERSION
+
+        if "corpus_sha256" in mapping:
+            seed_chunks = Path(__file__).resolve().parents[2] / "data" / "ingestion" / "seed_chunks.json"
+            seed_schemes = Path(__file__).resolve().parents[2] / "data" / "ingestion" / "seed_schemes.json"
+            from data.indexing.build_index import corpus_fingerprint
+
+            current_hash = corpus_fingerprint([seed_chunks, seed_schemes])
+            if current_hash != mapping["corpus_sha256"]:
+                raise RuntimeError(
+                    "Index was built from a different corpus than the one on disk.\n"
+                    "Run: python -m data.indexing.build_index"
+                )
 
         index_tokenizer = mapping.get("tokenizer_version")
         if index_tokenizer != TOKENIZER_VERSION:

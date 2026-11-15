@@ -9,11 +9,13 @@ Features:
 - Saves index artifacts reproducibly in data/indexing/artifacts/
 """
 
+import hashlib
 import json
 import os
 import pickle
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
@@ -33,6 +35,9 @@ ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 DEFAULT_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
+SEED_CHUNKS_PATH = Path(__file__).resolve().parents[1] / "ingestion" / "seed_chunks.json"
+SEED_SCHEMES_PATH = Path(__file__).resolve().parents[1] / "ingestion" / "seed_schemes.json"
+
 
 # Incremented whenever tokenize_text changes behaviour. Written into
 # chunk_ids.json at build time and checked when the BM25 index is loaded, so a
@@ -42,6 +47,37 @@ DEFAULT_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-Min
 TOKENIZER_VERSION = 2
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def corpus_fingerprint(paths) -> str:
+    """Hash the corpus by content, in a way that is the same on every machine.
+
+    Hashing the raw bytes of these files does not work in a git repository.
+    git normalises line endings on checkout, so a Windows clone with
+    core.autocrlf sees CRLF where a Linux clone sees LF, and the same corpus
+    hashes to two different values. An index built on Windows then refuses to
+    load everywhere else -- which is what happened: the committed fingerprint
+    matched only the CRLF form, so the guard fired for every other machine and
+    for CI, while passing on the laptop that wrote it.
+
+    So the hash is taken over canonical JSON instead: parsed, keys sorted, no
+    incidental whitespace. That is immune to line endings and to reformatting,
+    and it tracks what the fingerprint is actually meant to track -- whether
+    the corpus CONTENT changed, not whether the file was re-indented.
+    """
+    import hashlib
+    import json as _json
+
+    digest = hashlib.sha256()
+    for path in sorted(str(p) for p in paths):
+        p = Path(path)
+        if not p.exists():
+            continue
+        data = _json.loads(p.read_text(encoding="utf-8"))
+        canonical = _json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        digest.update(p.name.encode("utf-8"))
+        digest.update(canonical.encode("utf-8"))
+    return digest.hexdigest()
 
 
 def tokenize_text(text: str) -> List[str]:
@@ -117,13 +153,18 @@ def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:
             pickle.dump(bm25_index, f)
         print(f"Sparse BM25 index saved to: {bm25_file}")
 
-        # 3. Save chunk_id mappings
+        # 3. Save chunk_id mappings & fingerprint
         mapping_file = ARTIFACTS_DIR / "chunk_ids.json"
+
+        fingerprint = corpus_fingerprint([SEED_CHUNKS_PATH, SEED_SCHEMES_PATH])
+
         id_mapping = {
             "index_to_chunk_id": {idx: cid for idx, cid in enumerate(chunk_ids)},
             "chunk_id_to_index": {cid: idx for idx, cid in enumerate(chunk_ids)},
             "total_chunks": len(chunk_ids),
             "embedding_model": model_name,
+            "corpus_sha256": fingerprint,
+            "built_at": datetime.now(timezone.utc).isoformat(),
             # Bump TOKENIZER_VERSION whenever tokenize_text changes. The BM25
             # index stores documents already tokenized, so an index built by an
             # older tokenizer cannot be queried by a newer one: the two sides

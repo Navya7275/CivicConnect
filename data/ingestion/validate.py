@@ -168,14 +168,15 @@ def run_data_quality_check() -> bool:
             if c.document_id not in doc_ids:
                 orphan_chunks += 1
 
-            # Provenance checks (Issue #5)
-            if not c.raw_sha256 or not c.raw_sha256.strip():
-                missing_raw_hash += 1
+            # Provenance checks (Issue #5 & Issue #29)
+            method = (c.extraction_method or "manual").lower()
+            if method != "manual":
+                if not c.raw_sha256 or not c.raw_sha256.strip():
+                    missing_raw_hash += 1
 
             if not c.text_sha256 or not c.text_sha256.strip():
                 missing_text_hash += 1
 
-            method = (c.extraction_method or "manual").lower()
             if method == "manual":
                 if not c.reviewer_name or not c.reviewer_name.strip() or c.reviewer_name.strip() == "Harsh Gupta":
                     missing_manual_reviewer += 1
