@@ -1,0 +1,549 @@
+[
+  {
+    "id": "rti-01",
+    "question": "Is it only certain people who can ask the government for information, or can anyone?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 3",
+    "answerable": true
+  },
+  {
+    "id": "rti-02",
+    "question": "How do I actually go about asking a government office for a copy of their records?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 6",
+    "answerable": true
+  },
+  {
+    "id": "rti-03",
+    "question": "My English is weak. Can I write to the government office in Hindi instead?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 6",
+    "answerable": true
+  },
+  {
+    "id": "rti-04",
+    "question": "I asked a government office for records two months ago and nobody has replied. Are they allowed to do that?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 7",
+    "answerable": true
+  },
+  {
+    "id": "rti-05",
+    "question": "How long does a public authority have to respond to an RTI request?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 7",
+    "answerable": true
+  },
+  {
+    "id": "rti-06",
+    "question": "Can a government department just say no to my request, or do they have to give me everything?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 8",
+    "answerable": true
+  },
+  {
+    "id": "rti-07",
+    "question": "They turned down my request. What can I do about it?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 19",
+    "answerable": true
+  },
+  {
+    "id": "rti-08",
+    "question": "If I want to challenge their decision, how long do I have before it's too late?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 19",
+    "answerable": true
+  },
+  {
+    "id": "rti-09",
+    "question": "Does the officer face any consequences for ignoring me for months?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 20",
+    "answerable": true
+  },
+  {
+    "id": "rti-10",
+    "question": "Can the officer who refused me be made to pay a fine?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 20",
+    "answerable": true
+  },
+  {
+    "id": "rti-11",
+    "question": "Who in a government office is the person actually responsible for answering these requests?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 5",
+    "answerable": true
+  },
+  {
+    "id": "rti-12",
+    "question": "Are departments supposed to put things on their website without anyone asking?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 4",
+    "answerable": true
+  },
+  {
+    "id": "rti-13",
+    "question": "Do emails and file notes count as things I can ask for, or only printed papers?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "rti-14",
+    "question": "Does this transparency law apply everywhere in the country?",
+    "expected_act": "Right to Information Act, 2005",
+    "expected_section": "Section 1",
+    "answerable": true
+  },
+  {
+    "id": "cpa-01",
+    "question": "I bought a washing machine for my own home. Does the buyer protection law cover me?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-02",
+    "question": "I bought equipment to use in my shop, not for myself. Am I still protected as a buyer?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-03",
+    "question": "The plumber did a terrible job. Can I complain even though I paid for work and not a product?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-04",
+    "question": "The TV I bought stopped working in a week. Is a fault like that something I can act on?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-05",
+    "question": "The advertisement promised something the product clearly does not do. Is that allowed?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-06",
+    "question": "A faulty water heater burned my hand. Can I make the company pay for the injury?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-07",
+    "question": "The shopkeeper lied to me about where the goods were made. What is that called?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-08",
+    "question": "I ordered through a shopping app and it went wrong. Does the law reach online sellers?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-09",
+    "question": "What am I entitled to expect as a buyer? What are my basic rights?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-10",
+    "question": "Can a consumer group file the complaint on my behalf, or does it have to be me?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-11",
+    "question": "The thing I'm complaining about cost fifty thousand rupees. Which court do I go to?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 34",
+    "answerable": true
+  },
+  {
+    "id": "cpa-12",
+    "question": "My dispute involves about five crore rupees. Where should I take it?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 47",
+    "answerable": true
+  },
+  {
+    "id": "cpa-13",
+    "question": "The amount in my case is more than twenty crore. Who hears something that big?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 58",
+    "answerable": true
+  },
+  {
+    "id": "cpa-14",
+    "question": "How do I go about filing a complaint against a shop?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 35",
+    "answerable": true
+  },
+  {
+    "id": "cpa-15",
+    "question": "If the case goes my way, what can they actually order the seller to do?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 39",
+    "answerable": true
+  },
+  {
+    "id": "cpa-16",
+    "question": "This happened to me three years ago. Is it too late to do anything now?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 69",
+    "answerable": true
+  },
+  {
+    "id": "cpa-17",
+    "question": "Is there a deadline for bringing a complaint about a bad purchase?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 69",
+    "answerable": true
+  },
+  {
+    "id": "cpa-18",
+    "question": "Can the senior administrative officer of my area look into a trader who is cheating people?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 16",
+    "answerable": true
+  },
+  {
+    "id": "cpa-19",
+    "question": "Where do I report a misleading advertisement I saw on television?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 17",
+    "answerable": true
+  },
+  {
+    "id": "cpa-20",
+    "question": "Can anyone force a company to stop running a false advertisement?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 21",
+    "answerable": true
+  },
+  {
+    "id": "cpa-21",
+    "question": "A product turned out to be dangerous. Can it be pulled off the shelves?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 20",
+    "answerable": true
+  },
+  {
+    "id": "cpa-22",
+    "question": "I disagree with the decision the national authority gave. Can that be challenged?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 24",
+    "answerable": true
+  },
+  {
+    "id": "cpa-23",
+    "question": "The company says the fault isn't theirs. When is the maker on the hook?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 83",
+    "answerable": true
+  },
+  {
+    "id": "cpa-24",
+    "question": "Something I bought injured a member of my family. Is that a different kind of case from a normal complaint?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 82",
+    "answerable": true
+  },
+  {
+    "id": "cpa-25",
+    "question": "Is there a national body that looks after buyers' interests?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 10",
+    "answerable": true
+  },
+  {
+    "id": "cpa-26",
+    "question": "Is there somewhere in every district to take a complaint, or do I have to travel?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 28",
+    "answerable": true
+  },
+  {
+    "id": "cpa-27",
+    "question": "What powers does the national consumer body actually have?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 18",
+    "answerable": true
+  },
+  {
+    "id": "cpa-28",
+    "question": "Who investigates when there's a nationwide problem with a product?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 15",
+    "answerable": true
+  },
+  {
+    "id": "cpa-29",
+    "question": "Can officials go into a warehouse and take away goods as evidence?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 22",
+    "answerable": true
+  },
+  {
+    "id": "cpa-30",
+    "question": "Does my state have its own body for buyer protection?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 6",
+    "answerable": true
+  },
+  {
+    "id": "cpa-31",
+    "question": "Does each area have its own advisory group for shoppers?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 9",
+    "answerable": true
+  },
+  {
+    "id": "cpa-32",
+    "question": "What is the national-level body for buyers actually meant to do?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 5",
+    "answerable": true
+  },
+  {
+    "id": "cpa-33",
+    "question": "How often is the central council required to sit?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 4",
+    "answerable": true
+  },
+  {
+    "id": "cpa-34",
+    "question": "When did the newer buyer protection law start applying?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 1",
+    "answerable": true
+  },
+  {
+    "id": "cpa-35",
+    "question": "Does the law treat something posted online as an advertisement?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 2",
+    "answerable": true
+  },
+  {
+    "id": "cpa-36",
+    "question": "Can the national authority tell an investigator to look into a complaint?",
+    "expected_act": "Consumer Protection Act, 2019",
+    "expected_section": "Section 19",
+    "answerable": true
+  },
+  {
+    "id": "sch-01",
+    "question": "I have never had a bank account. Is there a government scheme that helps with that?",
+    "expected_act": "Pradhan Mantri Jan Dhan Yojana (PMJDY)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-02",
+    "question": "I farm a small piece of land. Does the government give farmers any money directly?",
+    "expected_act": "PM Kisan Samman Nidhi (PM-KISAN)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-03",
+    "question": "How much does a small farmer receive in a year, and is it paid all at once?",
+    "expected_act": "PM Kisan Samman Nidhi (PM-KISAN)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-04",
+    "question": "My family cannot afford a big hospital bill. Is there free treatment for poor families?",
+    "expected_act": "Ayushman Bharat PM-JAY",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-05",
+    "question": "We live in a rented room and have never owned a house. Is there help to buy one?",
+    "expected_act": "PM Awas Yojana (PMAY-Urban)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-06",
+    "question": "We still cook on firewood. Is there a scheme giving poor women a gas connection?",
+    "expected_act": "Pradhan Mantri Ujjwala Yojana (PMUY)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-07",
+    "question": "I am expecting my first baby. Is there any money from the government for mothers?",
+    "expected_act": "Pradhan Mantri Matru Vandana Yojana (PMMVY)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-08",
+    "question": "I sell vegetables from a cart. Can I get a small loan without putting up security?",
+    "expected_act": "PM SVANidhi (Street Vendor Special Micro-Credit)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-09",
+    "question": "I am a woman who wants to start a small factory. Is there a bank loan scheme for that?",
+    "expected_act": "Stand Up India Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-10",
+    "question": "Is food given free to students at state-run primary schools?",
+    "expected_act": "PM POSHAN (Mid Day Meal Scheme)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-11",
+    "question": "I work as a carpenter like my father did. Is there a scheme for traditional craft workers?",
+    "expected_act": "PM Vishwakarma Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-12",
+    "question": "A baby girl has just been born in our family here in Bhopal. Does the state put aside anything for her?",
+    "expected_act": "Ladli Laxmi Yojana (Madhya Pradesh)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-13",
+    "question": "I am a woman living in Madhya Pradesh. Does the state give any monthly money to women?",
+    "expected_act": "Mukhyamantri Ladli Behna Yojana (Madhya Pradesh)",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-14",
+    "question": "I am a widow in Madhya Pradesh getting remarried and cannot afford the wedding. Any help?",
+    "expected_act": "MP Mukhyamantri Kanya Vivah Yojana",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-15",
+    "question": "My daughter was born in Delhi and we earn very little. Is there a scheme for her?",
+    "expected_act": "Delhi Ladli Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-16",
+    "question": "I cannot work because of a permanent physical condition and I live in Delhi. Does the state give regular money?",
+    "expected_act": "Delhi Pension Scheme for Persons with Disabilities",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-17",
+    "question": "I run the household in Karnataka. Is there money given to women heads of families?",
+    "expected_act": "Karnataka Gruha Lakshmi Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-18",
+    "question": "I am a girl from a government school in Tamil Nadu going to college. Is there support?",
+    "expected_act": "Tamil Nadu Pudhumai Penn Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "sch-19",
+    "question": "We are a poor family in Maharashtra with one daughter. Is there a scheme for us?",
+    "expected_act": "Maharashtra Majhi Kanya Bhagya Shree Scheme",
+    "expected_section": "",
+    "answerable": true
+  },
+  {
+    "id": "neg-01",
+    "question": "My landlord told me to leave by Friday without any notice. What are my rights?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Tenancy is a State subject and the corpus holds no state law at all. Notably this is one of the app's own suggested questions on the start screen."
+  },
+  {
+    "id": "neg-02",
+    "question": "What is the punishment for theft?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Criminal law. The Bharatiya Nyaya Sanhita is not in the corpus."
+  },
+  {
+    "id": "neg-03",
+    "question": "How do I get a divorce and how long does it take?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Family law. Nothing in the corpus."
+  },
+  {
+    "id": "neg-04",
+    "question": "How do I register a piece of land I have bought in Madhya Pradesh?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Property registration, a State subject. No state law in the corpus."
+  },
+  {
+    "id": "neg-05",
+    "question": "What is the minimum wage I should be paid in my state?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Labour law, and state-specific. Nothing in the corpus."
+  },
+  {
+    "id": "neg-06",
+    "question": "How much maternity leave am I entitled to from my employer?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Maternity Benefit Act. Easy to confuse with the PMMVY scheme, which the corpus does hold -- a useful test of whether the system distinguishes a benefit scheme from an employment right."
+  },
+  {
+    "id": "neg-07",
+    "question": "What happens if I am caught driving after drinking?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "Motor Vehicles Act. Nothing in the corpus."
+  },
+  {
+    "id": "neg-08",
+    "question": "Is the free cervical cancer vaccine available for my eleven year old daughter?",
+    "expected_act": "",
+    "expected_section": "",
+    "answerable": false,
+    "why_unanswerable": "The HPV programme launched in 2026 and is not in the corpus. Public reporting on its eligibility conflicts, so inventing an answer here could send someone to a clinic for nothing."
+  }
+]

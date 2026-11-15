@@ -310,7 +310,18 @@ def main() -> None:
 
     arms = build_arms(chunks, want)
     if not arms:
-        sys.exit("No arm could be constructed. Build the index first:\n  python -m data.indexing.build_index")
+        artifacts = REPO_ROOT / "data" / "indexing" / "artifacts"
+        built = (artifacts / "faiss.index").exists()
+        sys.exit(
+            "No arm could be constructed.\n"
+            + (
+                "  The index exists, so the reason is above -- most likely the embedding\n"
+                "  model could not be loaded. It downloads from huggingface.co on first\n"
+                "  use and is cached afterwards, so this machine needs network access once."
+                if built
+                else "  The index is missing. Build it:\n    python -m data.indexing.build_index"
+            )
+        )
 
     synthesizer = verifier = None
     if not args.no_synthesis:
