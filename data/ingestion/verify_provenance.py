@@ -59,12 +59,13 @@ def run_provenance_verification(verify_network: bool = True) -> bool:
                 print(f"[FAIL] Text SHA-256 mismatch for {c.chunk_id}: stored={c.text_sha256}, computed={computed_text_hash}")
                 text_hash_mismatches += 1
 
-            # 2. Raw SHA-256 check
-            if not c.raw_sha256 or not c.raw_sha256.strip():
-                missing_raw_hash += 1
+            # 2. Raw SHA-256 check (only required for non-manual extractions, Issue #29)
+            method = (c.extraction_method or "manual").lower()
+            if method != "manual":
+                if not c.raw_sha256 or not c.raw_sha256.strip():
+                    missing_raw_hash += 1
 
             # 3. Extraction method check
-            method = (c.extraction_method or "manual").lower()
             if method not in valid_methods:
                 invalid_extraction_methods += 1
 
