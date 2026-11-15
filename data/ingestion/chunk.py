@@ -54,7 +54,7 @@ def chunk_law_section(
 
     def make_chunk_dict(cid: str, txt: str) -> Dict[str, Any]:
         t_hash = hashlib.sha256(txt.encode("utf-8")).hexdigest()
-        r_hash = raw_sha256.strip() if raw_sha256 else t_hash
+        r_hash = raw_sha256.strip() if raw_sha256 else None
         d = {
             "chunk_id": cid,
             "text": txt,

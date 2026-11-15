@@ -120,9 +120,13 @@ The database contains **147 clean, verbatim statutory chunks** and **18 hand-cur
   - State schemes: Ladli Laxmi Yojana (MP), Mukhyamantri Medhavi Vidyarthi Yojana (MP), Delhi Ladli Scheme, Jai Bhim Mukhyamantri Pratibha Vikas Yojana (Delhi), Sanjay Gandhi Niradhar Anudan Yojana (Maharashtra), Kalaignar Magalir Urimai Thittam (Tamil Nadu), Gruha Lakshmi Scheme (Karnataka).
 - **Source:** Hand-curated from official MyScheme listings and ministry notifications with exact eligibility criteria, benefit amounts, and application processes.
 
-### 3. Cryptographic Provenance Verification
+### 3. Cryptographic Provenance Verification & Hash Granularity (Issue #29)
 - **Provenance Script:** `python -m data.ingestion.verify_provenance`
-- **Integrity Guarantee:** Every chunk records `raw_sha256`, `text_sha256`, `fetched_at`, and `extraction_method`.
+- **Hash Granularity & Coverage**:
+  - `text_sha256`: **Chunk-level** provenance. Cryptographic SHA-256 hash of the individual chunk's extracted text. Recomputed and verified offline during every `validate.py` and `verify_provenance.py` run.
+  - `raw_sha256`: **Act-level** provenance. SHA-256 hash of the complete source document as fetched from `source_url`. India Code serves legislation as complete Acts at permanent handle URLs (e.g. `/handle/123456789/15256`), not per-section HTML pages. Therefore, all sections extracted from one statutory Act share the same Act-level `raw_sha256` by design.
+  - `manual` chunks: Chunks with `extraction_method: "manual"` are directly curated and reviewed by a named reviewer (e.g., Harshit Garg) without fetching an external raw HTML/PDF payload. As such, `manual` chunks record `raw_sha256: null` (rather than manufacturing an artificial hash by copying the text hash).
+  - **Citation URL Granularity**: Citations link to the Act's official handle page on the government repository, not individual dynamic sub-sections (which fail on government servers). The exact section number is always explicitly identified in the citation text and drawer.
 - **Absolute Rule:** Zero AI/LLM-generated or placeholder filler text. Every chunk is a deterministic verbatim extract from an authoritative government publication.
 
 ---

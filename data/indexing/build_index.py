@@ -9,11 +9,13 @@ Features:
 - Saves index artifacts reproducibly in data/indexing/artifacts/
 """
 
+import hashlib
 import json
 import os
 import pickle
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
@@ -32,6 +34,9 @@ ARTIFACTS_DIR = Path(__file__).parent / "artifacts"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 DEFAULT_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+
+SEED_CHUNKS_PATH = Path(__file__).resolve().parents[1] / "ingestion" / "seed_chunks.json"
+SEED_SCHEMES_PATH = Path(__file__).resolve().parents[1] / "ingestion" / "seed_schemes.json"
 
 
 # Incremented whenever tokenize_text changes behaviour. Written into
@@ -117,13 +122,21 @@ def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:
             pickle.dump(bm25_index, f)
         print(f"Sparse BM25 index saved to: {bm25_file}")
 
-        # 3. Save chunk_id mappings
+        # 3. Save chunk_id mappings & fingerprint
         mapping_file = ARTIFACTS_DIR / "chunk_ids.json"
+
+        corpus_fingerprint = hashlib.sha256()
+        for path in sorted([SEED_CHUNKS_PATH, SEED_SCHEMES_PATH]):
+            if Path(path).exists():
+                corpus_fingerprint.update(Path(path).read_bytes())
+
         id_mapping = {
             "index_to_chunk_id": {idx: cid for idx, cid in enumerate(chunk_ids)},
             "chunk_id_to_index": {cid: idx for idx, cid in enumerate(chunk_ids)},
             "total_chunks": len(chunk_ids),
             "embedding_model": model_name,
+            "corpus_sha256": corpus_fingerprint.hexdigest(),
+            "built_at": datetime.now(timezone.utc).isoformat(),
             # Bump TOKENIZER_VERSION whenever tokenize_text changes. The BM25
             # index stores documents already tokenized, so an index built by an
             # older tokenizer cannot be queried by a newer one: the two sides
