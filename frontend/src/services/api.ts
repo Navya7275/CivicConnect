@@ -97,10 +97,21 @@ export interface LegalAct {
 
 // --- Service layer configuration ---------------------------------------
 //
-// Both come from the environment so switching between mock data and the real
-// backend never requires a source edit. Mock stays the default so the UI runs
-// standalone. See frontend/.env.example.
-const USE_MOCK = import.meta.env.PUBLIC_USE_MOCK !== 'false';
+// Both come from the environment so switching between the simulator and the
+// real backend never requires a source edit. See frontend/.env.example.
+//
+// The real backend is the DEFAULT, and the simulator must be asked for by
+// name. This was the other way round, and the failure mode was bad: with no
+// frontend/.env present, PUBLIC_USE_MOCK was undefined, `!== 'false'` was
+// true, and the chat quietly answered from a canned simulator. It animated
+// through "understanding... searching... verifying...", returned confident
+// text, and never contacted the backend at all. Nothing on screen said so.
+//
+// A missing config file should never silently replace a real system with a
+// simulation of it. Now a missing file means the app talks to the backend,
+// and if the backend is down you get a visible error saying so -- which is
+// the right failure: loud, and about the thing that is actually wrong.
+const USE_MOCK = import.meta.env.PUBLIC_USE_MOCK === 'true';
 const API_BASE = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8000';
 
 /** The exact response shape of POST /query (PROJECT_PLAN.md section 3). */
@@ -120,7 +131,6 @@ export type StatusUpdateCallback = (
 ) => void;
 
 import { 
-  mockConversations, 
   mockWelfareSchemes, 
   mockLegalActs,
   simulateAiResponse
