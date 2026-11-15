@@ -63,11 +63,9 @@ class DenseRetriever:
         if "corpus_sha256" in mapping:
             seed_chunks = Path(__file__).resolve().parents[2] / "data" / "ingestion" / "seed_chunks.json"
             seed_schemes = Path(__file__).resolve().parents[2] / "data" / "ingestion" / "seed_schemes.json"
-            h = hashlib.sha256()
-            for p in sorted([seed_chunks, seed_schemes]):
-                if p.exists():
-                    h.update(p.read_bytes())
-            current_hash = h.hexdigest()
+            from data.indexing.build_index import corpus_fingerprint
+
+            current_hash = corpus_fingerprint([seed_chunks, seed_schemes])
             if current_hash != mapping["corpus_sha256"]:
                 raise RuntimeError(
                     "Index was built from a different corpus than the one on disk.\n"
