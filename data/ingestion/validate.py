@@ -13,6 +13,7 @@ Verifies database integrity against requirements:
 - Valid document foreign key relationships
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -42,6 +43,27 @@ TEMPLATE_MARKERS = [
 ]
 
 
+def looks_like_self_description(text: str, act: str, section: str) -> bool:
+    """True when a chunk's text just restates its own act and section.
+
+    Real statutory text never announces where it lives. A section begins with
+    its marginal note and then the provision -- "Disposal of request.—(1)
+    Subject to the proviso..." -- not with "Right to Information Act, 2005
+    Section 7:".
+
+    That opening is the signature of generated filler, and it is a far more
+    reliable tripwire than a list of phrases. The phrase list below it was
+    built from the exact sentences found in two earlier incidents, and it
+    missed a third: 90 chunks opening this way, with one generic sentence per
+    Act, slipped through a clean validation run because their wording differed
+    from the recorded phrases by a few words.
+    """
+    if not text or not act:
+        return False
+    pattern = rf"^\s*{re.escape(act.strip())}\s*,?\s*{re.escape((section or '').strip())}\s*[:\-–—]"
+    return bool(re.match(pattern, text.strip(), re.IGNORECASE))
+
+
 def run_data_quality_check() -> bool:
     """Perform comprehensive data quality audit on chunks table."""
     db = SessionLocal()
@@ -69,6 +91,38 @@ def run_data_quality_check() -> bool:
         missing_manual_reviewer = 0
         template_text_errors = 0
         invalid_provenance_errors = 0
+        repeated_text_errors = 0
+
+        # Identical text under different section numbers.
+        #
+        # Two sections of an Act never say exactly the same thing -- if they
+        # did, one of them would be redundant and would not have been enacted.
+        # So repeated text means the chunks were generated from a template, and
+        # the number of repeats tells you how many.
+        #
+        # This catches what a phrase list cannot: it does not care what the
+        # filler says, only that it says it more than once. The 69 Consumer
+        # Protection chunks that triggered this check were character-for-
+        # character identical across 69 different sections.
+        # Digits are stripped before comparing, so "Section 31: <sentence>" and
+        # "Section 32: <sentence>" collapse to the same key. Without that the
+        # 69 identical Consumer Protection fillers counted as 69 distinct texts,
+        # because the only thing that varied between them was the number.
+        text_counts: dict[str, list[str]] = {}
+        for c in chunks:
+            key = re.sub(r"\d+", "#", (c.text or "").strip().lower())
+            if key:
+                text_counts.setdefault(key, []).append(c.chunk_id)
+
+        for body, ids in text_counts.items():
+            if len(ids) > 1:
+                repeated_text_errors += len(ids)
+                print(
+                    f"[FAIL] {len(ids)} chunks share identical text, so at most one can be "
+                    f"a real provision: {', '.join(ids[:4])}"
+                    + (f" and {len(ids) - 4} more" if len(ids) > 4 else "")
+                )
+                print(f'        text: "{body[:90]}..."')
 
         for c in chunks:
             if not c.text or not c.text.strip():
@@ -77,6 +131,12 @@ def run_data_quality_check() -> bool:
             # Anti-filler guard: reject known placeholder templates
             if any(marker in (c.text or "") for marker in TEMPLATE_MARKERS):
                 print(f"[FAIL] {c.chunk_id}: text matches a placeholder template, not real statutory text")
+                template_text_errors += 1
+            elif looks_like_self_description(c.text or "", c.act or "", c.section or ""):
+                print(
+                    f"[FAIL] {c.chunk_id}: text opens by restating its own act and section, "
+                    f"which real statute never does -- generated filler, not law"
+                )
                 template_text_errors += 1
 
             if not c.chunk_id or not c.chunk_id.strip():
@@ -130,6 +190,7 @@ def run_data_quality_check() -> bool:
         print(f"Total chunks            : {total_chunks}")
         print(f"Empty text              : {empty_text}")
         print(f"Template filler errors  : {template_text_errors}")
+        print(f"Repeated-text chunks    : {repeated_text_errors}")
         print(f"Missing chunk ID        : {missing_chunk_id}")
         print(f"Missing act             : {missing_act}")
         print(f"Missing jurisdiction    : {missing_jurisdiction}")
@@ -146,6 +207,7 @@ def run_data_quality_check() -> bool:
         critical_errors = (
             empty_text
             + template_text_errors
+            + repeated_text_errors
             + missing_chunk_id
             + missing_act
             + missing_jurisdiction

@@ -204,7 +204,20 @@ class TestHarshDataPipeline(unittest.TestCase):
         db = SessionLocal()
         try:
             total_chunks = db.query(Chunk).count()
-            self.assertGreaterEqual(total_chunks, 147, "Database must contain at least 147 authentic clean statutory chunks.")
+            # 57 statutory chunks + 18 welfare schemes.
+            #
+            # This was 147 until 90 chunks were found to be generated filler
+            # that restated their own act and section and said nothing else --
+            # 69 identical Consumer Protection sentences and 21 identical RTI
+            # ones. They passed every check for weeks because the phrase-based
+            # anti-filler guard was built from two earlier incidents and these
+            # used different wording.
+            #
+            # The number going down is the corpus getting more honest, not
+            # smaller in any way that matters: none of those 90 could answer a
+            # question. Asserting a floor still guards against accidental data
+            # loss, which is why it is kept rather than removed.
+            self.assertGreaterEqual(total_chunks, 75, "Database must contain the 57 statutory chunks plus 18 welfare schemes.")
 
             # Imported, not redefined. This test used to carry its own copy with
             # two of the four markers, so a chunk containing either of the other
