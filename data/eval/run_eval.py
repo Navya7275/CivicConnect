@@ -110,6 +110,7 @@ class QuestionResult:
     verified: bool | None = None
     hallucinated_sections: list[str] = field(default_factory=list)
     error: str | None = None
+    synthesis_error: str | None = None
     seconds: float = 0.0
 
 
@@ -190,9 +191,21 @@ def run_one(
     verifier: Any | None,
     limit: int,
 ) -> QuestionResult:
+    """Score one question in one arm.
+
+    Retrieval and synthesis fail independently, and are recorded that way.
+
+    An earlier version wrapped both in a single handler, so a rate limit from
+    Groq discarded the retrieval result that had already been computed. A run
+    that hit limits on 64 of 77 questions then reported recall over the 13
+    that survived, as a bare percentage, with nothing to indicate the
+    denominator -- bm25 showed 100% over ten questions. Recall@k needs no LLM;
+    it must never be lost to one.
+    """
     res = QuestionResult(qid=question["id"], answerable=question.get("answerable", True))
     started = time.perf_counter()
 
+    # --- retrieval: no network, no LLM, always attempted ------------------
     try:
         raw = retriever.search(question["question"], limit=limit)
         chunks = [as_chunk(r) for r in raw]
@@ -203,30 +216,35 @@ def run_one(
                 same_provision(a, s, question["expected_act"], question["expected_section"])
                 for a, s in res.retrieved
             )
+    except Exception as exc:  # noqa: BLE001
+        res.error = f"{exc.__class__.__name__}: {exc}"
+        res.seconds = time.perf_counter() - started
+        return res
 
-        if synthesizer is None:
-            res.seconds = time.perf_counter() - started
-            return res
+    if synthesizer is None:
+        res.seconds = time.perf_counter() - started
+        return res
 
-        # Groq's free tier rate-limits a run like this hard: an unthrottled
-        # pass lost 46 of 77 questions to RateLimitError, which silently
-        # turned one arm's score into an average over whichever third
-        # happened to get through. Retry rather than drop.
+    # --- synthesis: needs the provider, and may fail on its own -----------
+    try:
         out = None
         for attempt in range(5):
             try:
                 out = synthesizer.synthesize(question["question"], chunks)
                 break
             except Exception as exc:  # noqa: BLE001
-                if "rate" not in exc.__class__.__name__.lower() and "429" not in str(exc):
-                    raise
-                if attempt == 4:
+                rate_limited = (
+                    "rate" in exc.__class__.__name__.lower() or "429" in str(exc)
+                )
+                if not rate_limited or attempt == 4:
                     raise
                 wait = 2 ** attempt * 5
                 print(f"\n    rate limited, waiting {wait}s", flush=True)
                 time.sleep(wait)
+
         if out is None:
             raise RuntimeError("synthesis returned nothing after retries")
+
         answer = out.get("answer") or ""
         citations = out.get("citations") or []
 
@@ -249,8 +267,8 @@ def run_one(
             res.verified = v.verified
             res.hallucinated_sections = list(v.hallucinated_sections)
 
-    except Exception as exc:  # noqa: BLE001 - one bad question must not kill the run
-        res.error = f"{exc.__class__.__name__}: {exc}"
+    except Exception as exc:  # noqa: BLE001
+        res.synthesis_error = f"{exc.__class__.__name__}: {exc}"
 
     res.seconds = time.perf_counter() - started
     return res
@@ -260,52 +278,94 @@ def pct(n: int, d: int) -> str:
     return f"{100.0 * n / d:5.1f}%" if d else "    --"
 
 
+def frac(n: int, d: int) -> str:
+    """A percentage that always carries its denominator.
+
+    A bare "100.0%" over ten questions reads identically to one over seventy,
+    and that is how a rate-limited run came to look like a clean result. Every
+    figure here says what it is over.
+    """
+    return f"{100.0 * n / d:.0f}% ({n}/{d})" if d else "--"
+
+
 def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> None:
     print()
     print("=" * 78)
     print("PHASE E RESULTS")
     print("=" * 78)
-
-    header = f"{'arm':<22} {'recall@k':>9} {'cite ok':>9} {'grounded':>9} {'refusal':>9} {'errors':>7}"
-    print(header)
-    print("-" * len(header))
+    print()
+    print("RETRIEVAL  (no LLM involved, so these are always complete)")
+    print()
+    print(f"  {'arm':<22} {'recall@k':>16} {'failed':>8}")
+    print(f"  {'-' * 48}")
 
     for arm, rows in results.items():
-        answerable = [r for r in rows if r.answerable and not r.error]
-        unanswerable = [r for r in rows if not r.answerable and not r.error]
-        errors = sum(1 for r in rows if r.error)
+        ok = [r for r in rows if r.answerable and not r.error]
+        print(f"  {arm:<22} {frac(sum(r.recall_hit for r in ok), len(ok)):>16} "
+              f"{sum(1 for r in rows if r.error):>8}")
 
-        recall = pct(sum(r.recall_hit for r in answerable), len(answerable))
-        if synthesis_ran:
-            cite = pct(sum(r.citation_correct for r in answerable), len(answerable))
-            grounded = pct(sum(r.citation_grounded for r in rows if not r.error), len(rows) - errors)
-            refusal = pct(sum(r.refused for r in unanswerable), len(unanswerable))
-        else:
-            cite = grounded = refusal = "    --"
+    if not synthesis_ran:
+        print()
+        print("  Synthesis was not run, so citation and refusal metrics are absent.")
+        print("  recall@k: did retrieval return the chunk that answers the question.")
+        return
 
-        print(f"{arm:<22} {recall:>9} {cite:>9} {grounded:>9} {refusal:>9} {errors:>7}")
+    print()
+    print("ANSWERS  (needs the LLM; questions it could not reach are excluded)")
+    print()
+    print(f"  {'arm':<22} {'cited right':>16} {'grounded':>16} {'refused':>14} {'lost':>6}")
+    print(f"  {'-' * 78}")
 
-    if synthesis_ran and "hybrid+verification" in results:
-        rows = [r for r in results["hybrid+verification"] if not r.error]
+    starved = False
+    for arm, rows in results.items():
+        done = [r for r in rows if not r.error and not r.synthesis_error]
+        ans = [r for r in done if r.answerable]
+        una = [r for r in done if not r.answerable]
+        lost = sum(1 for r in rows if r.synthesis_error)
+        if len(done) < 0.8 * len(rows):
+            starved = True
+        print(f"  {arm:<22} {frac(sum(r.citation_correct for r in ans), len(ans)):>16} "
+              f"{frac(sum(r.citation_grounded for r in done), len(done)):>16} "
+              f"{frac(sum(r.refused for r in una), len(una)):>14} {lost:>6}")
+
+    if starved:
+        print()
+        print("  WARNING: an arm answered fewer than 80% of its questions. Those")
+        print("  percentages are over whatever got through, which is not a result.")
+        print("  Re-run with a larger --sleep, or use --no-synthesis for retrieval")
+        print("  metrics alone, which need no provider and are always complete.")
+
+    if "hybrid+verification" in results:
+        rows = [r for r in results["hybrid+verification"] if not r.error and not r.synthesis_error]
         flagged = [r for r in rows if r.verified is False]
         hallucinated = [r for r in rows if r.hallucinated_sections]
         print()
-        print(f"verification flagged {len(flagged)} of {len(rows)} answers as ungrounded")
-        print(f"prose cited a section not retrieved in {len(hallucinated)} answers")
-        if hallucinated:
-            for r in hallucinated[:5]:
-                print(f"    {r.qid}: {', '.join(r.hallucinated_sections)}")
+        print(f"  verification flagged {len(flagged)} of {len(rows)} answers as ungrounded")
+        print(f"  prose named a section that was not retrieved in {len(hallucinated)}")
+        for r in hallucinated[:5]:
+            print(f"      {r.qid}: {', '.join(r.hallucinated_sections)}")
+
+    errs: dict[str, int] = {}
+    for rows in results.values():
+        for r in rows:
+            if r.synthesis_error:
+                errs[r.synthesis_error.split(":")[0]] = errs.get(r.synthesis_error.split(":")[0], 0) + 1
+    if errs:
+        print()
+        print("  synthesis failures by type:")
+        for name, n in sorted(errs.items(), key=lambda kv: -kv[1]):
+            print(f"      {n:4}  {name}")
 
     times = [r.seconds for rows in results.values() for r in rows]
     if times:
         print()
-        print(f"median {statistics.median(times):.2f}s per question, {len(times)} runs total")
+        print(f"  median {statistics.median(times):.1f}s per question, {len(times)} runs")
 
     print()
-    print("recall@k   did retrieval return the chunk that answers the question")
-    print("cite ok    did the answer cite the section that answers it")
-    print("grounded   was every cited section actually among the retrieved chunks")
-    print("refusal    for unanswerable questions, did it correctly decline")
+    print("  recall@k     did retrieval return the chunk that answers the question")
+    print("  cited right  did the answer cite the section that answers it")
+    print("  grounded     was every cited section actually among those retrieved")
+    print("  refused      for unanswerable questions, did it correctly decline")
 
 
 def main() -> None:
