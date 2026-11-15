@@ -152,6 +152,14 @@ def build_arms(chunks: list[dict[str, Any]], want: list[str]) -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001
             print(f"  [skip] dense: {exc.__class__.__name__}: {exc}")
 
+    if "bm25" in want:
+        try:
+            from backend.retrieval.bm25 import BM25Retriever
+
+            arms["bm25"] = BM25Retriever(chunks)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [skip] bm25: {exc.__class__.__name__}: {exc}")
+
     if "hybrid" in want or "hybrid+verification" in want:
         try:
             from backend.retrieval.hybrid_search import HybridRetriever
@@ -200,7 +208,25 @@ def run_one(
             res.seconds = time.perf_counter() - started
             return res
 
-        out = synthesizer.synthesize(question["question"], chunks)
+        # Groq's free tier rate-limits a run like this hard: an unthrottled
+        # pass lost 46 of 77 questions to RateLimitError, which silently
+        # turned one arm's score into an average over whichever third
+        # happened to get through. Retry rather than drop.
+        out = None
+        for attempt in range(5):
+            try:
+                out = synthesizer.synthesize(question["question"], chunks)
+                break
+            except Exception as exc:  # noqa: BLE001
+                if "rate" not in exc.__class__.__name__.lower() and "429" not in str(exc):
+                    raise
+                if attempt == 4:
+                    raise
+                wait = 2 ** attempt * 5
+                print(f"\n    rate limited, waiting {wait}s", flush=True)
+                time.sleep(wait)
+        if out is None:
+            raise RuntimeError("synthesis returned nothing after retries")
         answer = out.get("answer") or ""
         citations = out.get("citations") or []
 
@@ -287,7 +313,7 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=5, help="chunks retrieved per question (k)")
     ap.add_argument(
         "--arms",
-        default="dense,hybrid,hybrid+verification",
+        default="dense,bm25,hybrid,hybrid+verification",
         help="comma-separated subset of arms to run",
     )
     ap.add_argument(
@@ -296,6 +322,12 @@ def main() -> None:
         help="retrieval metrics only; needs no API key and no network",
     )
     ap.add_argument("--out", help="write full per-question results to this JSON file")
+    ap.add_argument(
+        "--sleep",
+        type=float,
+        default=0.0,
+        help="seconds to pause between questions; use ~2 on a rate-limited free tier",
+    )
     args = ap.parse_args()
 
     os.chdir(REPO_ROOT)
@@ -347,6 +379,8 @@ def main() -> None:
         for i, q in enumerate(questions, 1):
             rows.append(run_one(q, arm_name, retriever, synthesizer, use_verifier, args.limit))
             print(f"\r  {arm_name}: {i}/{len(questions)}", end="", flush=True)
+            if args.sleep and synthesizer is not None and i < len(questions):
+                time.sleep(args.sleep)
         print()
         results[arm_name] = rows
 
