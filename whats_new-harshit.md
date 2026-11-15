@@ -148,7 +148,7 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
    - Add the following:
      | Name | Value | Type |
      |---|---|---|
-     | `GROQ_API_KEY` | `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` | Secret |
+     | `GROQ_API_KEY` | `<your-groq-api-key>` | Secret |
      | `GROQ_MODEL` | `qwen/qwen3.8-27b` | Variable |
      | `CORS_ORIGINS` | `*` | Variable |
      | `DATABASE_URL` | `sqlite:///./civicconnect.db` | Variable |
