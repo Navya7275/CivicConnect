@@ -101,6 +101,11 @@ class QuestionResult:
 
     qid: str
     answerable: bool
+    # Which Act the answer lives in, so the report can break recall down by
+    # body of law. The aggregate hides the only thing worth knowing: keyword
+    # search scores very differently on the plain-language summaries than on
+    # verbatim statute, and one number averages the two together.
+    expected_act: str = ""
     retrieved: list[tuple[str, str]] = field(default_factory=list)
     recall_hit: bool = False
     cited: list[tuple[str, str]] = field(default_factory=list)
@@ -202,7 +207,11 @@ def run_one(
     denominator -- bm25 showed 100% over ten questions. Recall@k needs no LLM;
     it must never be lost to one.
     """
-    res = QuestionResult(qid=question["id"], answerable=question.get("answerable", True))
+    res = QuestionResult(
+        qid=question["id"],
+        answerable=question.get("answerable", True),
+        expected_act=question.get("expected_act", ""),
+    )
     started = time.perf_counter()
 
     # --- retrieval: no network, no LLM, always attempted ------------------
@@ -288,6 +297,57 @@ def frac(n: int, d: int) -> str:
     return f"{100.0 * n / d:.0f}% ({n}/{d})" if d else "--"
 
 
+def recall_by_act(results: dict[str, list[QuestionResult]]) -> None:
+    """Break recall down by the Act the answer lives in.
+
+    The single figure averages two different problems together. The Consumer
+    Protection and RTI chunks are condensed summaries written in ordinary
+    language, so a question shares vocabulary with them; the Bharatiya Nyaya
+    Sanhita and Motor Vehicles Act chunks are verbatim statute, where it does
+    not. "Someone took my phone out of my bag on a bus" and "Whoever,
+    intending to take dishonestly any movable property out of the possession
+    of any person without that person's consent" have almost no words in
+    common, which is survivable for dense retrieval and close to fatal for
+    BM25.
+
+    Reported separately, that difference is the result. Averaged, it is
+    invisible.
+    """
+    arms = list(results)
+    acts: dict[str, dict[str, list[bool]]] = {}
+    for arm, rows in results.items():
+        for r in rows:
+            if not r.answerable or r.error or not r.expected_act:
+                continue
+            acts.setdefault(r.expected_act, {}).setdefault(arm, []).append(r.recall_hit)
+
+    if len(acts) < 2:
+        return
+
+    # Welfare schemes are one chunk each and there are a lot of them; group
+    # them together rather than printing twenty rows of n=1.
+    STATUTES = ("Bharatiya Nyaya Sanhita", "Motor Vehicles Act",
+                "Consumer Protection Act", "Right to Information")
+    grouped: dict[str, dict[str, list[bool]]] = {}
+    for act, per_arm in acts.items():
+        label = next((s for s in STATUTES if s in act), "Welfare schemes")
+        for arm, hits in per_arm.items():
+            grouped.setdefault(label, {}).setdefault(arm, []).extend(hits)
+
+    width = max(len(k) for k in grouped) + 2
+    print()
+    print("  recall@k by body of law")
+    print()
+    print("  " + "".ljust(width) + "".join(f"{a:>22}" for a in arms))
+    print("  " + "-" * (width + 22 * len(arms)))
+    for label in sorted(grouped, key=lambda k: -len(grouped[k].get(arms[0], []))):
+        cells = ""
+        for arm in arms:
+            hits = grouped[label].get(arm, [])
+            cells += f"{frac(sum(hits), len(hits)):>22}" if hits else f"{'-':>22}"
+        print("  " + label.ljust(width) + cells)
+
+
 def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> None:
     print()
     print("=" * 78)
@@ -303,6 +363,8 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         ok = [r for r in rows if r.answerable and not r.error]
         print(f"  {arm:<22} {frac(sum(r.recall_hit for r in ok), len(ok)):>16} "
               f"{sum(1 for r in rows if r.error):>8}")
+
+    recall_by_act(results)
 
     if not synthesis_ran:
         print()
