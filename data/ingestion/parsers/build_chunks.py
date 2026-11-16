@@ -100,7 +100,11 @@ def strip_heading(piece: str, section: str, title: str) -> str:
     leaving the second form alone produced "Section 110: Power of Central
     Government to make rules. Power of Central Government to make rules. ...".
     """
-    body = re.sub(rf"^\[?\s*{re.escape(section)}\.\s*", "", piece).strip()
+    # The number may carry a superscript amendment marker and a bracket
+    # ("9[192. Using vehicle without registration.—"). Without allowing for
+    # those, neither the number nor the title that follows it is stripped,
+    # and the chunk opens by saying its own heading twice.
+    body = re.sub(rf"^\d*\s*\[?\s*{re.escape(section)}\.\s*", "", piece).strip()
     # The title may carry amendment brackets or a trailing em-dash.
     pattern = rf"^\d*\s*\[?\s*{re.escape(title)}\.?\]?\s*[—\-:]?\s*"
     body = re.sub(pattern, "", body, count=1, flags=re.IGNORECASE).strip()
