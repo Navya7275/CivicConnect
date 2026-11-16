@@ -163,3 +163,27 @@ def test_weights_default_to_unweighted_and_are_length_checked() -> None:
     import pytest
     with pytest.raises(ValueError):
         reciprocal_rank_fusion(lists, weights=[1.0])
+
+
+def test_hybrid_fusion_settings_are_the_measured_ones() -> None:
+    """The hybrid's k and weights were chosen by measurement, not by default.
+
+    Swept over 109 questions and 963 chunks (data/eval/tune_fusion.py):
+
+        k=60, equal weights (the RRF paper's defaults)   68% recall@10
+        k=5,  dense x3                                   77% recall@10
+
+    Reverting to the defaults costs nine points, so the values are asserted
+    rather than left to drift. If a later sweep finds better ones, change
+    them here and in hybrid_search together -- the point is that they are a
+    result, not a guess.
+    """
+    from backend.retrieval import hybrid_search
+
+    assert hybrid_search.FUSION_K == 5
+    assert hybrid_search.BM25_WEIGHT == 1.0
+    assert hybrid_search.DENSE_WEIGHT == 3.0
+    assert hybrid_search.DENSE_WEIGHT > hybrid_search.BM25_WEIGHT, (
+        "dense reaches 77% recall against bm25's 42%; the weaker arm must "
+        "not be able to overrule the stronger one"
+    )
