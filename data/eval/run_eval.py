@@ -74,12 +74,15 @@ REFUSAL_MARKERS = (
 )
 
 
-def normalise_section(value: str | None) -> str | None:
-    """'Section 7' / 'sec. 7' / '7' all become '7'."""
-    if not value:
-        return None
-    m = re.search(r"(\d+[A-Z]?)", str(value), re.IGNORECASE)
-    return m.group(1).upper() if m else None
+# Shared with the verification agent rather than reimplemented. There were
+# three copies of this five-line function -- here, in check_questions and in
+# verification -- all agreeing by coincidence with nothing keeping them in
+# step. That is precisely how the query and document tokenizers drifted apart
+# and quietly cost 50 places of retrieval rank.
+from backend.agents.verification import (  # noqa: E402
+    extract_section_numbers,
+    normalise_section,
+)
 
 
 def same_provision(a_act: str, a_sec: str, b_act: str, b_sec: str) -> bool:
@@ -266,10 +269,24 @@ def run_one(
                 for a, s in res.cited
             )
 
-        retrieved_keys = {(normalise_section(s), (a or "").lower()) for a, s in res.retrieved}
-        res.citation_grounded = all(
-            (normalise_section(s), (a or "").lower()) in retrieved_keys for a, s in res.cited
-        )
+        # Groundedness has to be read off the PROSE, not off the citation
+        # list. The citations are assembled in code from the retrieved chunks,
+        # so "is every citation among the retrieved chunks" is true however
+        # the model behaves -- it reported 100% and meant nothing. What can
+        # actually go wrong is the answer asserting a section nobody fetched,
+        # and only the prose can show that.
+        #
+        # Matched on section number alone, as the verification agent does, so
+        # the two agree. Pairing a section to its Act from free prose is
+        # fragile and being over-strict here would report hallucinations that
+        # are really just an Act named loosely.
+        known_numbers = {normalise_section(s) for _, s in res.retrieved}
+        known_numbers.discard(None)
+        prose_sections = extract_section_numbers(answer)
+        res.hallucinated_sections = [
+            n for n in prose_sections if n not in known_numbers
+        ]
+        res.citation_grounded = not res.hallucinated_sections
 
         if verifier is not None:
             v = verifier.verify(answer, citations, chunks)
@@ -426,7 +443,7 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
     print()
     print("  recall@k     did retrieval return the chunk that answers the question")
     print("  cited right  did the answer cite the section that answers it")
-    print("  grounded     was every cited section actually among those retrieved")
+    print("  grounded     did the prose avoid naming a section nobody retrieved")
     print("  refused      for unanswerable questions, did it correctly decline")
 
 
