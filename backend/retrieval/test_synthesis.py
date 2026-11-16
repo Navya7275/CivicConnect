@@ -80,3 +80,46 @@ def test_synthesis_handles_no_retrieved_chunks():
     )
 
     assert result["citations"] == []
+
+def test_answer_token_budget_fits_the_free_tier() -> None:
+    """max_tokens must stay under Groq's free-tier output budget.
+
+    Leaving it unset sends the model's own default, 2048 for
+    qwen/qwen3.8-27b. Groq checks the REQUESTED output figure against the
+    per-minute allowance before running anything, so on the free tier's
+    limit of 1000 every call was refused:
+
+        429 Request too large ... output tokens per minute (OTPM):
+        Limit 1000, Requested 2048 ... reduce max_tokens
+
+    That is not a rate limit waiting would clear. It took out the synthesis
+    half of the evaluation and backend/tests/test_api.py, and looked like
+    flakiness because a 429 normally means "try again later".
+    """
+    from backend.agents.synthesis import MAX_ANSWER_TOKENS
+
+    GROQ_FREE_TIER_OTPM = 1000
+    assert 0 < MAX_ANSWER_TOKENS < GROQ_FREE_TIER_OTPM, (
+        f"max_tokens is {MAX_ANSWER_TOKENS}; anything at or above "
+        f"{GROQ_FREE_TIER_OTPM} is rejected outright on the free tier. "
+        f"Raise it per-environment with CIVICCONNECT_MAX_ANSWER_TOKENS "
+        f"rather than changing the default."
+    )
+
+
+def test_the_api_call_actually_passes_max_tokens() -> None:
+    """Defining the constant is not the same as sending it.
+
+    The bug was a missing argument, not a wrong value, so the test that
+    matters is whether it reaches the request.
+    """
+    import inspect
+
+    from backend.agents import synthesis as synthesis_module
+
+    source = inspect.getsource(synthesis_module.SynthesisAgent.synthesize)
+    code = "\n".join(line.split("#", 1)[0] for line in source.splitlines())
+    assert "max_tokens=" in code, (
+        "synthesize() must pass max_tokens; without it the client sends the "
+        "model default and the free tier refuses every request"
+    )

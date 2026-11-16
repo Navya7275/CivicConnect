@@ -7,6 +7,28 @@ from groq import Groq
 load_dotenv()
 
 
+# How many tokens the model may spend on an answer.
+#
+# This was previously unset, which is not the same as unlimited: the client
+# then sends the model's own default, 2048 for qwen/qwen3.8-27b. Groq's free
+# tier allows 1000 output tokens per minute, and it checks the REQUESTED
+# figure before running anything, so every single call was refused outright:
+#
+#     429 Request too large ... output tokens per minute (OTPM):
+#     Limit 1000, Requested 2048 ... reduce max_tokens
+#
+# Not a rate limit that backing off would clear -- a request for more than
+# the per-minute budget can never succeed, however long you wait. It took
+# out the synthesis half of the evaluation and backend/tests/test_api.py
+# with it, and read as flakiness because 429 usually means "try later".
+#
+# 800 leaves headroom under the limit and is far more than an answer needs:
+# the citations are assembled in code from the retrieved chunks, so the model
+# writes only the prose, and the prompt asks for a short plain-language
+# reply. Raise it with CIVICCONNECT_MAX_ANSWER_TOKENS on a paid tier.
+MAX_ANSWER_TOKENS = int(os.getenv("CIVICCONNECT_MAX_ANSWER_TOKENS", "800"))
+
+
 class SynthesisAgent:
     """
     Generates grounded answers from retrieved CivicConnect chunks.
@@ -131,7 +153,8 @@ Retrieved context:
                     "content": prompt
                 }
             ],
-            temperature=0
+            temperature=0,
+            max_tokens=MAX_ANSWER_TOKENS
         )
 
         answer = response.choices[0].message.content
