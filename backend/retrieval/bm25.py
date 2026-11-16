@@ -109,9 +109,18 @@ class BM25Retriever:
         # (`query.split()`), independent of build_index.tokenize_text. The two
         # agreed only by coincidence, with nothing keeping them in step, so
         # changing one silently broke matching without failing anything.
-        from data.indexing.build_index import tokenize_text
+        from data.indexing.build_index import filter_query_tokens, tokenize_text
 
-        query_tokens = tokenize_text(query)
+        # Function words are dropped from the query but not from the index.
+        # rank_bm25's IDF never goes negative, so with 963 documents a long
+        # one full of "a", "to" and "of" outscores the one that actually
+        # answers the question: RTI s.7 fell from rank 2 to rank 35 when the
+        # corpus grew. Filtering lifts bm25 recall@10 from 30% to 55%.
+        #
+        # Query-side only, deliberately: the stored document tokens are
+        # unchanged, so this needs no index rebuild and no TOKENIZER_VERSION
+        # bump.
+        query_tokens = filter_query_tokens(tokenize_text(query))
 
         scores = self.bm25.get_scores(query_tokens)
 

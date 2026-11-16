@@ -104,11 +104,59 @@ def tokenize_text(text: str) -> List[str]:
     contains "request" twice -- ranked 54th. With punctuation stripped it ranks
     1st.
 
-    Note that stopwords are deliberately NOT removed. BM25 already down-weights
-    common terms through IDF, and in statutory text the small words carry real
-    meaning: "not", "shall", "may" and "within" change what a provision does.
+    Stopwords are not removed from DOCUMENTS, because in statutory text the
+    small words carry real meaning: "not", "shall", "may" and "within" change
+    what a provision does. Queries are a different matter -- see
+    QUERY_STOPWORDS below and filter_query_tokens().
     """
     return _TOKEN_RE.findall(text.lower())
+
+
+# Words stripped from a QUERY before scoring, never from a document.
+#
+# The reasoning above ("IDF already handles common terms") held while the
+# corpus was 75 chunks. It stopped holding at 963. rank_bm25's IDF is
+# log(1 + (N - df + 0.5)/(df + 0.5)), which stays positive however common a
+# term is, so a long document containing many instances of "a", "to", "an"
+# and "of" keeps accumulating score. With a small corpus there was nothing to
+# accumulate against; with a thousand, the function words outweigh the content
+# words entirely.
+#
+# Measured on "How long does a public authority have to respond to an RTI
+# request?": the provision that answers it, RTI Act s.7, ranked 2nd at 75
+# chunks and 35th at 963. Two of the three words that should carry the query
+# contribute nothing at all -- "respond" and "rti" both have df=0, because the
+# Act says "reply" and spells its own name out -- so the query rests on
+# "request" against 963 documents competing on "a", "to", "public" and
+# "authority".
+#
+# Over the 69 answerable evaluation questions, filtering these lifts bm25
+# recall@10 from 30% to 55%: 17 questions fixed, none broken.
+#
+# This list is deliberately function words only. Nothing here changes the
+# meaning of a provision. Legally loaded small words are NOT included, and
+# must not be added: not, no, shall, may, must, within, before, after, unless,
+# until, if, than, less, more, each, any, all, other, such.
+QUERY_STOPWORDS = frozenset("""
+    a an the this that these those there here
+    i me my we our you your it its he she they them their
+    is am are was were be been being
+    do does did done have has had having
+    what which who whom whose when where why how
+    of to in on at by for with as from into about
+    and or but so then
+""".split())
+
+
+def filter_query_tokens(tokens: List[str]) -> List[str]:
+    """Drop function words from a query, keeping at least one token.
+
+    A query made entirely of function words ("what is it about?") would
+    otherwise score nothing at all, so in that case the original tokens are
+    kept and the caller gets the old behaviour rather than an empty result.
+    """
+    kept = [t for t in tokens if t not in QUERY_STOPWORDS]
+    return kept or tokens
 
 
 def build_indexes(model_name: str = DEFAULT_MODEL_NAME) -> Dict[str, str]:

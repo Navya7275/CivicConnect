@@ -163,6 +163,48 @@ def test_query_and_document_tokenizers_are_the_same_function() -> None:
     assert ".split()" not in code, "search() has its own tokenizer again"
 
 
+def test_query_stopwords_exclude_legally_loaded_words() -> None:
+    """The filter must never drop a word that changes what a provision means.
+
+    "Whoever shall not, within thirty days..." and "Whoever shall, within
+    thirty days..." are opposite rules. These words are ordinary enough to
+    look like stopwords in any general-purpose list, and dropping one would
+    make the two sentences identical to keyword search.
+    """
+    from data.indexing.build_index import QUERY_STOPWORDS
+
+    must_keep = {
+        "not", "no", "nor", "shall", "may", "must", "within", "before",
+        "after", "unless", "until", "if", "than", "less", "more", "least",
+        "each", "any", "all", "every", "other", "such", "without", "except",
+    }
+    leaked = sorted(must_keep & QUERY_STOPWORDS)
+    assert not leaked, (
+        f"these change the meaning of a provision and must not be "
+        f"filtered out of a query: {leaked}"
+    )
+
+
+def test_query_filter_drops_function_words_but_never_everything() -> None:
+    """Filtering must not be able to produce an empty query.
+
+    A question made only of function words scores nothing against every
+    document, which returns an arbitrary ordering rather than no results --
+    worse than not filtering at all.
+    """
+    from data.indexing.build_index import filter_query_tokens
+
+    assert filter_query_tokens(
+        tokenize_text("How long does a public authority have to respond to an RTI request?")
+    ) == ["long", "public", "authority", "respond", "rti", "request"]
+
+    all_stopwords = tokenize_text("what is it about?")
+    assert filter_query_tokens(all_stopwords) == all_stopwords
+
+    # Documents keep their function words; only the query side filters.
+    assert "of" in tokenize_text("receipt of request")
+
+
 @pytest.mark.skipif(
     not (ARTIFACTS / "bm25.pkl").exists() or not (ARTIFACTS / "chunk_ids.json").exists(),
     reason="index artifacts missing; run `python -m data.indexing.build_index` first",
