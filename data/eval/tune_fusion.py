@@ -138,7 +138,65 @@ def main() -> int:
     print("  Compare each row against the dense-only column in run_eval. If no")
     print("  setting beats dense alone, that is the finding: report it rather")
     print("  than tuning until the hybrid looks better than it is.")
+
+    overlap(cached, bk, bw)
     return 0
+
+
+def overlap(cached, k, w_dense):
+    """Which questions does each arm actually get, not just how many.
+
+    Equal totals do not mean equal answers. Two arms can both reach 77% on
+    different halves of the set, and that would be worth exploiting: it
+    would mean bm25 covers questions dense misses, and the job is to find
+    the rule that picks between them.
+
+    The number that settles it is how many questions bm25 gets that dense
+    does not. That is the ceiling on what any fusion of the two can ever
+    add. If it is zero, no weighting, no k and no clever routing can make
+    the bm25 arm worth its place -- it is not that fusion is tuned badly, it
+    is that there is nothing to fuse.
+    """
+    dense_hits, bm25_hits, hybrid_hits = set(), set(), set()
+    for q, b, d in cached:
+        qid = q["id"]
+        if any(answers(q, c) for c in d[:LIMIT]):
+            dense_hits.add(qid)
+        if any(answers(q, c) for c in b[:LIMIT]):
+            bm25_hits.add(qid)
+        fused = reciprocal_rank_fusion([b, d], k=k, limit=LIMIT,
+                                       weights=[1.0, w_dense])
+        if any(answers(q, c) for c in fused):
+            hybrid_hits.add(qid)
+
+    total = len(cached)
+    only_bm25 = bm25_hits - dense_hits
+    print()
+    print("  which questions each arm gets, not just how many")
+    print()
+    print(f"    dense                      {len(dense_hits):>3}/{total}")
+    print(f"    bm25                       {len(bm25_hits):>3}/{total}")
+    print(f"    best hybrid                {len(hybrid_hits):>3}/{total}")
+    print(f"    either one                 {len(dense_hits | bm25_hits):>3}/{total}"
+          f"   <- ceiling for any fusion")
+    print(f"    bm25 gets, dense misses    {len(only_bm25):>3}"
+          f"   <- all bm25 can ever add")
+    print(f"    hybrid loses vs dense      {len(dense_hits - hybrid_hits):>3}")
+    print(f"    hybrid gains vs dense      {len(hybrid_hits - dense_hits):>3}")
+    if only_bm25:
+        print()
+        print("    questions only bm25 finds:")
+        for qid in sorted(only_bm25):
+            print(f"      {qid}")
+        print()
+        print("    Worth reading these. If they share a shape -- an exact phrase,")
+        print("    a section number, a rare term -- the answer is to route those")
+        print("    queries to bm25, not to fuse every query with it.")
+    else:
+        print()
+        print("    bm25 finds nothing dense misses. No fusion of these two can")
+        print("    beat dense alone, at any k and any weight, because there is")
+        print("    nothing for the second arm to contribute.")
 
 
 if __name__ == "__main__":
