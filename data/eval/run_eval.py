@@ -184,6 +184,48 @@ def build_arms(chunks: list[dict[str, Any]], want: list[str]) -> dict[str, Any]:
     return arms
 
 
+# Answers already produced in this run, keyed by the question and the exact
+# chunks it was answered from.
+#
+# The hybrid and hybrid+verification arms share one HybridRetriever, so they
+# retrieve identically, and synthesis runs at temperature 0. Asking the
+# provider the same question over the same context therefore buys a second
+# copy of the same answer -- a quarter of every run's LLM calls, spent on
+# nothing. On a free tier where the budget allows roughly one call a minute,
+# that quarter is about twenty minutes.
+_ANSWER_CACHE: dict[tuple, dict[str, Any]] = {}
+
+# Groq enforces output tokens per minute, so the window that has to clear is
+# sixty seconds. The old backoff ran 5, 10, 20, 40 and gave up at 75 seconds
+# total, never once waiting out a full window; runs died with every attempt
+# "rate limited" and nothing to show. These waits cross a minute twice.
+RATE_LIMIT_WAITS = (15, 35, 65, 65)
+
+
+def synthesize_cached(synthesizer: Any, query: str, chunks: list[dict[str, Any]]):
+    """Synthesize an answer, reusing one already produced for the same input."""
+    key = (query, tuple(c.get("chunk_id") for c in chunks))
+    if key in _ANSWER_CACHE:
+        return _ANSWER_CACHE[key]
+
+    for attempt, wait in enumerate((*RATE_LIMIT_WAITS, None)):
+        try:
+            out = synthesizer.synthesize(query, chunks)
+            _ANSWER_CACHE[key] = out
+            return out
+        except Exception as exc:  # noqa: BLE001
+            rate_limited = (
+                "rate" in exc.__class__.__name__.lower() or "429" in str(exc)
+            )
+            if not rate_limited or wait is None:
+                raise
+            print(f"\n    rate limited, waiting {wait}s "
+                  f"(attempt {attempt + 1} of {len(RATE_LIMIT_WAITS)})", flush=True)
+            time.sleep(wait)
+
+    raise RuntimeError("synthesis returned nothing after retries")
+
+
 def as_chunk(item: Any) -> dict[str, Any]:
     """Retrievers return either a chunk dict or {'chunk': ..., 'score': ...}."""
     if isinstance(item, dict) and "chunk" in item and isinstance(item["chunk"], dict):
@@ -239,23 +281,7 @@ def run_one(
 
     # --- synthesis: needs the provider, and may fail on its own -----------
     try:
-        out = None
-        for attempt in range(5):
-            try:
-                out = synthesizer.synthesize(question["question"], chunks)
-                break
-            except Exception as exc:  # noqa: BLE001
-                rate_limited = (
-                    "rate" in exc.__class__.__name__.lower() or "429" in str(exc)
-                )
-                if not rate_limited or attempt == 4:
-                    raise
-                wait = 2 ** attempt * 5
-                print(f"\n    rate limited, waiting {wait}s", flush=True)
-                time.sleep(wait)
-
-        if out is None:
-            raise RuntimeError("synthesis returned nothing after retries")
+        out = synthesize_cached(synthesizer, question["question"], chunks)
 
         answer = out.get("answer") or ""
         citations = out.get("citations") or []
@@ -411,8 +437,16 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         print()
         print("  WARNING: an arm answered fewer than 80% of its questions. Those")
         print("  percentages are over whatever got through, which is not a result.")
-        print("  Re-run with a larger --sleep, or use --no-synthesis for retrieval")
-        print("  metrics alone, which need no provider and are always complete.")
+        print()
+        print("  On a free Groq key the limit is output tokens per minute, not")
+        print("  requests, so waiting longer between questions does not help on")
+        print("  its own -- one 800-token answer is most of a 1000-token minute.")
+        print("  What does help, in order of how much:")
+        print()
+        print("    --arms hybrid            one arm instead of four")
+        print("    CIVICCONNECT_MAX_ANSWER_TOKENS=300   shorter answers, more of them")
+        print("    --sample 10              fewer questions")
+        print("    --no-synthesis           retrieval metrics only, no provider")
 
     if "hybrid+verification" in results:
         rows = [r for r in results["hybrid+verification"] if not r.error and not r.synthesis_error]
