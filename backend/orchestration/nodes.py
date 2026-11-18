@@ -303,15 +303,33 @@ def verification_node(state: GraphState) -> GraphState:
     synthesis agent could return a clean citations list while writing an
     invented section number into the text — and the answer came back verified.
     """
+    answer = state.get("draft_answer", "")
+
     result = _verifier.verify(
-        answer=state.get("draft_answer", ""),
+        answer=answer,
         citations=state.get("citations", []),
         retrieved_chunks=state.get("retrieved_chunks", []),
     )
 
+    # A fallback answer cannot be verified, whatever the checks say.
+    #
+    # Verification asks whether the answer cites only law that was retrieved.
+    # On the stub path that is trivially true -- the stub quotes the chunk it
+    # was handed -- so the agent returned verified=True and the API reported
+    # `"verified": true` on an answer whose first line is "This is not a real
+    # answer". The frontend renders that field as a trust badge, so a Space
+    # with no working synthesis would have shown "Verified by law" above text
+    # that explicitly says it is not one.
+    #
+    # The check is not wrong, it is answering a narrower question than the
+    # field is read as answering. Nothing is verified when nothing was
+    # synthesised, so say so here rather than teaching the reader that the
+    # badge means little.
+    verified = result.verified and STUB_ANSWER_NOTICE not in answer
+
     return GraphState(
-        verification_status=result.status,
-        verified=result.verified,
+        verification_status="skipped" if verified != result.verified else result.status,
+        verified=verified,
         ungrounded_citations=result.ungrounded_citations,
         hallucinated_sections=result.hallucinated_sections,
         checked_sections=result.checked_sections,
