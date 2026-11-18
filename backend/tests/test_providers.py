@@ -406,3 +406,49 @@ def test_stub_citations_carry_no_scores(monkeypatch) -> None:
     assert body["citations"], "the stub path should still return citations"
     for citation in body["citations"]:
         assert citation.get("retrieval_scores") is None
+
+
+def test_stub_answers_say_they_are_not_real_answers() -> None:
+    """A stub answer must be unmistakable as one, in the answer itself.
+
+    The stub runs when synthesis could not be reached, a missing or rejected
+    GROQ_API_KEY being the usual reason. It shows the provisions retrieval
+    found, which is more use than a placeholder -- but raw statute presented
+    without comment reads exactly like an answer, and the person asking
+    cannot tell that nothing read their question.
+
+    Nothing else catches it. /health returns 200 whenever the process is up,
+    including while serving stubs, so a deployment with a bad key looks
+    healthy from outside; the log line saying STUB goes to the server, not
+    the reader. The answer is the only place the degradation can surface.
+
+    This is the third fallback in this project to hide behind a realistic
+    surface -- the frontend defaulted to a canned simulator when its config
+    was missing, and /health reported "ok" while serving stubs. Both were
+    fixed for this reason.
+    """
+    from backend.orchestration.nodes import STUB_ANSWER_NOTICE, _stub_synthesize
+
+    chunks = [{
+        "chunk_id": "mvact1988-s185",
+        "act": "Motor Vehicles Act, 1988",
+        "section": "Section 185",
+        "jurisdiction": "Central",
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/1798",
+        "text": "Whoever drives after consuming alcohol shall be punishable with "
+                "a fine of ten thousand rupees.",
+    }]
+
+    with_sources = _stub_synthesize("caught driving after drinking", chunks)
+    without_sources = _stub_synthesize("something nobody wrote a law about", [])
+
+    for label, out in (("with sources", with_sources), ("no sources", without_sources)):
+        assert out["answer"].startswith(STUB_ANSWER_NOTICE), (
+            f"the {label} stub answer must open with the notice, or a reader "
+            f"takes it for a real answer"
+        )
+        assert "not a real answer" in out["answer"].lower()
+
+    # The notice has to come first. Buried under the statute it is no warning.
+    assert with_sources["answer"].index("not a real answer") < \
+           with_sources["answer"].index("ten thousand rupees")

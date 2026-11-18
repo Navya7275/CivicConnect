@@ -104,62 +104,87 @@ def _stub_search(
     return [chunk][:limit]
 
 
+#: Prefixed to every stub answer, and the thing a reader must not be able to
+#: miss. The stub runs when synthesis could not be reached -- a missing or
+#: rejected GROQ_API_KEY being the usual reason -- and without this the
+#: response is raw statute presented as though something had read the
+#: question and answered it.
+#:
+#: That matters more here than it would elsewhere. /health returns 200
+#: whenever the process is up, including when it is serving stubs, so a
+#: deployment with a bad key looks healthy from the outside. The only place
+#: the degradation can surface is the answer itself.
+#:
+#: It is also the third time this project has hidden a fallback behind a
+#: realistic-looking surface: the frontend defaulted to a canned simulator
+#: when its config file was missing, and /health reported "ok" while
+#: serving stub data. Both were fixed for the same reason. A system that
+#: cannot do its job has to say so plainly, in the place the person is
+#: actually looking.
+STUB_ANSWER_NOTICE = (
+    "**This is not a real answer.** CivicConnect's answer service is not "
+    "running, so nothing has read your question or explained anything."
+)
+
+
 def _stub_synthesize(
     query: str,
     retrieved_chunks: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Stand-in synthesis agent for Phase C1.
+    """Stand-in synthesis agent for when the real one cannot be reached.
 
-    Does not call an LLM. Returns a fixed message plus citations built from
-    whatever chunks it was handed, so the response shape is realistic even
-    though the content is not.
+    Does not call an LLM. Shows the provisions retrieval found, which is more
+    use than a placeholder, but every answer opens with STUB_ANSWER_NOTICE so
+    nobody mistakes raw statute for an explanation of it.
     """
     logger.warning("Using STUB synthesizer — no LLM is being called (Phase C1).")
 
     if not retrieved_chunks:
         return {
-            "answer": "The available sources do not contain enough information to answer this question.",
+            "answer": (
+                f"{STUB_ANSWER_NOTICE} Nothing in the available sources "
+                f"matched this question either."
+            ),
             "citations": [],
         }
 
-    if retrieved_chunks:
-        # Build an informative summary from the retrieved source chunks
-        primary = retrieved_chunks[0]
-        text_snippet = primary.get("text", "").strip()
-        act_name = primary.get("act", "")
-        sec = primary.get("section", "")
-        
-        sec_label = f", {sec}" if sec else ""
-        answer_body = f"Based on retrieved civic records for **{act_name}**{sec_label}:\n\n{text_snippet}"
-        
-        if len(retrieved_chunks) > 1:
-            more_acts = list(dict.fromkeys(c.get("act") for c in retrieved_chunks[1:] if c.get("act") and c.get("act") != act_name))
-            if more_acts:
-                answer_body += f"\n\n*Related provisions retrieved*: {', '.join(more_acts[:3])}."
+    primary = retrieved_chunks[0]
+    act_name = primary.get("act", "")
+    section = primary.get("section", "")
+    section_label = f", {section}" if section else ""
 
-        return {
-            "answer": answer_body,
-            "citations": [
-                {
-                    "act": chunk["act"],
-                    "section": chunk.get("section", ""),
-                    "jurisdiction": chunk["jurisdiction"],
-                    "source_url": chunk["source_url"],
-                    "reference_url": chunk.get("reference_url"),
-                    "chunk_id": chunk.get("chunk_id"),
-                    "excerpt": chunk.get("excerpt"),
-                    "_retrieval_scores": chunk.get("_retrieval_scores"),
-                    "_rrf_score": chunk.get("_rrf_score"),
-                }
-                for chunk in retrieved_chunks
-            ],
-        }
+    answer = (
+        f"{STUB_ANSWER_NOTICE} What follows is the raw text of a provision "
+        f"whose wording matched yours, exactly as it appears in the Act. "
+        f"Please do not act on it.\n\n"
+        f"---\n\n"
+        f"Text found in **{act_name}**{section_label}:\n\n"
+        f"{primary.get('text', '').strip()}"
+    )
+
+    others = list(dict.fromkeys(
+        c.get("act") for c in retrieved_chunks[1:]
+        if c.get("act") and c.get("act") != act_name
+    ))
+    if others:
+        answer += f"\n\nAlso searched: {', '.join(others[:3])}."
 
     return {
-        "answer": (
-            f"No relevant provisions were retrieved for '{query}'. Please check the jurisdiction or refine your question."
-        ),
-        "citations": [],
+        "answer": answer,
+        "citations": [
+            {
+                "act": chunk["act"],
+                "section": chunk.get("section", ""),
+                "jurisdiction": chunk["jurisdiction"],
+                "source_url": chunk["source_url"],
+                "reference_url": chunk.get("reference_url"),
+                "chunk_id": chunk.get("chunk_id"),
+                "excerpt": chunk.get("excerpt"),
+                "_retrieval_scores": chunk.get("_retrieval_scores"),
+                "_rrf_score": chunk.get("_rrf_score"),
+            }
+            for chunk in retrieved_chunks
+        ],
     }
 
 
