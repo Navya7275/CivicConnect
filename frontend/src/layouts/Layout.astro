@@ -60,7 +60,7 @@ const isApp = pathname.startsWith('/assistant');
         id="main-header" 
         data-transparent={transparentNavOnLoad ? "true" : "false"} 
         class={`sticky top-0 z-40 transition-all duration-500 ease-out flex justify-center ${
-          transparentNavOnLoad ? "w-full -mb-16 bg-transparent" : "w-full nav-glass border-b border-border"
+          transparentNavOnLoad ? "w-full -mb-16 bg-transparent" : "w-full nav-glass"
         }`}
       >
         <nav 
@@ -220,9 +220,8 @@ const isApp = pathname.startsWith('/assistant');
               'h-13',
               'px-5',
               'rounded-full',
-              'nav-glass',
-              'border',
-              'border-border/80',
+              'bg-white/85',
+              'backdrop-blur-xl',
               'shadow-lg',
               'shadow-black/5'
             );
@@ -236,9 +235,8 @@ const isApp = pathname.startsWith('/assistant');
               'h-13',
               'px-5',
               'rounded-full',
-              'nav-glass',
-              'border',
-              'border-border/80',
+              'bg-white/85',
+              'backdrop-blur-xl',
               'shadow-lg',
               'shadow-black/5'
             );
