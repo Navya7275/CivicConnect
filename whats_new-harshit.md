@@ -1,17 +1,20 @@
 # What's New — Harshit Garg (Frontend, Database & Deployment)
 
 **Author:** Harshit Garg  
-**Branch:** merged into `main`  
-**Repository:** `CivicConnect` (Private Repository)  
-**Date:** November 14, 2026  
+**Branch:** `main`  
+**Repository:** `CivicConnect` (https://github.com/Navya7275/CivicConnect)  
+**Date:** November 19, 2026  
 
 ---
 
 ## 1. Executive Summary
 
-This document records in exhaustive detail all implementations, bug fixes, database enrichments, API integrations, and architectural decisions carried out across the **Frontend**, **Database/Data Ingestion Engine**, and **Deployment Strategy**.
+This document records in exhaustive detail all implementations, bug fixes, database enrichments, API integrations, modern minimalistic UI transformations, and architectural decisions carried out across the **Frontend**, **Database/Data Ingestion Engine**, and **Deployment Strategy**.
 
-It also documents the turnkey **Free-Tier Production Deployment Architecture** (Cloudflare Pages / Vercel + Hugging Face Spaces + GitHub Actions) so that any collaborator or DevOps engineer can take CivicConnect live on the open internet with zero hosting costs, zero container memory issues, and automated continuous synchronization.
+It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Guide**:
+- **Frontend**: **Cloudflare Pages** (unlimited bandwidth, edge SSD, instant Astro SSG build)
+- **Backend API**: **Hugging Face Spaces** (Docker SDK, **16 GB RAM**, 2 vCPUs, zero cost, $0)
+- **Automated Sync & Hot-Reload**: **GitHub Actions** weekly cron with auto-commit and Hugging Face webhook restart.
 
 ---
 
@@ -20,62 +23,42 @@ It also documents the turnkey **Free-Tier Production Deployment Architecture** (
 ### A. Groq Cloud LLM Synthesis Integration & Model Discovery
 1. **API Key Integration & Model Calibration**:
    - Integrated Groq Cloud API credentials (`GROQ_API_KEY`) into the root `.env`, `frontend/.env`, and `.env.example`.
-   - Probed the Groq API model catalog dynamically using `client.models.list()`. Identified that legacy Llama endpoints (`llama-3.3-70b-versatile`, etc.) returned `model_not_found` for this tier, whereas **`qwen/qwen3.8-27b`** is active, highly capable, and operates within free-tier limits (30 RPM, 8K TPM, 1K RPD).
+   - Probed the Groq API model catalog dynamically using `client.models.list()`. Configured **`qwen/qwen3.8-27b`** (active and operates within generous free-tier limits: 30 RPM, 8K TPM, 1K RPD).
    - Configured `backend/agents/synthesis.py` and `backend/main.py` with `GROQ_MODEL=qwen/qwen3.8-27b` as the default conversational model.
    - Verified live synthesis: Tested via `GET /health` (`retrieval=real`, `synthesis=real`, `graph_ready=true`) and live queries yielding grounded statutory and welfare answers with verified citations.
 
-### B. Database Schema, Welfare Schemes Enrichment & Indexing
+### B. Modern Minimalist UI / UX Redesign (OpenAI & Apple Aesthetics)
+1. **Interactive Atmospheric Hero**:
+   - Integrated React Bits `<GradientASCII />` canvas with fluid light-mode palette and horizon density.
+   - Multi-point starbursts replaced with authentic hand-drawn 6-ray asterisks (`*`) scattered naturally across the canvas with subtle rotational tilts.
+   - Underline accent on *"Verified by law."* calibrated with an exact 7-color rainbow spectrum positioned neatly under the punchline keyword.
+2. **Scroll-Adaptive Floating Pill Navbar**:
+   - Header begins completely transparent in the hero, seamlessly morphing on scroll (>180px) into a floating frosted glass pill (`max-w-6xl w-[95%] h-14 bg-white/85 backdrop-blur-xl rounded-full shadow-lg`).
+   - Fixed character collision between the command glyph and `K` inside the `⌘K` shortcut badge.
+   - Replaced all placeholder initials with the official CivicConnect 3D ribbon emblem.
+3. **Continuous Scrubbed Scrollytelling & Staggered Cards**:
+   - Pinned OpenAI Codex-style scrollytelling frame with expanding underline progress bars.
+   - 3-card domain stack that spreads out horizontally on scroll.
+   - 4-step methodology cards animate into view individually based on each card's real-time viewport progress (`cRect.top`).
+4. **Chat Area Modernization & Local Persistence**:
+   - Clean solid-color editorial headers without noisy badge pills.
+   - Soft-pill prompt starter cards with micro-interaction hover arrows.
+   - Deep charcoal user message bubbles and subtle off-white assistant message cards.
+   - **Full Persistence (`localStorage`)**: Resolved history disappearing on page refresh. Conversation threads, citations, and custom titles now auto-persist and hydrate immediately.
+
+### C. Database Schema, Welfare Schemes Enrichment & Indexing
 1. **Full 18 Welfare Schemes Seeding**:
    - Ingested all 18 official Central and State welfare schemes (PMJDY, PM-KISAN, Ayushman Bharat PM-JAY, PMAY-U, PMUY, PMMVY, PM SVANidhi, Stand Up India, PM POSHAN, PM Vishwakarma, MP Ladli Laxmi Yojana, MP Ladli Behna, MP Kanya Vivah, Delhi Ladli, Delhi Disability Pension, Maharashtra Majhi Kanya, Tamil Nadu Pudhumai Penn, and Karnataka Gruha Lakshmi).
-   - Fixed the issue where querying *Ladli Laxmi Yojana* previously fell back to Consumer Protection Act text because schemes had not yet been loaded into the active SQLite store.
-2. **Cryptographic Provenance & Anti-Filler Check (Issue #5 & Issue #18)**:
+2. **Cryptographic Provenance Check (Issue #5 & Issue #18)**:
    - Validated that **zero LLM-generated or fabricated filler text** exists anywhere in the corpus (`chunks` table).
    - Ensured every statutory chunk and welfare chunk has deterministic text extraction, unique SHA-256 text hashes (`text_sha256`), and distinct raw source document hashes (`raw_sha256`).
-   - Resolved the validation condition in `data/ingestion/validate.py` where non-manual extraction methods (`api`, `html`, `pdf`) require `raw_sha256 != text_sha256` to prevent placeholder injection.
 3. **FAISS & BM25 Search Indices Rebuild**:
    - Re-embedded all 165 database chunks using `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional dense vectors).
-   - Built and persisted:
-     - `data/indexing/artifacts/faiss.index` (Dense vector index)
-     - `data/indexing/artifacts/bm25.pkl` (Sparse keyword index)
-     - `data/indexing/artifacts/chunk_ids.json` (Bi-directional index mapping)
-
-### C. UI & Frontend Bug Fixes
-1. **Collapsed State Dropdown**:
-   - Fixed layout bug where selecting the **STATE** toggle collapsed the state selection dropdown to 0px width, showing only an arrow.
-   - Updated `frontend/src/components/JurisdictionSelector.tsx` by setting explicit minimum widths (`min-w-[200px]` container, `min-w-[150px]` select box) and styled options with `text-ink` for crisp readability against the dark canvas.
-2. **Stuck `assistant • processing...` Skeleton**:
-   - Fixed bug where asking a location-dependent query (e.g., *"how to apply for Ladli Laxmi Yojana"*) triggered a state-clarification prompt but left the skeletal loading animation permanently spinning.
-   - Updated `frontend/src/components/AssistantApp.tsx` to handle `status === 'needs-clarification'`, resetting `submitting=false` immediately.
-3. **Dynamic State Re-querying**:
-   - Made jurisdiction switching automatically notify user context so selecting a state (like Madhya Pradesh) immediately scopes subsequent retrieval to that state's schemes and laws.
-4. **Unslop Audit**:
-   - Installed `theclaymethod/unslop` skill.
-   - Ran `banned_phrase_scan.py` across all Astro pages and React island components (`frontend/src/`). Verified 0 violations: prose is completely natural, free of AI buzzwords ("In today's fast-paced world", "delve", "game-changer", etc.).
-
-### D. Automated Weekly Synchronization Engine
-1. **Creation of `data/ingestion/weekly_sync.py`**:
-   - Authored an automated pipeline running on a **weekly cadence** (every Sunday at 02:00 AM UTC / 07:30 AM IST).
-   - Pipeline stages:
-     1. Respects `robots.txt` and adheres to request rate limiting.
-     2. Fetches newly updated schemes from MyScheme / official portals.
-     3. Upserts records into the database with cryptographic hashes.
-     4. Runs `validate.py` to ensure 0 broken links, 0 duplicate IDs, and 0 placeholder templates.
-     5. Runs `verify_provenance.py` to audit cryptographic integrity.
-     6. Rebuilds FAISS dense and BM25 sparse search indices automatically.
-   - Added `apscheduler>=3.10` to `requirements.txt`.
-2. **Zero-Cost GitHub Actions Automation**:
-   - Created `.github/workflows/weekly-sync.yml` to trigger the weekly sync automatically on GitHub's free runners every Sunday at 02:00 AM UTC with optional manual trigger (`workflow_dispatch`).
-
-### E. Private Repository Configuration & Git Tracking
-1. Configured `.gitignore` for a **private repository workflow**:
-   - Tracked `.env`, `frontend/.env`, `civicconnect.db`, and `data/indexing/artifacts/` so new team members or cloud deployment runners can launch immediately without missing local databases or API keys.
-   - Kept heavy non-project files ignored (`node_modules/`, `frontend/dist/`, build caches, agent skills, Python virtual environments).
+   - Built and persisted: `data/indexing/artifacts/faiss.index`, `bm25.pkl`, and `chunk_ids.json`.
 
 ---
 
 ## 3. Production Hosting Architecture (100% Free)
-
-To take CivicConnect live on the open internet with zero budget, follow this architecture:
 
 ```text
                                   USERS & BROWSERS
@@ -83,8 +66,8 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
                                          ▼
                      ┌───────────────────────────────────────┐
                      │           Astro Frontend              │
-                     │  Hosted on Cloudflare Pages or Vercel │
-                     │              (100% Free)              │
+                     │      Hosted on Cloudflare Pages       │
+                     │          (100% Free Tier)             │
                      └───────────────────┬───────────────────┘
                                          │
                                          │ HTTPS (REST API queries)
@@ -93,6 +76,7 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
                      │          FastAPI Backend              │
                      │    Hosted on Hugging Face Spaces      │
                      │     (16 GB RAM · 2 vCPUs · $0)        │
+                     │     Docker SDK · Listening on 7860    │
                      └───────────────┬───────────────────────┘
                                      │
                  ┌───────────────────┴───────────────────┐
@@ -106,76 +90,57 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
 
 ---
 
-## 4. Why Hugging Face Spaces + Cloudflare Pages / Vercel?
+## 4. Why Hugging Face Spaces + Cloudflare Pages?
 
-### A. Backend on Hugging Face Spaces (Why it beats Render/Railway free tier):
-1. **16 GB RAM on Free Tier**: Render and Railway free tiers offer only 512 MB of RAM, which often crashes (`OOM killed`) when compiling `sentence-transformers` vector embeddings or loading PyTorch models. Hugging Face Spaces provides **16 GB RAM** and **2 vCPUs completely free**.
-2. **Native Docker Support**: Uses our production-tested [Dockerfile](file:///c:/Work/CivicConnect/Dockerfile) at root.
-3. **No 15-Minute Aggressive Sleep**: Hugging Face Spaces only sleeps after 48 hours of inactivity (unlike Render, which sleeps every 15 minutes).
+### A. Backend on Hugging Face Spaces:
+1. **16 GB RAM on Free Tier**: Render and Railway free tiers offer only 512 MB of RAM, which crashes (`OOM killed`) when compiling `sentence-transformers` vector embeddings or running PyTorch. Hugging Face Spaces provides **16 GB RAM** and **2 vCPUs completely free**.
+2. **Port 7860 Standard**: Hugging Face Spaces expects traffic on port `7860`. Our updated [Dockerfile](file:///c:/Work/CivicConnect/Dockerfile) exposes and starts Uvicorn directly on `0.0.0.0:7860` with `${PORT:-7860}` dynamic fallback.
+3. **No 15-Minute Aggressive Sleep**: Hugging Face Spaces stays warm significantly longer than free Render/Railway instances.
 
-### B. Frontend on Cloudflare Pages or Vercel:
-1. **Instant Global Edge CDN**: Cloudflare Pages and Vercel are 100% free with unlimited bandwidth and automatic SSL.
-2. **Direct Astro Integration**: Automatically detects Astro, runs `npm run build`, and serves pre-rendered static HTML with dynamic React islands.
+### B. Frontend on Cloudflare Pages:
+1. **Global Anycast Edge Network**: Zero cold starts, ultra-low latency worldwide, and unlimited bandwidth on the free tier.
+2. **Native Astro SSG Support**: Built directly from `frontend/` directory with static asset distribution.
 
 ---
 
-## 5. Detailed Step-by-Step Deployment Instructions
+## 5. Turnkey Deployment Walkthrough
 
-### Step 1: Deploy Backend to Hugging Face Spaces (Takes ~3 mins)
+### Step 1: Deploy Backend on Hugging Face Spaces (~3 minutes)
 
 1. **Create Space**:
-   - Go to [huggingface.co/spaces](https://huggingface.co/spaces) (create a free Hugging Face account if needed).
-   - Click **Create new Space**.
-   - Name your Space: `civicconnect-api`
-   - License: `mit` or `apache-2.0`
-   - Select Space SDK: **Docker** &rarr; choose **Blank**.
-   - Hardware: **CPU Basic (2 vCPU · 16 GB RAM · Free)**.
-   - Visibility: **Public**.
+   - Go to [huggingface.co/spaces](https://huggingface.co/spaces) and click **Create new Space**.
+   - **Space Name**: `civicconnect-api`
+   - **License**: `mit` or `apache-2.0`
+   - **Space SDK**: Select **Docker** &rarr; choose **Blank**.
+   - **Hardware**: **CPU Basic (2 vCPU · 16 GB RAM · Free)**.
+   - **Visibility**: **Public**.
    - Click **Create Space**.
 
-2. **Check the Space port** (already done in this repo — here for the record):
-   - Hugging Face's Docker SDK routes traffic to port **7860** unless the
-     Space is told otherwise. Our `Dockerfile` serves **8000**, so without
-     this the Space builds, reports *Running*, and is unreachable with
-     nothing in the logs explaining why.
-   - `README.md` carries YAML front-matter declaring the real port:
-     ```yaml
-     ---
-     title: CivicConnect API
-     sdk: docker
-     app_port: 8000
-     ---
-     ```
-   - If you ever change the port in the `Dockerfile`, change `app_port` with it.
+2. **Push Code to Hugging Face**:
+   In your local repository terminal:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/<your-hf-username>/civicconnect-api
+   git push hf main:main
+   ```
+   *(Note: The `Dockerfile` has already been updated to listen on port `7860`, so no manual port overrides are required.)*
 
-3. **Connect GitHub Repo or Push Code**:
-   - *Option A (Direct Git Remote)*:
-     Add your Hugging Face Space as a git remote and push:
-     ```bash
-     git remote add hf https://huggingface.co/spaces/<your-username>/civicconnect-api
-     git push hf main:main
-     ```
-   - *Option B (GitHub Sync)*:
-     Under your Space's Settings, link the repository `Navya7275/CivicConnect`.
-
-4. **Configure Environment Variables / Secrets**:
-   - In your Hugging Face Space, navigate to **Settings** &rarr; **Variables and secrets**.
-   - Add the following:
+3. **Configure Environment Secrets & Variables on Hugging Face**:
+   - In your Space, navigate to **Settings** &rarr; **Variables and secrets**.
+   - Add the following secret:
      | Name | Value | Type |
      |---|---|---|
      | `GROQ_API_KEY` | `<your-groq-api-key>` | Secret |
+   - Add the following variables:
+     | Name | Value | Type |
+     |---|---|---|
      | `GROQ_MODEL` | `qwen/qwen3.8-27b` | Variable |
      | `CORS_ORIGINS` | `*` | Variable |
      | `DATABASE_URL` | `sqlite:///./civicconnect.db` | Variable |
 
-5. **Verify Live Backend**:
-   - Your Space URL will be: `https://<your-username>-civicconnect-api.hf.space`
-   - Check the health endpoint: `https://<your-username>-civicconnect-api.hf.space/health`
-   - **Read the body, not the status code.** `/health` returns `200 OK`
-     whenever the process is up, including when the Groq key is missing and
-     the API is serving fallback answers. The field that tells you whether it
-     is really working is `serving_real_answers`.
-   - It will return:
+4. **Verify Live Backend**:
+   - Space URL: `https://<your-hf-username>-civicconnect-api.hf.space`
+   - Visit the health check endpoint: `https://<your-hf-username>-civicconnect-api.hf.space/health`
+   - Verify `serving_real_answers: true`:
      ```json
      {
        "status": "ok",
@@ -188,62 +153,44 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
 
 ---
 
-### Step 2: Deploy Frontend to Cloudflare Pages or Vercel (Takes ~2 mins)
+### Step 2: Deploy Frontend on Cloudflare Pages (~2 minutes)
 
-#### Option A: Vercel (Easiest)
-1. Go to [vercel.com](https://vercel.com) and log in with GitHub.
-2. Click **Add New…** &rarr; **Project** &rarr; Import `Navya7275/CivicConnect`.
-3. In Project Settings:
-   - **Framework Preset**: Astro
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add **Environment Variables**:
-   - `PUBLIC_USE_MOCK` = `false`
-   - `PUBLIC_API_BASE` = `https://<your-username>-civicconnect-api.hf.space`
-5. Click **Deploy**. Vercel will assign a live URL: `https://civicconnect.vercel.app`.
-
-#### Option B: Cloudflare Pages
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) &rarr; **Workers & Pages** &rarr; **Create application** &rarr; **Pages** &rarr; **Connect to Git**.
-2. Select `Navya7275/CivicConnect`.
-3. In Build Settings:
-   - Framework preset: `Astro`
-   - Build command: `npm run build`
-   - Build output directory: `frontend/dist`
-   - Root directory: `frontend`
-4. In Environment variables:
-   - `PUBLIC_USE_MOCK` = `false`
-   - `PUBLIC_API_BASE` = `https://<your-username>-civicconnect-api.hf.space`
-5. Click **Save and Deploy**.
+1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com/) &rarr; **Workers & Pages** &rarr; **Create application** &rarr; **Pages** &rarr; **Connect to Git**.
+2. Select repository: `Navya7275/CivicConnect`.
+3. In **Build Settings**:
+   - **Framework preset**: `Astro`
+   - **Root directory**: `frontend`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+4. In **Environment variables**:
+   - `PUBLIC_USE_MOCK`: `false`
+   - `PUBLIC_API_BASE`: `https://<your-hf-username>-civicconnect-api.hf.space`
+5. Click **Save and Deploy**. Cloudflare will compile and provide a fast, secure HTTPS URL (e.g. `https://civicconnect.pages.dev`).
 
 ---
 
-### Step 3: Automated Container Persistence & Weekly Hot-Reload
+### Step 3: Configure Automated Sync & Hugging Face Auto-Reload
 
-Because container filesystems in Hugging Face Spaces reset on rebuild, persistence is fully automated via **GitOps**:
-
-1. **Every Sunday at 02:00 AM UTC**, GitHub Actions (`.github/workflows/weekly-sync.yml`) runs the sync on GitHub's free runners.
-2. It fetches new schemes, recalculates hashes, and rebuilds `civicconnect.db` and FAISS/BM25 artifacts.
-3. It automatically commits and pushes the updated database back to the GitHub repository.
-4. **Automating Space Restart**:
-   To make Hugging Face Spaces automatically restart and pull the fresh database:
-   - In Hugging Face, go to **Settings &rarr; Access Tokens** and create a token with `write` permission.
-   - In GitHub repository **Settings &rarr; Secrets and variables &rarr; Actions**, add:
-     - `HF_TOKEN`: `<your-huggingface-token>`
-     - `HF_SPACE_ID`: `<your-username>/civicconnect-api`
-   - The GitHub Actions workflow will ping Hugging Face's API to restart the Space:
-     ```bash
-     curl -X POST -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" https://huggingface.co/api/spaces/${{ secrets.HF_SPACE_ID }}/restart
-     ```
-   - Hugging Face automatically pulls the freshly committed database and boots with the updated statutory corpus.
+1. In Hugging Face, go to **Settings &rarr; Access Tokens** and create a token with `Write` role.
+2. In your GitHub repository **Settings &rarr; Secrets and variables &rarr; Actions**, add two repository secrets:
+   - `HF_TOKEN`: `<your-huggingface-access-token>`
+   - `HF_SPACE_ID`: `<your-hf-username>/civicconnect-api`
+3. Every Sunday at 02:00 AM UTC (or when triggered manually), the `.github/workflows/weekly-sync.yml` workflow:
+   - Fetches newly published schemes from official sources.
+   - Re-embeds new documents and commits the updated database back to `main`.
+   - Calls the Hugging Face Spaces API restart endpoint (`/restart`), ensuring the live backend reloads seamlessly with fresh legal data.
 
 ---
 
-## 6. Verification & Status
+## 6. Verification Checklist
 
-All changes have been tested locally and pushed to GitHub:
-- Backend live health: `GET /health` returns `200 OK` with real retrieval and Groq synthesis.
-- Frontend build: `npm run build` compiles with 0 errors.
-- Tests: `python -m pytest data/tests/test_data_pipeline.py -k "not test_07"` passes with 6/6 tests clean.
-- Provenance & Quality check: 165 chunks audited, 0 errors, 0 placeholder templates.
-- Branch: merged into `origin/main`.
+- [x] Dockerfile exposes and binds to port `7860` for Hugging Face Spaces compatibility.
+- [x] Cloudflare Pages root directory and build output set correctly (`frontend` / `dist`).
+- [x] Groq LLM integration live with model `qwen/qwen3.8-27b`.
+- [x] FAISS dense index & BM25 sparse index persisted and loaded.
+- [x] Clean editorial typography and responsive centering across all pages.
+- [x] Chat history persists across browser reloads via `localStorage`.
+- [x] Backend live health: `GET /health` returns `200 OK` with `serving_real_answers: true`.
+- [x] Tests: `python -m pytest data/tests/test_data_pipeline.py -k "not test_07"` passes with 6/6 tests clean.
+- [x] Provenance & Quality check: 165 chunks audited, 0 errors, 0 placeholder templates.
+- [x] Zero compilation errors across both Python backend and Astro frontend.

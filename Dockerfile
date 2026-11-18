@@ -25,12 +25,13 @@ RUN python -m data.db.database && \
     python -m data.ingestion.load_welfare && \
     python -m data.indexing.build_index
 
-# Expose backend port
-EXPOSE 8000
+# Hugging Face Spaces default port is 7860
+ENV PORT=7860
+EXPOSE 7860
 
-# Container healthcheck
+# Container healthcheck (supports dynamic PORT or default 7860)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-7860}/health || exit 1
 
-# Start FastAPI server
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start FastAPI server binding to Hugging Face Spaces port
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860}"]
