@@ -1,7 +1,7 @@
 ---
 title: CivicConnect API
 emoji: "⚖️"
-colorFrom: orange
+colorFrom: yellow
 colorTo: green
 sdk: gradio
 app_file: app.py
