@@ -187,8 +187,22 @@ demo = gr.Interface(
     description="Grounded AI Assistant for Indian Statutory Law & Welfare Schemes. FastAPI endpoints active at `/docs`, `/health`, and `/query`.",
 )
 
-# Mount Gradio onto the FastAPI app so both coexist on port 7860
-app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
+# Mount Gradio onto the FastAPI app so both coexist on port 7860.
+#
+# ssr_mode=False is load-bearing, and the reason the first two deploys served
+# nothing. A Space sets GRADIO_SSR_MODE=True and GRADIO_SERVER_PORT=7860, and
+# gradio's node_server.py starts its port search at GRADIO_SERVER_PORT. So with
+# SSR left on, mount_gradio_app quietly starts a Node front proxy that binds
+# 7860 -- the very port this app is meant to serve -- and uvicorn then finds it
+# taken. That is the "[Errno 98] address already in use" from the first deploy,
+# and the "Port 7860 is already being served" from the second. The culprit was
+# inside this process all along, not elsewhere on the machine.
+#
+# Server-side rendering only speeds up the first paint of the Gradio page, which
+# here is an internal test harness, and it needs a newer Node than the image
+# carries anyway. FastAPI owning the port is what matters, because /health and
+# /query are what the Cloudflare frontend calls.
+app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio", ssr_mode=False)
 
 def _port_is_available(port: int) -> bool:
     """Whether this process can bind `port` itself.
