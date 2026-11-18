@@ -3,64 +3,65 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Sources & Methodology | CivicConnect" description="Learn about the government datasets, acts, and verification methods used by CivicConnect.">
-  <div class="py-24 px-6 max-w-4xl mx-auto">
+  <div class="container section max-w-4xl">
     <!-- Header -->
     <div class="mb-16">
-      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">data standards</span>
-      <h1 class="text-display-md text-ink mb-6">Sources & Methodology</h1>
-      <p class="text-body-lg text-mute leading-relaxed">
-        How CivicConnect retrieves, processes, and displays verified legal texts and welfare benefits.
+      <span class="badge badge-soft mb-3" data-tone="accent">Data Governance</span>
+      <h1 class="text-h1 mb-4">
+        Sources & Methodology. <span class="text-muted-foreground">Rigorous statutory grounding.</span>
+      </h1>
+      <p class="text-body text-muted-foreground leading-relaxed">
+        How CivicConnect ingests, indexes, verifies, and presents Indian legislation and citizen welfare aid.
       </p>
     </div>
 
     <!-- Content Sections -->
-    <div class="space-y-12 text-body-md text-body leading-relaxed">
+    <div class="space-y-10">
       
-      <section>
-        <span class="text-caption-mono text-accent-sunset tracking-wider block mb-2">data sources</span>
-        <h2 class="text-display-xs text-ink mb-4">Official Document Library</h2>
-        <p class="mb-4">
-          CivicConnect utilizes publicly available government databases. Rather than indexing the entire web, we curate and index verified PDF documents and HTML resources directly from primary channels, such as:
+      <article class="card space-y-4">
+        <span class="badge badge-soft" data-tone="primary">Authoritative Repositories</span>
+        <h2 class="text-h2 text-2xl">Official Document Sources</h2>
+        <p class="text-body text-muted-foreground leading-relaxed">
+          CivicConnect utilizes publicly available government databases. Rather than scraping uncontrolled web sources, we curate and index verified PDF documents and HTML resources directly from primary statutory sources:
         </p>
-        <ul class="list-disc pl-6 space-y-2 text-body-sm text-mute">
-          <li>**The Gazette of India**: The official public journal carrying newly enacted central acts.</li>
-          <li>**State Government Gazettes**: Gazette publications from states like Maharashtra, providing state-specific legislative modifications and pensions.</li>
-          <li>**National Government Services Portal (services.india.gov.in)**: Official records of central and state citizen welfare eligibility details.</li>
-          <li>**Individual Ministry Portals**: Direct operational manuals from the Ministry of Agriculture, Ministry of Health and Family Welfare, and others.</li>
+        <ul class="list-disc pl-6 space-y-2 text-small text-muted-foreground">
+          <li><strong>The Gazette of India:</strong> The official public journal carrying newly enacted central acts such as the Bharatiya Nyaya Sanhita 2023 and the Motor Vehicles Act 1988.</li>
+          <li><strong>State Government Gazettes:</strong> Gazette publications from states like Maharashtra, providing state-specific legislative modifications and pensions.</li>
+          <li><strong>National Government Services Portal (services.india.gov.in):</strong> Official records of central and state citizen welfare eligibility details.</li>
+          <li><strong>Individual Ministry Portals:</strong> Direct operational manuals and gazette notifications from the Ministry of Agriculture, Ministry of Health and Family Welfare, and others.</li>
         </ul>
-      </section>
+      </article>
 
-      <section>
-        <span class="text-caption-mono text-accent-breeze tracking-wider block mb-2">retrieval pipeline</span>
-        <h2 class="text-display-xs text-ink mb-4">Context-Constrained Synthesis</h2>
-        <p class="mb-4">
-          When you write a question in the assistant, the backend does not rely on pre-trained LLM memory. Instead:
+      <article class="card space-y-4">
+        <span class="badge badge-soft" data-tone="accent">Pipeline Engineering</span>
+        <h2 class="text-h2 text-2xl">Hybrid Retrieval & Context-Constrained Synthesis</h2>
+        <p class="text-body text-muted-foreground leading-relaxed">
+          When you write a question in the assistant, the backend does not rely on raw LLM parameters:
         </p>
-        <ol class="list-decimal pl-6 space-y-3 text-body-sm text-mute">
+        <ol class="list-decimal pl-6 space-y-3 text-small text-muted-foreground">
           <li>
-            **Vector and Text Search**: The system matches the query words against the indexed documents database to isolate specific relevant paragraphs and clauses.
+            <strong>Hybrid Dense & BM25 Search:</strong> The system matches question terms against the indexed statutory database using reciprocal rank fusion (RRF) to isolate exact relevant sections and clauses.
           </li>
           <li>
-            **Jurisdiction Filtering**: The system matches your chosen jurisdiction (Central or State) to exclude irrelevant laws (e.g. ignoring Kerala land laws if you are asking about Maharashtra).
+            <strong>Jurisdiction Filtering:</strong> Matches your chosen jurisdiction (Central or State) to exclude irrelevant legislation.
           </li>
           <li>
-            **Context-Closed Answering**: The isolated clauses are sent to the summary generator. The AI is structurally blocked from outputting any details not explicitly documented in the retrieved text.
+            <strong>Context-Closed Synthesis:</strong> The isolated statutory clauses are formatted into a constrained prompt. The AI reasoning engine is instructed to cite only the retrieved facts and decline to answer if sources are not found.
           </li>
         </ol>
-      </section>
+      </article>
 
-      <section>
-        <span class="text-caption-mono text-accent-dusk tracking-wider block mb-2">system limitations</span>
-        <h2 class="text-display-xs text-ink mb-4">Currency & Document Availability</h2>
-        <p class="mb-4">
-          CivicConnect outputs are only as accurate as the indexed files. Key constraints:
+      <article class="card space-y-4">
+        <span class="badge badge-soft" data-tone="warning">Corpus Constraints</span>
+        <h2 class="text-h2 text-2xl">Currency & Coverage Limitations</h2>
+        <p class="text-body text-muted-foreground leading-relaxed">
+          CivicConnect outputs reflect the indexed files in the database:
         </p>
-        <ul class="list-disc pl-6 space-y-2 text-body-sm text-mute">
-          <li>**Update Latency**: Government policies, interest rates, or eligibility criteria can modify. While we strive to update the index files, there may be delays before new modifications appear.</li>
-          <li>**Coverage Gaps**: We are expanding our coverage of states and specific civil legislation categories. If a scheme or law is not yet indexed, the system will return an empty search match.</li>
-          <li>**Formatting Overrides**: Complex legal tables or layout columns are translated into markdown tables for screen readability. Always verify details against the original linked PDF source.</li>
+        <ul class="list-disc pl-6 space-y-2 text-small text-muted-foreground">
+          <li><strong>Update Schedule:</strong> Government guidelines and thresholds can be updated by ministries. We run regular ingestion syncs, but always cross-verify high-consequence deadlines with the official Gazette.</li>
+          <li><strong>Expanding Coverage:</strong> The statutory database is continuously expanding to cover additional state regulations and municipal bylaws.</li>
         </ul>
-      </section>
+      </article>
 
     </div>
   </div>

@@ -41,7 +41,6 @@ export default function AssistantApp() {
         setJurisdiction(convs[0].jurisdiction);
         setStateName(convs[0].stateName);
       } else {
-        // Create initial default chat
         const defConv = await api.createConversation('central', null);
         setConversations([defConv]);
         setActiveConversationId(defConv.id);
@@ -64,9 +63,7 @@ export default function AssistantApp() {
     const params = new URLSearchParams(window.location.search);
     const urlQuery = params.get('query');
     if (urlQuery) {
-      // Clear URL params to avoid re-triggering on refreshes
       window.history.replaceState({}, document.title, window.location.pathname);
-      // Execute query in active chat
       handleSendMessage(urlQuery);
     }
   }, [conversations.length, activeConversationId]);
@@ -86,7 +83,6 @@ export default function AssistantApp() {
         (status) => {
           setActiveStatus(status);
           
-          // Re-fetch conversation list to render updated messages and titles in real-time
           api.getConversations().then(convs => {
             setConversations(convs);
           });
@@ -135,13 +131,10 @@ export default function AssistantApp() {
     setJurisdiction(jur);
     setStateName(stName);
     
-    // Save state on active conversation
     if (activeConversation) {
       activeConversation.jurisdiction = jur;
       activeConversation.stateName = stName;
-      // Persist in localStorage
       localStorage.setItem('civicconnect_history', JSON.stringify(conversations));
-      // Trigger conversation update re-render
       setConversations([...conversations]);
     }
   };
@@ -159,7 +152,6 @@ export default function AssistantApp() {
     }
   };
 
-  // Bookmark togglers
   const handleSaveScheme = (scheme: WelfareScheme) => {
     setSavedSchemes(prev => {
       const isSaved = prev.some(s => s.id === scheme.id);
@@ -182,7 +174,6 @@ export default function AssistantApp() {
     localStorage.removeItem('civicconnect_history');
     setConversations([]);
     setActiveConversationId(null);
-    // Create new blank chat
     api.createConversation(jurisdiction, stateName).then(fresh => {
       setConversations([fresh]);
       setActiveConversationId(fresh.id);
@@ -195,10 +186,10 @@ export default function AssistantApp() {
   };
 
   return (
-    <div className="h-screen w-screen flex bg-canvas overflow-hidden text-body relative">
+    <div className="h-screen w-screen flex bg-muted/40 overflow-hidden text-foreground relative">
       
-      {/* Left Sidebar (Desktop: Static, Mobile: Floating Drawer Overlay) */}
-      <div className={`h-full shrink-0 z-30 transition-transform duration-300 md:translate-x-0 ${mobileSidebarOpen ? 'translate-x-0 absolute md:relative' : '-translate-x-full absolute md:relative md:translate-x-0'}`}>
+      {/* Left Sidebar (Desktop: Glass Sidebar, Mobile: Floating Drawer Overlay) */}
+      <div className={`h-full shrink-0 z-30 transition-transform duration-base md:translate-x-0 border-r border-border shadow-[1px_0_0_0_var(--border)] ${mobileSidebarOpen ? 'translate-x-0 absolute md:relative' : '-translate-x-full absolute md:relative md:translate-x-0'}`}>
         <Sidebar 
           conversations={conversations}
           activeConversationId={activeConversationId}
@@ -216,34 +207,36 @@ export default function AssistantApp() {
       {mobileSidebarOpen && (
         <div 
           onClick={() => setMobileSidebarOpen(false)}
-          className="md:hidden fixed inset-0 z-20 bg-canvas/60 backdrop-blur-xs"
+          className="md:hidden fixed inset-0 z-20 bg-black/30 backdrop-blur-xs"
           aria-hidden="true"
         ></div>
       )}
 
       {/* Right Main Panel Shell */}
-      <div className="flex-grow flex flex-col h-full min-w-0 relative">
+      <div className="flex-grow flex flex-col h-full min-w-0 relative bg-muted/20">
         
-        {/* Top Toolbar Header */}
-        <header className="p-4 border-b border-hairline flex items-center justify-between shrink-0 bg-canvas z-10">
+        {/* Top Liquid Glass Toolbar */}
+        <header className="h-16 px-6 bg-transparent flex items-center justify-between shrink-0 z-10">
           
-          {/* Mobile Sidebar Toggle */}
-          <button 
-            type="button"
-            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="md:hidden p-2 text-mute hover:text-ink border border-hairline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Toggle navigation history sidebar"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Mobile Sidebar Toggle */}
+            <button 
+              type="button"
+              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground border border-input rounded-md transition-colors"
+              aria-label="Toggle navigation history sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
 
-          {/* Current view state indicator (for mobile headers) */}
-          <div className="md:hidden text-caption-mono-sm text-ink shrink-0 mr-auto ml-3 font-semibold select-none lowercase">
-            {currentView === 'chat' ? 'assistant' : currentView}
+            {/* Current view indicator for mobile */}
+            <div className="md:hidden text-sm font-medium text-foreground capitalize">
+              {currentView === 'chat' ? 'Assistant' : currentView}
+            </div>
           </div>
 
-          {/* Active Jurisdiction Selector widget */}
-          <div className="flex-grow mx-auto md:mx-0">
+          {/* Active Jurisdiction Selector widget (Segmented Control style) */}
+          <div className="mx-auto md:mx-0">
             <JurisdictionSelector 
               jurisdiction={jurisdiction}
               stateName={stateName}
@@ -252,17 +245,19 @@ export default function AssistantApp() {
           </div>
 
           {/* Quick exit Link back to public homepage */}
-          <a 
-            href="/"
-            className="hidden md:inline-flex button-pill button-pill-outline text-caption-mono-sm tracking-widest text-mute hover:text-ink select-none ml-4"
-          >
-            exit app
-          </a>
+          <div className="flex items-center gap-2">
+            <a 
+              href="/"
+              className="btn btn-secondary btn-sm hidden sm:inline-flex"
+            >
+              Exit to Home
+            </a>
+          </div>
 
         </header>
 
         {/* Sub-view content router panel */}
-        <main className="flex-grow min-h-0 min-w-0 relative">
+        <main className="flex-grow min-h-0 min-w-0 relative bg-muted/20">
           {currentView === 'chat' && (
             <ChatView 
               conversation={activeConversation}
@@ -313,11 +308,8 @@ export default function AssistantApp() {
             />
           )}
         </main>
-
       </div>
 
     </div>
   );
 }
-
-

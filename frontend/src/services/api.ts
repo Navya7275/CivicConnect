@@ -257,10 +257,17 @@ export class CivicConnectApi {
         conv.messages.push(assistantMsg);
         onUpdate(status, assistantMsg.content, assistantMsg.citations);
       } catch (err) {
-        onUpdate(
-          'error',
-          `Could not reach the CivicConnect API at ${API_BASE}. Check that the backend is running (uvicorn backend.main:app).`
-        );
+        const errorContent = `Could not reach the CivicConnect API at ${API_BASE}. Check that the backend is running (uvicorn backend.main:app).`;
+        const errMsg: Message = {
+          id: `msg_err_${Date.now()}`,
+          role: 'assistant',
+          content: errorContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: 'error',
+          verified: false
+        };
+        conv.messages.push(errMsg);
+        onUpdate('error', errorContent);
       }
       return;
     }

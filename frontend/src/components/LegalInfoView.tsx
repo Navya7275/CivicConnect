@@ -32,29 +32,29 @@ export default function LegalInfoView({
   };
 
   return (
-    <div className="h-full flex flex-col bg-canvas select-text min-w-0" aria-label="Legislative Index Explorer Panel">
+    <div className="h-full flex flex-col bg-muted/20 select-text min-w-0" aria-label="Legislative Index Explorer Panel">
       
       {/* Top Header */}
-      <div className="p-6 border-b border-hairline shrink-0">
-        <span className="text-caption-mono text-accent-breeze tracking-wider block mb-1">catalog</span>
-        <h1 className="text-display-xs text-ink font-semibold">Indian Laws & Acts</h1>
+      <div className="p-6 border-b border-border shrink-0 bg-card">
+        <span className="badge badge-soft mb-2" data-tone="accent">Legislation</span>
+        <h1 className="text-h2">Indian Laws & Acts</h1>
       </div>
 
       {/* Controls Panel */}
-      <div className="p-6 border-b border-hairline shrink-0">
-        <div className="relative">
+      <div className="p-6 border-b border-border shrink-0 bg-muted/30">
+        <div className="relative max-w-xl flex items-center">
+          <div className="absolute left-3 pointer-events-none text-muted-foreground flex items-center justify-center" aria-hidden="true">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
           <label htmlFor="app-act-search" className="sr-only">Search legislation</label>
           <input 
             type="text" 
             id="app-act-search"
-            placeholder="Search acts, codes, regulations…" 
+            placeholder="Search statutory acts, sections, regulations…" 
             defaultValue={searchQuery}
             onChange={handleSearchChange}
-            className="w-full pl-9 pr-4 py-2 bg-canvas-soft border border-hairline rounded-sm text-body-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            className="input input-sm !pl-9"
           />
-          <div className="absolute left-3 top-2.5 text-mute" aria-hidden="true">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          </div>
         </div>
       </div>
 
@@ -64,113 +64,114 @@ export default function LegalInfoView({
           /* Sections explorer mode */
           <div className="flex-grow flex flex-col md:flex-row h-full overflow-hidden w-full">
             {/* Sections list */}
-            <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-hairline overflow-y-auto max-h-[30vh] md:max-h-none p-4 space-y-1">
+            <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-border overflow-y-auto max-h-[35vh] md:max-h-none p-4 space-y-1 bg-muted/20">
               <button 
                 onClick={() => { setSelectedAct(null); setActiveSection(null); }}
-                className="text-caption-mono-sm text-ink hover:text-accent-sunset flex items-center gap-1 mb-4"
+                className="btn btn-secondary btn-sm mb-3 gap-1.5"
               >
-                ➔ back to acts
+                ← Back to Acts
               </button>
               
-              <div className="text-[10px] text-mute/50 uppercase tracking-widest pl-2 mb-2 font-mono">sections</div>
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
+                Sections ({selectedAct.sections.length})
+              </div>
               {selectedAct.sections.map(sec => (
                 <button
                   key={sec.number}
                   onClick={() => setActiveSection(sec)}
-                  className={`w-full text-left p-2.5 text-body-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection?.number === sec.number ? 'bg-canvas-soft text-ink font-medium border-l-2 border-primary' : 'text-mute hover:text-ink hover:bg-canvas-soft/30'}`}
+                  className={`w-full text-left p-2.5 rounded-ui-sm transition-colors text-xs ${activeSection?.number === sec.number ? 'bg-card text-foreground font-medium shadow-ui-sm border border-border' : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'}`}
                 >
-                  <div className="font-mono text-xs text-accent-sunset">{sec.number}</div>
-                  <div className="truncate mt-0.5">{sec.title}</div>
+                  <div className="text-mono font-medium text-accent-foreground">{sec.number}</div>
+                  <div className="truncate mt-0.5 text-foreground">{sec.title}</div>
                 </button>
               ))}
             </div>
 
-            {/* Sections text details */}
-            <div className="w-full md:w-2/3 p-6 overflow-y-auto flex flex-col justify-between h-full">
+            {/* Section details */}
+            <div className="w-full md:w-2/3 p-6 overflow-y-auto flex flex-col justify-between h-full bg-card">
               {activeSection ? (
                 <div className="space-y-6">
                   <div>
-                    <span className="text-caption-mono text-accent-sunset tracking-wider block mb-1 font-mono">section reference</span>
-                    <h2 className="text-body-md md:text-body-lg text-ink font-semibold">{activeSection.number}: {activeSection.title}</h2>
+                    <span className="badge badge-soft mb-2" data-tone="primary">Section Reference</span>
+                    <h2 className="text-h3 text-xl">{activeSection.number}: {activeSection.title}</h2>
+                    <div className="text-xs text-muted-foreground mt-1">{selectedAct.name}</div>
                   </div>
-                  <div className="text-body-sm text-mute leading-relaxed bg-canvas border border-hairline rounded-sm p-4 font-mono select-all">
+                  <div className="text-small text-foreground leading-relaxed bg-muted/40 border border-border rounded-ui-md p-5 select-all">
                     {activeSection.content}
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-16 text-mute">
-                  Select a section in the list to view its official legislative text parameters.
+                <div className="text-center py-16 text-muted-foreground text-sm">
+                  Select a section from the left column to view statutory details.
                 </div>
               )}
 
               {activeSection && (
-                <div className="border-t border-hairline pt-6 mt-6 flex items-center justify-end">
-                  <button 
-                    onClick={() => onAskAboutLaw(`Explain the provisions of ${selectedAct.name} ${activeSection.number}: ${activeSection.title}`)}
-                    className="button-pill button-pill-primary text-caption-mono-sm"
+                <div className="pt-6 border-t border-border flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => onAskAboutLaw(`What does ${activeSection.number} of ${selectedAct.name} state, and how is it applied?`)}
+                    className="btn btn-outline btn-sm"
                   >
-                    ask assistant about this section
+                    Ask Assistant about {activeSection.number} →
                   </button>
                 </div>
               )}
             </div>
           </div>
         ) : (
-          /* Acts catalog grid mode */
-          <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            {filteredActs.length === 0 ? (
-              <div className="text-center py-12 text-mute">
-                No legislative acts found matching your search.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {filteredActs.map(act => {
-                  const isSaved = savedActIds.includes(act.id);
-                  return (
-                    <div 
-                      key={act.id} 
-                      className="bg-canvas-card border border-hairline rounded-sm p-6 hover:border-body-mid transition-all duration-300 space-y-4"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2 select-none">
-                            <span className="text-caption-mono-sm text-accent-breeze bg-accent-breeze/10 px-2 py-0.5 rounded-full uppercase">{act.jurisdiction}</span>
-                          </div>
-                          <h2 className="text-body-md text-ink font-semibold">{act.name}</h2>
-                        </div>
-
-                        {/* Bookmark Button */}
+          /* Acts catalog grid */
+          <div className="flex-grow overflow-y-auto p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
+              {filteredActs.map(act => {
+                const isSaved = savedActIds.includes(act.id);
+                return (
+                  <div key={act.id} className="card flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="badge badge-soft uppercase" data-tone="accent">{act.jurisdiction}</span>
                         <button 
-                          type="button"
+                          type="button" 
                           onClick={() => onSaveAct(act)}
-                          className={`p-2 rounded-sm border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary ${isSaved ? 'bg-accent-sunset/15 border-accent-sunset text-accent-sunset' : 'border-hairline text-mute hover:text-ink hover:bg-canvas-soft'}`}
-                          aria-label={isSaved ? `Remove bookmark for ${act.name}` : `Save bookmark for ${act.name}`}
+                          className={`btn btn-ghost btn-sm !h-7 !px-2 ${isSaved ? 'text-accent-fill' : 'text-muted-foreground'}`}
+                          title={isSaved ? 'Remove bookmark' : 'Save act'}
                         >
-                          <svg className="w-4 h-4" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                          <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.75">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                          </svg>
                         </button>
                       </div>
 
-                      <p className="text-body-sm text-mute leading-relaxed">{act.description}</p>
+                      <h2 className="text-h3 text-lg">{act.name}</h2>
+                      <p className="text-small text-muted-foreground leading-relaxed line-clamp-3">
+                        {act.description}
+                      </p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-hairline/30">
-                        <button 
-                          onClick={() => { setSelectedAct(act); setActiveSection(act.sections[0] || null); }}
-                          className="text-caption-mono-sm text-ink hover:text-accent-sunset transition-colors"
-                        >
-                          browse sections ({act.sections.length}) ➔
-                        </button>
-                        <button 
-                          onClick={() => onAskAboutLaw(`Explain the structure and main clauses of ${act.name}`)}
-                          className="button-pill button-pill-outline text-caption-mono-sm tracking-wider"
-                        >
-                          ask assistant
-                        </button>
+                      <div className="text-xs text-muted-foreground">
+                        {act.sections.length} sections indexed in database
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+
+                    <div className="pt-3 flex items-center justify-between border-t border-border">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedAct(act); setActiveSection(act.sections[0] || null); }}
+                        className="btn btn-secondary btn-sm"
+                      >
+                        Explore Sections →
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onAskAboutLaw(`Explain the key provisions and scope of the ${act.name}.`)}
+                        className="btn btn-outline btn-sm"
+                      >
+                        Ask Assistant
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -178,5 +179,3 @@ export default function LegalInfoView({
     </div>
   );
 }
-
-

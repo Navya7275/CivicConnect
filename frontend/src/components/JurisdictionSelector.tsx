@@ -25,7 +25,7 @@ export default function JurisdictionSelector({
     if (type === 'central') {
       onChange('central', null);
     } else {
-      onChange('state', stateName || 'Maharashtra'); // Default to Maharashtra if none selected
+      onChange('state', stateName || 'Maharashtra');
     }
   };
 
@@ -34,58 +34,58 @@ export default function JurisdictionSelector({
   };
 
   return (
-    <div className="flex items-center gap-3 bg-canvas-card border border-hairline rounded-sm px-3 py-1.5 w-fit max-w-full">
+    <div className="flex items-center gap-3 bg-card border border-border rounded-ui-full px-2 py-1 shadow-ui-sm max-w-full">
       
-      {/* Toggle Buttons */}
-      <div className="flex items-center bg-canvas-soft border border-hairline rounded-sm p-0.5 shrink-0" role="group" aria-label="Legislative Jurisdiction Selection">
+      {/* Segmented Control Pill */}
+      <div className="tabs" role="group" aria-label="Legislative Jurisdiction Selection">
         <button 
           type="button"
           onClick={() => handleTypeChange('central')}
-          className={`px-3 py-1 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'central' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
+          aria-selected={jurisdiction === 'central'}
+          className="tab !h-7 !px-3 text-xs"
         >
-          central
+          Central Acts
         </button>
         <button 
           type="button"
           onClick={() => handleTypeChange('state')}
-          className={`px-3 py-1 text-caption-mono-sm rounded-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${jurisdiction === 'state' ? 'bg-primary text-on-primary font-medium' : 'text-mute hover:text-ink'}`}
+          aria-selected={jurisdiction === 'state'}
+          className="tab !h-7 !px-3 text-xs"
         >
-          state
+          State Laws
         </button>
       </div>
 
       {/* State Dropdown (Conditional) */}
       {jurisdiction === 'state' && (
-        <div className="flex items-center gap-2 shrink-0">
-          <label htmlFor="state-select" className="text-caption-mono-sm text-mute shrink-0 lowercase">state:</label>
+        <div className="flex items-center gap-1.5 shrink-0 pr-1">
+          <label htmlFor="state-select" className="text-xs text-muted-foreground">State:</label>
           <div className="relative inline-flex items-center">
             <select 
               id="state-select"
-              value={stateName || 'Madhya Pradesh'} 
+              value={stateName || 'Maharashtra'} 
               onChange={handleStateChange}
-              className="appearance-none bg-canvas-soft border border-hairline hover:border-hairline/80 rounded-sm pl-2.5 pr-7 py-1 text-body-sm text-ink focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
+              className="appearance-none bg-muted hover:bg-muted/80 text-foreground border border-border rounded-ui-sm pl-2 pr-6 py-1 text-xs focus:ring-1 focus:ring-ring focus:outline-none cursor-pointer"
             >
               {INDIAN_STATES.map(st => (
-                <option key={st} value={st} className="bg-canvas-card text-ink">{st}</option>
+                <option key={st} value={st}>{st}</option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-mute">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1.5 text-muted-foreground">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
         </div>
       )}
 
-      {/* Indicator summary */}
-      <div className="hidden sm:inline-flex items-center gap-1.5 text-caption-mono-sm text-mute shrink-0 whitespace-nowrap select-none lowercase pl-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-accent-sunset animate-pulse" aria-hidden="true"></span>
-        active: {jurisdiction === 'central' ? 'central legislation' : `${stateName || 'state'} context`}
+      {/* Status indicator */}
+      <div className="hidden lg:inline-flex items-center gap-1.5 text-xs text-muted-foreground pl-2 pr-1 border-l border-border select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent-fill" aria-hidden="true"></span>
+        <span>{jurisdiction === 'central' ? 'National scope' : `${stateName || 'State'} scope`}</span>
       </div>
 
     </div>
   );
 }
-
-

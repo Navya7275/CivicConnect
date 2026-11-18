@@ -122,23 +122,44 @@ def _stub_synthesize(
             "citations": [],
         }
 
+    if retrieved_chunks:
+        # Build an informative summary from the retrieved source chunks
+        primary = retrieved_chunks[0]
+        text_snippet = primary.get("text", "").strip()
+        act_name = primary.get("act", "")
+        sec = primary.get("section", "")
+        
+        sec_label = f", {sec}" if sec else ""
+        answer_body = f"Based on retrieved civic records for **{act_name}**{sec_label}:\n\n{text_snippet}"
+        
+        if len(retrieved_chunks) > 1:
+            more_acts = list(dict.fromkeys(c.get("act") for c in retrieved_chunks[1:] if c.get("act") and c.get("act") != act_name))
+            if more_acts:
+                answer_body += f"\n\n*Related provisions retrieved*: {', '.join(more_acts[:3])}."
+
+        return {
+            "answer": answer_body,
+            "citations": [
+                {
+                    "act": chunk["act"],
+                    "section": chunk.get("section", ""),
+                    "jurisdiction": chunk["jurisdiction"],
+                    "source_url": chunk["source_url"],
+                    "reference_url": chunk.get("reference_url"),
+                    "chunk_id": chunk.get("chunk_id"),
+                    "excerpt": chunk.get("excerpt"),
+                    "_retrieval_scores": chunk.get("_retrieval_scores"),
+                    "_rrf_score": chunk.get("_rrf_score"),
+                }
+                for chunk in retrieved_chunks
+            ],
+        }
+
     return {
         "answer": (
-            "STUB ANSWER — the orchestration graph ran end to end, but synthesis "
-            "is not wired up yet (Phase C2). Your question was: "
-            f"'{query}'"
+            f"No relevant provisions were retrieved for '{query}'. Please check the jurisdiction or refine your question."
         ),
-        "citations": [
-            {
-                "act": chunk["act"],
-                "section": chunk["section"],
-                "jurisdiction": chunk["jurisdiction"],
-                "source_url": chunk["source_url"],
-                "reference_url": chunk.get("reference_url"),
-                "chunk_id": chunk.get("chunk_id"),
-            }
-            for chunk in retrieved_chunks
-        ],
+        "citations": [],
     }
 
 

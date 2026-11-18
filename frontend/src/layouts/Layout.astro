@@ -4,14 +4,15 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  transparentNavOnLoad?: boolean;
 }
 
 const { 
   title = "CivicConnect | AI-Powered Indian Law & Welfare Schemes Assistant", 
-  description = "Understand Indian laws and search government welfare schemes using plain language, backed by verified source citations." 
+  description = "Understand Indian laws and search government welfare schemes using plain language, backed by verified source citations.",
+  transparentNavOnLoad = false
 } = Astro.props;
 
-// Current path for active link indication
 const pathname = Astro.url.pathname;
 const isApp = pathname.startsWith('/assistant');
 ---
@@ -33,6 +34,11 @@ const isApp = pathname.startsWith('/assistant');
     <meta name="title" content={title} />
     <meta name="description" content={description} />
 
+    <!-- Google Fonts Preconnect for Inter and JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -43,38 +49,53 @@ const isApp = pathname.startsWith('/assistant');
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
   </head>
-  <body class="bg-canvas text-body h-full flex flex-col antialiased selection:bg-primary selection:text-on-primary">
+  <body class="bg-[#f5f5f7] text-foreground h-full flex flex-col antialiased">
     <!-- Skip to Main Content link for accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-sm">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 btn btn-primary btn-sm">
       Skip to main content
     </a>
 
     {!isApp && (
-      <header class="sticky top-0 z-40 bg-canvas/80 backdrop-blur-md border-b border-hairline transition-all duration-300">
-        <nav class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" aria-label="Global Navigation">
+      <header 
+        id="main-header" 
+        data-transparent={transparentNavOnLoad ? "true" : "false"} 
+        class={`sticky top-0 z-40 transition-all duration-500 ease-out flex justify-center ${
+          transparentNavOnLoad ? "w-full -mb-16 bg-transparent" : "w-full nav-glass border-b border-border"
+        }`}
+      >
+        <nav 
+          id="main-nav-inner"
+          class={`transition-all duration-500 ease-out flex items-center justify-between ${
+            transparentNavOnLoad ? "w-full container mx-auto px-6 h-16" : "w-full container mx-auto px-6 h-16"
+          }`} 
+          aria-label="Global Navigation"
+        >
           <!-- Logo & Brand -->
           <div class="flex items-center gap-3">
-            <a href="/" class="group flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas rounded-sm" aria-label="CivicConnect Home">
-              <img src="/logo.svg" width="24" height="24" alt="" class="transition-transform duration-300 group-hover:scale-105" aria-hidden="true" />
-              <span class="text-caption-mono text-ink tracking-wider lowercase">civic<span class="text-accent-sunset">connect</span></span>
+            <a href="/" class="flex items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md py-1" aria-label="CivicConnect Home">
+              <img src="/logo.png" alt="CivicConnect Logo" class="w-7 h-7 object-contain drop-shadow-sm" />
+              <span class="font-medium text-[15px] tracking-tight text-foreground">
+                CivicConnect
+              </span>
             </a>
           </div>
 
           <!-- Desktop Navigation Menu -->
-          <div class="hidden md:flex items-center gap-6">
-            <a href="/how-it-works" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/how-it-works' ? 'text-ink' : 'text-mute hover:text-ink'}`}>How It Works</a>
-            <a href="/welfare-schemes" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/welfare-schemes' ? 'text-ink' : 'text-mute hover:text-ink'}`}>Welfare Schemes</a>
-            <a href="/legal-info" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/legal-info' ? 'text-ink' : 'text-mute hover:text-ink'}`}>Laws & Acts</a>
-            <a href="/sources-methodology" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/sources-methodology' ? 'text-ink' : 'text-mute hover:text-ink'}`}>Methodology</a>
-            <a href="/about" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/about' ? 'text-ink' : 'text-mute hover:text-ink'}`}>About</a>
-            <a href="/faq" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/faq' ? 'text-ink' : 'text-mute hover:text-ink'}`}>FAQ</a>
-            <a href="/contact" class={`text-body-sm transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm py-1 px-2 ${pathname === '/contact' ? 'text-ink' : 'text-mute hover:text-ink'}`}>Contact</a>
+          <div class="hidden md:flex items-center gap-1">
+            <a href="/how-it-works" class="nav-link" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>How It Works</a>
+            <a href="/welfare-schemes" class="nav-link" aria-current={pathname === '/welfare-schemes' ? 'page' : undefined}>Welfare Schemes</a>
+            <a href="/legal-info" class="nav-link" aria-current={pathname === '/legal-info' ? 'page' : undefined}>Laws & Acts</a>
+            <a href="/sources-methodology" class="nav-link" aria-current={pathname === '/sources-methodology' ? 'page' : undefined}>Methodology</a>
+            <a href="/about" class="nav-link" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
+            <a href="/faq" class="nav-link" aria-current={pathname === '/faq' ? 'page' : undefined}>FAQ</a>
+            <a href="/contact" class="nav-link" aria-current={pathname === '/contact' ? 'page' : undefined}>Contact</a>
           </div>
 
-          <!-- Launch CTA Pill -->
-          <div class="hidden md:flex items-center">
-            <a href="/assistant" class="button-pill button-pill-outline text-caption-mono-sm tracking-widest text-ink hover:scale-105 active:scale-95" aria-label="Open CivicConnect AI Assistant">
-              use assistant [ctrl+k]
+          <!-- Launch CTA & Shortkey -->
+          <div class="hidden md:flex items-center gap-3">
+            <a href="/assistant" class="btn btn-primary btn-sm" aria-label="Open CivicConnect AI Assistant">
+              <span>Open Assistant</span>
+              <kbd class="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] rounded bg-white/20 text-white font-mono leading-none">⌘K</kbd>
             </a>
           </div>
 
@@ -82,30 +103,30 @@ const isApp = pathname.startsWith('/assistant');
           <button 
             type="button" 
             id="mobile-nav-toggle"
-            class="md:hidden flex items-center p-2 text-mute hover:text-ink outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm" 
+            class="md:hidden flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground rounded-md transition-colors" 
             aria-controls="mobile-menu" 
             aria-expanded="false"
             aria-label="Toggle Navigation Menu"
           >
-            <svg class="w-6 height-6" id="menu-icon-hamburger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            <svg class="w-5 h-5" id="menu-icon-hamburger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            <svg class="w-6 height-6 hidden" id="menu-icon-close" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <svg class="w-5 h-5 hidden" id="menu-icon-close" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </nav>
 
-        <!-- Mobile Navigation Menu Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-hairline bg-canvas/95 backdrop-blur-md px-6 py-4 flex flex-col gap-4 animate-fade-in" aria-label="Mobile Navigation Menu">
-          <a href="/how-it-works" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">How It Works</a>
-          <a href="/welfare-schemes" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">Welfare Schemes</a>
-          <a href="/legal-info" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">Laws & Acts</a>
-          <a href="/sources-methodology" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">Methodology</a>
-          <a href="/about" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">About</a>
-          <a href="/faq" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">FAQ</a>
-          <a href="/contact" class="text-body-md py-2 border-b border-hairline/20 hover:text-ink">Contact</a>
-          <a href="/assistant" class="button-pill button-pill-primary w-full text-center mt-2">
+        <!-- Mobile Navigation Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 border-t border-border bg-card px-6 py-4 flex flex-col gap-2 shadow-md">
+          <a href="/how-it-works" class="nav-link w-full py-2" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>How It Works</a>
+          <a href="/welfare-schemes" class="nav-link w-full py-2" aria-current={pathname === '/welfare-schemes' ? 'page' : undefined}>Welfare Schemes</a>
+          <a href="/legal-info" class="nav-link w-full py-2" aria-current={pathname === '/legal-info' ? 'page' : undefined}>Laws & Acts</a>
+          <a href="/sources-methodology" class="nav-link w-full py-2" aria-current={pathname === '/sources-methodology' ? 'page' : undefined}>Methodology</a>
+          <a href="/about" class="nav-link w-full py-2" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
+          <a href="/faq" class="nav-link w-full py-2" aria-current={pathname === '/faq' ? 'page' : undefined}>FAQ</a>
+          <a href="/contact" class="nav-link w-full py-2" aria-current={pathname === '/contact' ? 'page' : undefined}>Contact</a>
+          <a href="/assistant" class="btn btn-primary w-full mt-2">
             Open Assistant
           </a>
         </div>
@@ -118,42 +139,42 @@ const isApp = pathname.startsWith('/assistant');
     </main>
 
     {!isApp && (
-      <footer class="border-t border-hairline bg-canvas py-16 px-6">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+      <footer class="border-t border-border bg-muted py-16 px-6 mt-24">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <!-- Col 1: Brand & Disclaimer summary -->
           <div class="md:col-span-2 flex flex-col gap-4">
-            <div class="flex items-center gap-2">
-              <img src="/logo.svg" width="20" height="20" alt="" aria-hidden="true" />
-              <span class="text-caption-mono text-ink tracking-wider lowercase">civic<span class="text-accent-sunset">connect</span></span>
+            <div class="flex items-center gap-2.5">
+              <img src="/logo.png" alt="CivicConnect Logo" class="w-6 h-6 object-contain" />
+              <span class="font-medium text-sm tracking-tight text-foreground">CivicConnect</span>
             </div>
-            <p class="text-body-sm text-mute max-w-sm">
+            <p class="text-sm text-muted-foreground max-w-sm leading-relaxed">
               An AI-powered civic information platform designed to make Indian laws and welfare benefits transparent and easily accessible for all citizens.
             </p>
-            <p class="text-[11px] text-mute/60 leading-relaxed max-w-lg mt-2">
-              Disclaimer: CivicConnect provides informational summaries based on official government documentation. It is not a legislative authority, does not offer professional legal advice, and answers should be verified against official Gazettes.
+            <p class="text-xs text-muted-foreground/80 leading-relaxed max-w-lg">
+              Disclaimer: CivicConnect provides informational summaries based on official government documentation. It is not a legislative authority, does not offer professional legal counsel, and answers should be verified against official Gazettes.
             </p>
           </div>
 
           <!-- Col 2: Directory links -->
           <div class="flex flex-col gap-3">
-            <span class="text-caption-mono-sm text-ink font-semibold tracking-widest lowercase">directories</span>
-            <a href="/welfare-schemes" class="text-body-sm text-mute hover:text-ink transition-colors">Welfare Schemes</a>
-            <a href="/legal-info" class="text-body-sm text-mute hover:text-ink transition-colors">Indian Laws & Acts</a>
-            <a href="/sources-methodology" class="text-body-sm text-mute hover:text-ink transition-colors">Data Methodology</a>
+            <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Directories</span>
+            <a href="/welfare-schemes" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Welfare Schemes</a>
+            <a href="/legal-info" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Indian Laws & Acts</a>
+            <a href="/sources-methodology" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Data Methodology</a>
           </div>
 
           <!-- Col 3: Legal Policy links -->
           <div class="flex flex-col gap-3">
-            <span class="text-caption-mono-sm text-ink font-semibold tracking-widest lowercase">legal</span>
-            <a href="/disclaimer" class="text-body-sm text-mute hover:text-ink transition-colors">Official Disclaimer</a>
-            <a href="/privacy" class="text-body-sm text-mute hover:text-ink transition-colors">Privacy Policy</a>
-            <a href="/terms" class="text-body-sm text-mute hover:text-ink transition-colors">Terms of Service</a>
+            <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Legal & Safety</span>
+            <a href="/disclaimer" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Official Disclaimer</a>
+            <a href="/privacy" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Privacy Policy</a>
+            <a href="/terms" class="text-sm text-foreground hover:text-muted-foreground transition-colors">Terms of Service</a>
           </div>
         </div>
 
-        <div class="max-w-7xl mx-auto border-t border-hairline/30 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span class="text-caption-mono-sm text-mute/50 lowercase">© {new Date().getFullYear()} civicconnect. all rights reserved.</span>
-          <span class="text-caption-mono-sm text-mute/50 lowercase">built for citizens. unmarketed.</span>
+        <div class="container mx-auto border-t border-border mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <span>© {new Date().getFullYear()} CivicConnect. Public civic initiative.</span>
+          <span>Verified source documentation.</span>
         </div>
       </footer>
     )}
@@ -175,13 +196,58 @@ const isApp = pathname.startsWith('/assistant');
         });
       }
 
-      // Optional helper for key shortcuts
       document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
           e.preventDefault();
           window.location.href = '/assistant';
         }
       });
+    
+      // Navbar smooth conversion into Floating Pill Navbar on scroll
+      const mainHeader = document.getElementById('main-header');
+      const mainNavInner = document.getElementById('main-nav-inner');
+      if (mainHeader && mainHeader.getAttribute('data-transparent') === 'true' && mainNavInner) {
+        const updateHeaderOnScroll = () => {
+          // When user scrolls and white background emerges (> 180px)
+          if (window.scrollY > 180) {
+            // Pill Navbar Floating Mode
+            mainHeader.classList.add('pt-3', 'pointer-events-none');
+            mainNavInner.classList.remove('container', 'w-full', 'px-6', 'h-16');
+            mainNavInner.classList.add(
+              'pointer-events-auto',
+              'max-w-5xl',
+              'w-[92%]',
+              'h-13',
+              'px-5',
+              'rounded-full',
+              'nav-glass',
+              'border',
+              'border-border/80',
+              'shadow-lg',
+              'shadow-black/5'
+            );
+          } else {
+            // Full Width Transparent Hero Mode
+            mainHeader.classList.remove('pt-3', 'pointer-events-none');
+            mainNavInner.classList.remove(
+              'pointer-events-auto',
+              'max-w-5xl',
+              'w-[92%]',
+              'h-13',
+              'px-5',
+              'rounded-full',
+              'nav-glass',
+              'border',
+              'border-border/80',
+              'shadow-lg',
+              'shadow-black/5'
+            );
+            mainNavInner.classList.add('container', 'w-full', 'px-6', 'h-16');
+          }
+        };
+        window.addEventListener('scroll', updateHeaderOnScroll, { passive: true });
+        updateHeaderOnScroll();
+      }
     </script>
   </body>
 </html>

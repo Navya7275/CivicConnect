@@ -19,23 +19,24 @@ export default function SavedItemsView({
   const hasItems = savedSchemes.length > 0 || savedActs.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-canvas select-text min-w-0" aria-label="Bookmarked Items Panel">
+    <div className="h-full flex flex-col bg-muted/20 select-text min-w-0" aria-label="Bookmarked Items Panel">
       
       {/* Top Header */}
-      <div className="p-6 border-b border-hairline shrink-0">
-        <span className="text-caption-mono text-accent-sunset tracking-wider block mb-1">bookmarks</span>
-        <h1 className="text-display-xs text-ink font-semibold">Saved Information</h1>
+      <div className="p-6 border-b border-border shrink-0 bg-card">
+        <span className="badge badge-soft mb-2" data-tone="accent">Saved</span>
+        <h1 className="text-h2">Bookmarked Schemes & Acts</h1>
       </div>
 
       {/* Content Area */}
       <div className="flex-grow overflow-y-auto p-6 space-y-8">
         {!hasItems ? (
-          /* Empty State */
-          <div className="text-center py-16 border border-hairline border-dashed rounded-sm bg-canvas-card max-w-md mx-auto my-12">
-            <svg className="w-12 h-12 mx-auto text-mute/50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-            <h2 className="text-body-md text-ink font-semibold mb-2">No Saved Bookmarks</h2>
-            <p className="text-body-sm text-mute max-w-xs mx-auto">
-              Save useful welfare schemes or legal acts by clicking the bookmark icons while browsing.
+          <div className="text-center py-20 border border-border border-dashed rounded-ui-lg bg-card max-w-md mx-auto my-12 p-8">
+            <svg className="w-10 h-10 mx-auto text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+            <h2 className="text-h3 text-lg mb-2">No Saved Items</h2>
+            <p className="text-small text-muted-foreground max-w-xs mx-auto">
+              Save welfare schemes or legislative acts by clicking the bookmark button while browsing.
             </p>
           </div>
         ) : (
@@ -44,32 +45,34 @@ export default function SavedItemsView({
             {/* Welfare Schemes Category */}
             {savedSchemes.length > 0 && (
               <div className="space-y-4">
-                <div className="text-[10px] text-mute/50 uppercase tracking-widest pl-2 font-mono">welfare schemes ({savedSchemes.length})</div>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider pl-1">
+                  Saved Schemes ({savedSchemes.length})
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {savedSchemes.map(sch => (
-                    <div key={sch.id} className="bg-canvas-card border border-hairline rounded-sm p-5 space-y-3 flex flex-col justify-between">
+                    <div key={sch.id} className="card !p-5 space-y-3 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-caption-mono-sm text-accent-sunset bg-accent-sunset/10 px-2 py-0.5 rounded-full uppercase">{sch.state}</span>
+                          <span className="badge badge-soft uppercase" data-tone="accent">{sch.state}</span>
                           <button 
                             type="button" 
                             onClick={() => onRemoveScheme(sch.id)}
-                            className="text-xs text-mute hover:text-accent-sunset transition-colors"
-                            aria-label={`Remove saved scheme ${sch.name}`}
+                            className="text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                           >
-                            remove
+                            Remove
                           </button>
                         </div>
-                        <h3 className="text-body-sm text-ink font-semibold line-clamp-1">{sch.name}</h3>
-                        <p className="text-xs text-mute line-clamp-2 mt-1 leading-relaxed">{sch.description}</p>
+                        <h3 className="font-medium text-base text-foreground mb-1">{sch.name}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{sch.description}</p>
                       </div>
-                      <div className="flex items-center justify-end border-t border-hairline/20 pt-3 mt-1">
+
+                      <div className="pt-2 border-t border-border flex items-center justify-between">
                         <button 
-                          type="button" 
-                          onClick={() => onAskAboutItem(`Who is eligible for ${sch.name} and how do I apply?`)}
-                          className="button-pill button-pill-outline text-caption-mono-sm py-1"
+                          type="button"
+                          onClick={() => onAskAboutItem(`What are the latest rules and documents required for ${sch.name}?`)}
+                          className="btn btn-secondary btn-sm"
                         >
-                          ask assistant
+                          Ask in chat →
                         </button>
                       </div>
                     </div>
@@ -81,32 +84,34 @@ export default function SavedItemsView({
             {/* Legal Acts Category */}
             {savedActs.length > 0 && (
               <div className="space-y-4">
-                <div className="text-[10px] text-mute/50 uppercase tracking-widest pl-2 font-mono">laws & acts ({savedActs.length})</div>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider pl-1">
+                  Saved Acts & Statutes ({savedActs.length})
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {savedActs.map(act => (
-                    <div key={act.id} className="bg-canvas-card border border-hairline rounded-sm p-5 space-y-3 flex flex-col justify-between">
+                    <div key={act.id} className="card !p-5 space-y-3 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-caption-mono-sm text-accent-breeze bg-accent-breeze/10 px-2 py-0.5 rounded-full uppercase">{act.jurisdiction}</span>
+                          <span className="badge badge-soft uppercase" data-tone="primary">{act.jurisdiction}</span>
                           <button 
                             type="button" 
                             onClick={() => onRemoveAct(act.id)}
-                            className="text-xs text-mute hover:text-accent-sunset transition-colors"
-                            aria-label={`Remove saved act ${act.name}`}
+                            className="text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                           >
-                            remove
+                            Remove
                           </button>
                         </div>
-                        <h3 className="text-body-sm text-ink font-semibold line-clamp-1">{act.name}</h3>
-                        <p className="text-xs text-mute line-clamp-2 mt-1 leading-relaxed">{act.description}</p>
+                        <h3 className="font-medium text-base text-foreground mb-1">{act.name}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{act.description}</p>
                       </div>
-                      <div className="flex items-center justify-end border-t border-hairline/20 pt-3 mt-1">
+
+                      <div className="pt-2 border-t border-border flex items-center justify-between">
                         <button 
-                          type="button" 
-                          onClick={() => onAskAboutItem(`Explain the main provisions of the ${act.name}`)}
-                          className="button-pill button-pill-outline text-caption-mono-sm py-1"
+                          type="button"
+                          onClick={() => onAskAboutItem(`Summarize the key provisions of ${act.name}.`)}
+                          className="btn btn-secondary btn-sm"
                         >
-                          ask assistant
+                          Ask in chat →
                         </button>
                       </div>
                     </div>
@@ -122,5 +127,3 @@ export default function SavedItemsView({
     </div>
   );
 }
-
-

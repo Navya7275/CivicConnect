@@ -3,44 +3,56 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Privacy Policy | CivicConnect" description="Read about CivicConnect's policies regarding session storage and data security.">
-  <div class="py-24 px-6 max-w-3xl mx-auto">
+  <div class="container section max-w-3xl">
     <!-- Header -->
     <div class="mb-12">
-      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">policy</span>
-      <h1 class="text-display-md text-ink mb-4">Privacy Policy</h1>
-      <p class="text-body-sm text-mute">Last Updated: August 2026</p>
+      <span class="badge badge-soft mb-3" data-tone="accent">User Privacy</span>
+      <h1 class="text-h1 mb-4">
+        Privacy Policy. <span class="text-muted-foreground">Local storage and zero tracking.</span>
+      </h1>
+      <p class="text-small text-muted-foreground">Effective Date: November 2026</p>
     </div>
 
     <!-- Content -->
-    <div class="space-y-6 text-body-sm text-body leading-relaxed">
-      <p>
-        At CivicConnect, we respect your privacy and are committed to transparency regarding how we handle any information you share while using our platform.
+    <div class="space-y-8 text-small leading-relaxed">
+      <p class="text-body text-muted-foreground">
+        At CivicConnect, we respect your privacy and are committed to complete transparency regarding how data is handled across our platform.
       </p>
 
-      <h2 class="text-body-md text-ink font-semibold mt-8">1. Information We Do Not Collect</h2>
-      <p>
-        CivicConnect does not require user accounts or registration to access basic civic directories. We do not sell, rent, or trade your personal data.
-      </p>
+      <article class="card space-y-3">
+        <h2 class="text-h3 text-lg font-medium text-foreground">1. Information We Do Not Collect</h2>
+        <p class="text-muted-foreground">
+          CivicConnect does not require user accounts, passwords, or personal identity documents to access civic directories. We do not sell, rent, or trade your personal data.
+        </p>
+      </article>
 
-      <h2 class="text-body-md text-ink font-semibold mt-8">2. Local Storage & Conversation History</h2>
-      <p>
-        To make the user experience convenient, CivicConnect saves your conversation history, jurisdiction settings, and bookmarked cards directly in your browser's local storage (`localStorage`). This data stays on your machine and is not sent to our servers unless you explicitly submit feedback report messages. You can clear this history anytime by deleting chat threads in the sidebar or clearing your browser cache.
-      </p>
+      <article class="card space-y-3">
+        <h2 class="text-h3 text-lg font-medium text-foreground">2. Local Browser Storage & History</h2>
+        <p class="text-muted-foreground">
+          To provide a seamless experience without cloud account tracking, CivicConnect saves your conversation history, jurisdiction preferences, and bookmarked cards directly in your browser's local storage (<code>localStorage</code>). This data stays strictly on your device. You can purge this data anytime by clearing conversations or wiping browser cache.
+        </p>
+      </article>
 
-      <h2 class="text-body-md text-ink font-semibold mt-8">3. AI Chat Query Logs</h2>
-      <p>
-        When you submit questions to the AI assistant, the queries are processed through our retrieval-augmented generation (RAG) pipeline to fetch matching official documents. We temporarily cache query logs solely to improve retrieval accuracy and optimize search indexing. These logs are stored without any user identification tags.
-      </p>
+      <article class="card space-y-3">
+        <h2 class="text-h3 text-lg font-medium text-foreground">3. Search & Query Processing</h2>
+        <p class="text-muted-foreground">
+          When you submit questions to the AI assistant, the queries are processed through our retrieval-augmented generation (RAG) pipeline to fetch matching official documents. Queries are evaluated without user identification or profiling.
+        </p>
+      </article>
 
-      <h2 class="text-body-md text-ink font-semibold mt-8">4. Thumbs Up/Down Feedback Reports</h2>
-      <p>
-        If you provide thumbs up or thumbs down feedback on answers, the report (which includes the message text, citation status, and optional user remarks) is collected so that our editorial team can verify source documents. This information is voluntary.
-      </p>
+      <article class="card space-y-3">
+        <h2 class="text-h3 text-lg font-medium text-foreground">4. Feedback Reporting</h2>
+        <p class="text-muted-foreground">
+          If you provide thumbs up or thumbs down feedback on answers, the report (which includes the message text, citation status, and optional user remarks) is collected strictly so that our editorial team can audit statutory accuracy. This submission is voluntary.
+        </p>
+      </article>
 
-      <h2 class="text-body-md text-ink font-semibold mt-8">5. External Links</h2>
-      <p>
-        Our citation cards contain links to official external government websites (e.g. pmjay.gov.in, rti.gov.in). We are not responsible for the privacy practices or contents of those external government portals.
-      </p>
+      <article class="card space-y-3">
+        <h2 class="text-h3 text-lg font-medium text-foreground">5. External Portal Links</h2>
+        <p class="text-muted-foreground">
+          Our citation cards link to official government platforms (e.g. pmjay.gov.in, legislative.gov.in). We are not responsible for the privacy practices or data collection policies of external third-party portals.
+        </p>
+      </article>
     </div>
   </div>
 </Layout>

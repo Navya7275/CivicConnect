@@ -3,77 +3,90 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="How It Works | CivicConnect" description="Understand the technology and verified pipeline behind CivicConnect's answers.">
-  <div class="py-24 px-6 max-w-4xl mx-auto">
+  <div class="container section max-w-4xl">
     <!-- Header -->
     <div class="mb-16">
-      <span class="text-caption-mono text-mute tracking-[0.15em] block mb-3">methodology</span>
-      <h1 class="text-display-md text-ink mb-6">How CivicConnect Works</h1>
-      <p class="text-body-lg text-mute leading-relaxed">
-        A structured, reliable system designed to verify every answer against official legal acts and government schemes.
+      <span class="badge badge-soft mb-3" data-tone="accent">Architecture & Verification</span>
+      <h1 class="text-h1 mb-4">
+        How CivicConnect Works. <span class="text-muted-foreground">Constrained RAG pipeline.</span>
+      </h1>
+      <p class="text-body text-muted-foreground leading-relaxed">
+        A structured, reliable system designed to verify every single generated answer against official statutory acts and government schemes.
       </p>
     </div>
 
     <!-- Timeline Steps -->
-    <div class="space-y-16 relative before:absolute before:top-4 before:bottom-4 before:left-8 before:w-[1px] before:bg-hairline">
+    <div class="space-y-8 relative">
       
       <!-- Step 1 -->
-      <div class="relative pl-16">
-        <div class="absolute left-[20px] top-[4px] w-6 h-6 rounded-full bg-canvas border-2 border-accent-sunset flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-accent-sunset"></div>
+      <article class="card flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-10 h-10 rounded-ui-full bg-primary text-primary-foreground font-mono text-sm font-semibold flex items-center justify-center shrink-0">
+          01
         </div>
-        <span class="text-caption-mono text-accent-sunset tracking-wider block mb-2">step 1</span>
-        <h2 class="text-display-xs text-ink mb-3">Ask in Plain Language</h2>
-        <p class="text-body-sm text-mute leading-relaxed">
-          Type your query into the assistant composer just like you would describe a problem to a friend. For example: *"How do I register a birth in Maharashtra?"* or *"What is the landholding limit for the PM-Kisan scheme?"*
-        </p>
-      </div>
+        <div class="space-y-2">
+          <span class="badge badge-soft" data-tone="primary">Citizen Input</span>
+          <h2 class="text-h3 text-xl">Ask in Plain Language</h2>
+          <p class="text-small text-muted-foreground leading-relaxed">
+            Type your query into the assistant composer just like you would describe a problem to a friend. For example: <em>"How do I register a birth in Maharashtra?"</em> or <em>"What is the landholding limit for the PM-Kisan scheme?"</em>
+          </p>
+        </div>
+      </article>
 
       <!-- Step 2 -->
-      <div class="relative pl-16">
-        <div class="absolute left-[20px] top-[4px] w-6 h-6 rounded-full bg-canvas border-2 border-accent-breeze flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-accent-breeze"></div>
+      <article class="card flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-10 h-10 rounded-ui-full bg-primary text-primary-foreground font-mono text-sm font-semibold flex items-center justify-center shrink-0">
+          02
         </div>
-        <span class="text-caption-mono text-accent-breeze tracking-wider block mb-2">step 2</span>
-        <h2 class="text-display-xs text-ink mb-3">Retrieve Verified Source Documents</h2>
-        <p class="text-body-sm text-mute leading-relaxed">
-          The system searches indexed, official documents matching your selected jurisdiction (Central or State). It retrieves the exact sections of relevant legislation, official rules, or scheme manuals.
-        </p>
-      </div>
+        <div class="space-y-2">
+          <span class="badge badge-soft" data-tone="accent">Hybrid Search</span>
+          <h2 class="text-h3 text-xl">Retrieve Verified Source Documents</h2>
+          <p class="text-small text-muted-foreground leading-relaxed">
+            The system searches indexed, official documents matching your selected jurisdiction (Central or State). It retrieves the exact sections of relevant legislation, official rules, or scheme manuals using dense vector search and BM25 lexical ranking.
+          </p>
+        </div>
+      </article>
 
       <!-- Step 3 -->
-      <div class="relative pl-16">
-        <div class="absolute left-[20px] top-[4px] w-6 h-6 rounded-full bg-canvas border-2 border-accent-dusk flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-accent-dusk"></div>
+      <article class="card flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-10 h-10 rounded-ui-full bg-primary text-primary-foreground font-mono text-sm font-semibold flex items-center justify-center shrink-0">
+          03
         </div>
-        <span class="text-caption-mono text-accent-dusk tracking-wider block mb-2">step 3</span>
-        <h2 class="text-display-xs text-ink mb-3">Generate Context-Bound Explanations</h2>
-        <p class="text-body-sm text-mute leading-relaxed">
-          An AI assistant reads the retrieved source documents and draft-generates a clear, simplified summary response. The model is constrained to write *only* what is supported by the facts in the retrieved documents, preventing common AI errors.
-        </p>
-      </div>
+        <div class="space-y-2">
+          <span class="badge badge-soft" data-tone="warning">Closed-Domain Synthesis</span>
+          <h2 class="text-h3 text-xl">Generate Context-Bound Explanations</h2>
+          <p class="text-small text-muted-foreground leading-relaxed">
+            An AI assistant reads the retrieved source documents and draft-generates a clear, simplified summary response. The model is constrained to write <em>only</em> what is supported by the facts in the retrieved documents, preventing common AI hallucinations.
+          </p>
+        </div>
+      </article>
 
       <!-- Step 4 -->
-      <div class="relative pl-16">
-        <div class="absolute left-[20px] top-[4px] w-6 h-6 rounded-full bg-canvas border-2 border-primary flex items-center justify-center">
-          <div class="w-2 h-2 rounded-full bg-primary"></div>
+      <article class="card flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-10 h-10 rounded-ui-full bg-primary text-primary-foreground font-mono text-sm font-semibold flex items-center justify-center shrink-0">
+          04
         </div>
-        <span class="text-caption-mono text-ink tracking-wider block mb-2">step 4</span>
-        <h2 class="text-display-xs text-ink mb-3">Cross-Verify & Render Citations</h2>
-        <p class="text-body-sm text-mute leading-relaxed">
-          Every statement is cross-matched back to the source text. The interface displays verified badges indicating the specific Act Name, Section, and official link. You can open the details drawer to view the exact excerpt from the law.
-        </p>
-      </div>
+        <div class="space-y-2">
+          <span class="badge badge-soft" data-tone="success">Verification Check</span>
+          <h2 class="text-h3 text-xl">Statutory Citations & Cross-Referencing</h2>
+          <p class="text-small text-muted-foreground leading-relaxed">
+            The final answer is presented alongside interactive citation pills naming the exact Act and Section relied upon, allowing citizens to inspect the statutory text directly or click through to original Gazette records.
+          </p>
+        </div>
+      </article>
+
     </div>
 
-    <!-- Call to action -->
-    <div class="mt-20 p-8 border border-hairline bg-canvas-card rounded-sm text-center">
-      <h3 class="text-display-xs text-ink mb-4">Experience the Interface</h3>
-      <p class="text-body-sm text-mute mb-6 max-w-md mx-auto">
-        Test our verified citation workflow inside the active assistant panel.
+    <!-- Final Callout -->
+    <div class="mt-16 card bg-muted/40 text-center space-y-4">
+      <h3 class="text-h3 text-lg">Experience the pipeline in action</h3>
+      <p class="text-small text-muted-foreground max-w-md mx-auto">
+        Test our retrieval-augmented generation engine with queries across Indian welfare programs and criminal law reforms.
       </p>
-      <a href="/assistant" class="button-pill button-pill-outline text-caption-mono tracking-wider">
-        open assistant dashboard
-      </a>
+      <div class="pt-2">
+        <a href="/assistant" class="btn btn-primary btn-sm">
+          Try CivicConnect Assistant
+        </a>
+      </div>
     </div>
   </div>
 </Layout>

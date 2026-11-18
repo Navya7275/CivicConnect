@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 interface FeedbackModalProps {
   messageId?: string;
@@ -32,12 +32,11 @@ export default function FeedbackModal({
     );
   };
 
-  const handleFormSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     onSubmit(comment, selectedIssues);
     setIsSubmitting(false);
@@ -45,108 +44,95 @@ export default function FeedbackModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-      {/* Modal Canvas Card */}
-      <div className="bg-canvas-card border border-hairline rounded-sm w-full max-w-md flex flex-col justify-between overflow-hidden shadow-2xl animate-scale-up">
+    <div className="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+      <div className="dialog">
         
         {/* Header */}
-        <div className="p-6 border-b border-hairline flex items-center justify-between">
-          <h2 id="feedback-title" className="text-body-md text-ink font-semibold">
-            {rating === 'helpful' ? 'Provide Feedback' : 'Report AI Response Issue'}
+        <div className="flex items-center justify-between pb-4 border-b border-border">
+          <h2 id="feedback-title" className="text-h3 text-lg">
+            {rating === 'helpful' ? 'Share Feedback' : 'Report Response Issue'}
           </h2>
           <button 
             type="button" 
             onClick={onClose}
-            className="p-1.5 text-mute hover:text-ink outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-            aria-label="Close feedback dialog"
+            className="p-1.5 text-muted-foreground hover:text-foreground rounded-ui-sm transition-colors"
+            aria-label="Close dialog"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
         {isSubmitted ? (
-          /* Submitted State */
-          <div className="p-8 text-center space-y-4">
-            <svg className="w-12 h-12 text-accent-sunset mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <h3 className="text-body-md text-ink font-semibold">Feedback Submitted</h3>
-            <p className="text-body-sm text-mute">Thank you for helping us verify our sources and improve accuracy.</p>
+          <div className="py-8 text-center space-y-4">
+            <div className="w-12 h-12 rounded-ui-full bg-success/10 text-success mx-auto flex items-center justify-center">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 className="font-medium text-base text-foreground">Feedback Recorded</h3>
+            <p className="text-small text-muted-foreground max-w-xs mx-auto">
+              Thank you for helping us verify statutory accuracy for Indian citizens.
+            </p>
             <button 
-              type="button" 
+              type="button"
               onClick={onClose}
-              className="button-pill button-pill-outline text-caption-mono-sm mt-4"
+              className="btn btn-primary btn-sm"
             >
-              close
+              Done
             </button>
           </div>
         ) : (
-          /* Form State */
-          <form onSubmit={handleFormSubmit}>
-            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-              
-              {/* Optional Checklist for issues */}
-              {rating === 'not-helpful' && (
-                <div className="space-y-3">
-                  <span className="text-caption-mono text-mute tracking-wider block font-mono">select issues</span>
-                  <div className="grid grid-cols-1 gap-2.5" role="group" aria-label="Response issue selection checklist">
-                    {COMMON_ISSUES.map(issue => (
-                      <label 
-                        key={issue} 
-                        className="flex items-start gap-3 p-3 bg-canvas-soft border border-hairline rounded-sm text-body-sm text-mute hover:border-body-mid hover:text-ink cursor-pointer select-none"
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedIssues.includes(issue)}
-                          onChange={() => handleIssueToggle(issue)}
-                          className="mt-1 w-4 h-4 accent-primary rounded-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-                        />
-                        <span>{issue}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Text Comment Input */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="feedback-comment" className="text-caption-mono text-mute tracking-wider font-mono">
-                  {rating === 'helpful' ? 'additional notes (optional)' : 'details (optional)'}
+          <form onSubmit={handleFormSubmit} className="pt-4 space-y-4">
+            {rating === 'not-helpful' && (
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Select issue categories:
                 </label>
-                <textarea 
-                  id="feedback-comment"
-                  rows={4}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Explain why this response was helpful or what corrections are needed…"
-                  className="w-full px-4 py-3 bg-canvas-soft border border-hairline rounded-sm text-body-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none resize-none"
-                ></textarea>
+                <div className="flex flex-wrap gap-2">
+                  {COMMON_ISSUES.map(issue => {
+                    const isSelected = selectedIssues.includes(issue);
+                    return (
+                      <button
+                        key={issue}
+                        type="button"
+                        onClick={() => handleIssueToggle(issue)}
+                        className={`badge cursor-pointer transition-colors ${isSelected ? 'badge-solid' : 'badge-outline'}`}
+                        data-tone="primary"
+                      >
+                        {issue}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
+
+            <div className="space-y-2">
+              <label htmlFor="feedback-comment" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Additional remarks (optional):
+              </label>
+              <textarea
+                id="feedback-comment"
+                rows={3}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Share any specifics about the citation, clause or wording…"
+                className="input text-xs"
+              ></textarea>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-hairline bg-canvas-soft/30 flex items-center justify-end gap-3">
-              <button 
-                type="button" 
+            <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
+              <button
+                type="button"
                 onClick={onClose}
-                className="button-pill button-pill-outline text-caption-mono-sm"
+                className="btn btn-secondary btn-sm"
               >
-                cancel
+                Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isSubmitting}
-                className="button-pill button-pill-primary text-caption-mono-sm inline-flex items-center gap-1.5"
+                className="btn btn-primary btn-sm"
               >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-on-primary" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>submitting…</span>
-                  </>
-                ) : (
-                  <span>submit</span>
-                )}
+                {isSubmitting ? 'Submitting…' : 'Submit Feedback'}
               </button>
             </div>
           </form>
@@ -156,5 +142,3 @@ export default function FeedbackModal({
     </div>
   );
 }
-
-
