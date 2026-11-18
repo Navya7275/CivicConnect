@@ -1,3 +1,15 @@
+---
+title: CivicConnect API
+emoji: "⚖️"
+colorFrom: orange
+colorTo: green
+sdk: docker
+app_port: 8000
+pinned: false
+license: mit
+short_description: Hybrid-RAG assistant for Indian law and welfare schemes
+---
+
 # CivicConnect
 
 **A multi-agent, hybrid-RAG assistant that explains Indian law and welfare schemes to non-lawyers — grounded in the actual acts, so it doesn't hallucinate section numbers or confuse state and central law.**

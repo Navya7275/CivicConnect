@@ -133,7 +133,22 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
    - Visibility: **Public**.
    - Click **Create Space**.
 
-2. **Connect GitHub Repo or Push Code**:
+2. **Check the Space port** (already done in this repo — here for the record):
+   - Hugging Face's Docker SDK routes traffic to port **7860** unless the
+     Space is told otherwise. Our `Dockerfile` serves **8000**, so without
+     this the Space builds, reports *Running*, and is unreachable with
+     nothing in the logs explaining why.
+   - `README.md` carries YAML front-matter declaring the real port:
+     ```yaml
+     ---
+     title: CivicConnect API
+     sdk: docker
+     app_port: 8000
+     ---
+     ```
+   - If you ever change the port in the `Dockerfile`, change `app_port` with it.
+
+3. **Connect GitHub Repo or Push Code**:
    - *Option A (Direct Git Remote)*:
      Add your Hugging Face Space as a git remote and push:
      ```bash
@@ -143,7 +158,7 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
    - *Option B (GitHub Sync)*:
      Under your Space's Settings, link the repository `Navya7275/CivicConnect`.
 
-3. **Configure Environment Variables / Secrets**:
+4. **Configure Environment Variables / Secrets**:
    - In your Hugging Face Space, navigate to **Settings** &rarr; **Variables and secrets**.
    - Add the following:
      | Name | Value | Type |
@@ -153,9 +168,13 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
      | `CORS_ORIGINS` | `*` | Variable |
      | `DATABASE_URL` | `sqlite:///./civicconnect.db` | Variable |
 
-4. **Verify Live Backend**:
+5. **Verify Live Backend**:
    - Your Space URL will be: `https://<your-username>-civicconnect-api.hf.space`
    - Check the health endpoint: `https://<your-username>-civicconnect-api.hf.space/health`
+   - **Read the body, not the status code.** `/health` returns `200 OK`
+     whenever the process is up, including when the Groq key is missing and
+     the API is serving fallback answers. The field that tells you whether it
+     is really working is `serving_real_answers`.
    - It will return:
      ```json
      {
