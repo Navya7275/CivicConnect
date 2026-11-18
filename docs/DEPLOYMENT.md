@@ -2,6 +2,17 @@
 
 This guide describes how to deploy the CivicConnect stack for demonstrations and production hosting.
 
+> [!IMPORTANT]
+> **Read this before following the Render or Railway steps below.** Those free
+> tiers give 512 MB of RAM, which is not enough to load the sentence-transformers
+> model: the container is OOM-killed during startup. The backend is intended to
+> run on Hugging Face Spaces instead, which gives 2 vCPUs and 16 GB free.
+>
+> The Hugging Face route, with the environment variables it needs, is written up
+> in [`whats_new-harshit.md`](../whats_new-harshit.md) sections 4 and 5. The
+> Render and Railway instructions here still apply to any host with enough
+> memory.
+
 ---
 
 ## Architecture Overview
