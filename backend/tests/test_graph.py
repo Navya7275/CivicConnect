@@ -265,3 +265,50 @@ def test_stub_citations_are_obviously_fake() -> None:
     for citation in final["citations"]:
         assert "STUB" in citation["act"]
         assert "example.invalid" in citation["source_url"]
+
+
+def test_a_fallback_answer_is_never_reported_as_verified() -> None:
+    """`verified` is a trust signal, so a stub must not earn it.
+
+    Verification asks a narrow question: does the answer cite only law that
+    was retrieved? On the stub path that is trivially true, because the stub
+    quotes the chunk it was handed. So the agent returned verified=True and
+    the API reported `"verified": true` on an answer whose first line is
+    "This is not a real answer".
+
+    The frontend renders that field as a badge. A Space with no working
+    synthesis would have shown "Verified by law" above text saying it is not
+    a real answer -- the fourth time in this project that a broken state has
+    been dressed up as a working one.
+    """
+    from backend.orchestration.nodes import STUB_ANSWER_NOTICE, verification_node
+    from backend.orchestration.state import GraphState
+
+    chunk = {
+        "chunk_id": "c1",
+        "act": "Motor Vehicles Act, 1988",
+        "section": "Section 185",
+        "jurisdiction": "Central",
+        "source_url": "https://example.invalid/mv",
+        "text": "Whoever drives after drinking shall be fined ten thousand rupees.",
+    }
+    citation = {k: chunk[k] for k in ("chunk_id", "act", "section", "jurisdiction", "source_url")}
+
+    stub_state: GraphState = {
+        "draft_answer": f"{STUB_ANSWER_NOTICE} Text found in Section 185.",
+        "citations": [citation],
+        "retrieved_chunks": [chunk],
+    }
+    assert verification_node(stub_state)["verified"] is False, (
+        "a fallback answer must never come back verified"
+    )
+
+    # The same content without the notice is a real answer and may verify.
+    real_state: GraphState = {
+        "draft_answer": "You can be fined ten thousand rupees under Section 185.",
+        "citations": [citation],
+        "retrieved_chunks": [chunk],
+    }
+    assert verification_node(real_state)["verified"] is True, (
+        "the guard must not suppress verification of genuine answers"
+    )
