@@ -582,7 +582,7 @@ import GradientASCII from '../components/ui/GradientASCII';
   <!-- Scroll-triggered Stagger Animations for Methodology Flow and Final CTA -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Methodology Flow Section Animation (Continuous Scrubbed Scroll Effect like the domain cards)
+      // 1. Methodology Flow Section Animation (Sequential one-by-one scrubbed scroll)
       const methodSection = document.getElementById('methodology-flow-section');
       const stepHeader = document.querySelector('.step-header-anim') as HTMLElement | null;
       const stepCards = document.querySelectorAll('.step-card-anim');
@@ -590,7 +590,6 @@ import GradientASCII from '../components/ui/GradientASCII';
       if (methodSection && stepHeader && stepCards.length === 4) {
         const updateMethodologyAnim = () => {
           if (window.innerWidth < 768) {
-            // Normal static view on small mobile
             stepHeader.style.opacity = '1';
             stepHeader.style.transform = '';
             stepCards.forEach(c => {
@@ -603,43 +602,43 @@ import GradientASCII from '../components/ui/GradientASCII';
           const rect = methodSection.getBoundingClientRect();
           const vh = window.innerHeight;
 
-          // Animation window: starts when section top is at 80% vh, reaches full bloom around 30% vh
-          const start = vh * 0.85;
-          const end = vh * 0.25;
+          // Overall section window: spans from entering view until well past the header
+          const start = vh * 0.90;
+          const end = vh * 0.10;
           const rawProgress = (start - rect.top) / (start - end);
-          const progress = Math.max(0, Math.min(1, rawProgress));
+          const totalProgress = Math.max(0, Math.min(1, rawProgress));
 
-          // Header smoothly glides up
-          stepHeader.style.opacity = Math.min(1, progress * 1.5).toFixed(2);
-          stepHeader.style.transform = `translateY(${(1 - progress) * 24}px)`;
+          // Header enters first (from 0 to 0.25)
+          const headerProgress = Math.max(0, Math.min(1, totalProgress / 0.25));
+          stepHeader.style.opacity = headerProgress.toFixed(2);
+          stepHeader.style.transform = `translateY(${(1 - headerProgress) * 25}px)`;
 
-          // Cards: left column flies in from left + spreads slightly, right column flies in from right
-          // Card 0 (top-left), Card 1 (top-right), Card 2 (bottom-left), Card 3 (bottom-right)
-          const c0 = stepCards[0] as HTMLElement;
-          const c1 = stepCards[1] as HTMLElement;
-          const c2 = stepCards[2] as HTMLElement;
-          const c3 = stepCards[3] as HTMLElement;
+          // Sequential thresholds for each card:
+          // Card 0 (01: Ask in Natural Language): progresses from 0.15 to 0.40
+          // Card 1 (02: Hybrid Retrieval Search): progresses from 0.35 to 0.60
+          // Card 2 (03: Context-Bound Synthesis): progresses from 0.55 to 0.80
+          // Card 3 (04: Section Citation Pinning): progresses from 0.75 to 1.00
+          const windows = [
+            { s: 0.15, e: 0.40, dir: -1 }, // left
+            { s: 0.35, e: 0.60, dir: 1 },  // right
+            { s: 0.55, e: 0.80, dir: -1 }, // left
+            { s: 0.75, e: 1.00, dir: 1 }   // right
+          ];
 
-          const spreadFactor = 1 - progress;
-          // Left column cards: glide in from left (-translateX) and rotate slightly
-          const leftX = spreadFactor * -60; // px
-          const rightX = spreadFactor * 60; // px
-          const translateY = spreadFactor * 40; // px
-          const leftRotate = spreadFactor * -2.5; // deg
-          const rightRotate = spreadFactor * 2.5; // deg
-          const opacity = (0.2 + progress * 0.8).toFixed(2);
+          stepCards.forEach((card, idx) => {
+            const el = card as HTMLElement;
+            const w = windows[idx];
+            const p = Math.max(0, Math.min(1, (totalProgress - w.s) / (w.e - w.s)));
+            const inv = 1 - p;
 
-          c0.style.transform = `translate(${leftX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${leftRotate.toFixed(1)}deg)`;
-          c0.style.opacity = opacity;
+            const translateX = inv * (w.dir * 45); // px
+            const translateY = inv * 35; // px
+            const rotate = inv * (w.dir * 2); // deg
+            const opacity = Math.max(0, p);
 
-          c1.style.transform = `translate(${rightX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${rightRotate.toFixed(1)}deg)`;
-          c1.style.opacity = opacity;
-
-          c2.style.transform = `translate(${leftX.toFixed(1)}px, ${(translateY * 1.3).toFixed(1)}px) rotate(${leftRotate.toFixed(1)}deg)`;
-          c2.style.opacity = opacity;
-
-          c3.style.transform = `translate(${rightX.toFixed(1)}px, ${(translateY * 1.3).toFixed(1)}px) rotate(${rightRotate.toFixed(1)}deg)`;
-          c3.style.opacity = opacity;
+            el.style.transform = `translate(${translateX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${rotate.toFixed(1)}deg)`;
+            el.style.opacity = opacity.toFixed(2);
+          });
         };
 
         window.addEventListener('scroll', updateMethodologyAnim, { passive: true });
