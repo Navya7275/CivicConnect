@@ -137,24 +137,47 @@ import {
 } from './mockData';
 
 export class CivicConnectApi {
-  // Conversations are held in memory only, per PROJECT_PLAN.md Appendix A
-  // point 6. They are deliberately NOT persisted: cached mock answers
-  // reappearing after a rebuild get mistaken for real ones, and silently
-  // storing someone's legal questions in their browser is not something our
-  // privacy page covers.
+  private static STORAGE_KEY = 'civicconnect_chat_history';
   private conversations: Conversation[] = [];
 
   constructor() {
-    this.conversations = [];
+    this.conversations = this.loadFromStorage();
+  }
+
+  private loadFromStorage(): Conversation[] {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem(CivicConnectApi.STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore parse or storage errors
+    }
+    return [];
+  }
+
+  private saveToStorage(): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(CivicConnectApi.STORAGE_KEY, JSON.stringify(this.conversations));
+      }
+    } catch (e) {
+      // Ignore quota/storage errors
+    }
   }
 
   async getConversations(): Promise<Conversation[]> {
-    await this.delay(300);
+    await this.delay(100);
     return [...this.conversations];
   }
 
   async createConversation(jurisdiction: 'central' | 'state', stateName: string | null): Promise<Conversation> {
-    await this.delay(200);
+    await this.delay(100);
     const newConv: Conversation = {
       id: `conv_${Date.now()}`,
       title: 'New Conversation',
@@ -164,20 +187,23 @@ export class CivicConnectApi {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     this.conversations.unshift(newConv);
+    this.saveToStorage();
     return newConv;
   }
 
   async deleteConversation(id: string): Promise<boolean> {
-    await this.delay(200);
+    await this.delay(100);
     this.conversations = this.conversations.filter(c => c.id !== id);
+    this.saveToStorage();
     return true;
   }
 
   async renameConversation(id: string, newTitle: string): Promise<boolean> {
-    await this.delay(200);
+    await this.delay(100);
     const conv = this.conversations.find(c => c.id === id);
     if (conv) {
       conv.title = newTitle;
+      this.saveToStorage();
       return true;
     }
     return false;
@@ -209,6 +235,7 @@ export class CivicConnectApi {
     if (conv.messages.filter(m => m.role === 'user').length === 1) {
       conv.title = userText.length > 25 ? userText.slice(0, 25) + '…' : userText;
     }
+    this.saveToStorage();
 
     // Trigger update for user message render
     onUpdate('sending', '');
@@ -255,6 +282,7 @@ export class CivicConnectApi {
           needsClarification: data.needs_clarification
         };
         conv.messages.push(assistantMsg);
+        this.saveToStorage();
         onUpdate(status, assistantMsg.content, assistantMsg.citations);
       } catch (err) {
         const errorContent = `Could not reach the CivicConnect API at ${API_BASE}. Check that the backend is running (uvicorn backend.main:app).`;
@@ -267,6 +295,7 @@ export class CivicConnectApi {
           verified: false
         };
         conv.messages.push(errMsg);
+        this.saveToStorage();
         onUpdate('error', errorContent);
       }
       return;
@@ -304,6 +333,7 @@ export class CivicConnectApi {
         needsClarification: false
       };
       conv.messages.push(assistantMsg);
+      this.saveToStorage();
       onUpdate('verified', assistantMsg.content, assistantMsg.citations);
     } catch (e) {
       onUpdate('error', 'An error occurred while processing your request.');
@@ -325,6 +355,7 @@ export class CivicConnectApi {
         msg.feedback = rating;
         if (comment) msg.feedbackComment = comment;
         if (selectedIssues) msg.feedbackIssues = selectedIssues;
+        this.saveToStorage();
         return true;
       }
     }
