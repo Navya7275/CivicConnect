@@ -512,9 +512,9 @@ import GradientASCII from '../components/ui/GradientASCII';
   </script>
 
   <!-- Step-by-Step Methodology Flow -->
-  <section class="section border-b border-border bg-background relative overflow-hidden" id="methodology-flow-section">
+  <section class="section border-b border-border bg-background relative overflow-hidden py-32" id="methodology-flow-section">
     <div class="container max-w-4xl">
-      <div class="text-center mb-16 step-header-anim transition-all duration-700 ease-out">
+      <div class="text-center mb-20 step-header-anim transition-all duration-700 ease-out">
         <span class="badge badge-soft mb-3" data-tone="primary">How it operates</span>
         <h2 class="text-h2">
           From legal text to plain answers. <span class="text-muted-foreground">In four steps.</span>
@@ -599,41 +599,35 @@ import GradientASCII from '../components/ui/GradientASCII';
             return;
           }
 
-          const rect = methodSection.getBoundingClientRect();
           const vh = window.innerHeight;
 
-          // Overall section window: spans from entering view until well past the header
-          const start = vh * 0.90;
-          const end = vh * 0.10;
-          const rawProgress = (start - rect.top) / (start - end);
-          const totalProgress = Math.max(0, Math.min(1, rawProgress));
-
-          // Header enters first (from 0 to 0.25)
-          const headerProgress = Math.max(0, Math.min(1, totalProgress / 0.25));
+          // Animate header only when it enters the lower 75% of viewport
+          const headerRect = stepHeader.getBoundingClientRect();
+          const headerRawProgress = (vh * 0.75 - headerRect.top) / (vh * 0.35);
+          const headerProgress = Math.max(0, Math.min(1, headerRawProgress));
           stepHeader.style.opacity = headerProgress.toFixed(2);
-          stepHeader.style.transform = `translateY(${(1 - headerProgress) * 25}px)`;
+          stepHeader.style.transform = `translateY(${(1 - headerProgress) * 20}px)`;
 
-          // Sequential thresholds for each card:
-          // Card 0 (01: Ask in Natural Language): progresses from 0.15 to 0.40
-          // Card 1 (02: Hybrid Retrieval Search): progresses from 0.35 to 0.60
-          // Card 2 (03: Context-Bound Synthesis): progresses from 0.55 to 0.80
-          // Card 3 (04: Section Citation Pinning): progresses from 0.75 to 1.00
-          const windows = [
-            { s: 0.15, e: 0.40, dir: -1 }, // left
-            { s: 0.35, e: 0.60, dir: 1 },  // right
-            { s: 0.55, e: 0.80, dir: -1 }, // left
-            { s: 0.75, e: 1.00, dir: 1 }   // right
-          ];
+          // Animate each card individually based on its OWN on-screen position!
+          // They only start moving once they are well inside the user's view (top < 70% vh)
+          // and reach full alignment when at 35% vh.
+          const cardDirs = [-1, 1, -1, 1]; // Left (-1) and Right (1) entrance vectors
 
           stepCards.forEach((card, idx) => {
             const el = card as HTMLElement;
-            const w = windows[idx];
-            const p = Math.max(0, Math.min(1, (totalProgress - w.s) / (w.e - w.s)));
+            const cRect = el.getBoundingClientRect();
+            
+            // Trigger range: starts at 75% vh (well below viewport top), completes at 40% vh
+            const startY = vh * 0.75;
+            const endY = vh * 0.40;
+            const rawP = (startY - cRect.top) / (startY - endY);
+            const p = Math.max(0, Math.min(1, rawP));
             const inv = 1 - p;
 
-            const translateX = inv * (w.dir * 45); // px
+            const dir = cardDirs[idx];
+            const translateX = inv * (dir * 55); // px
             const translateY = inv * 35; // px
-            const rotate = inv * (w.dir * 2); // deg
+            const rotate = inv * (dir * 2.5); // deg
             const opacity = Math.max(0, p);
 
             el.style.transform = `translate(${translateX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${rotate.toFixed(1)}deg)`;
