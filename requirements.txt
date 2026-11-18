@@ -22,6 +22,9 @@ numpy>=1.26
 # --- LLM provider [Ayushi / Navya] -------------------------------------
 groq>=0.11
 
+# --- Hugging Face Spaces SDK (Gradio Free Tier Support) ----------------
+gradio>=4.40
+
 # --- Data & database [Harshit] -----------------------------------------
 SQLAlchemy>=2.0
 psycopg2-binary>=2.9

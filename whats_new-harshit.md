@@ -90,12 +90,15 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
 
 ---
 
-## 4. Why Hugging Face Spaces + Cloudflare Pages?
+## 4. Why Hugging Face Spaces (Gradio SDK - 100% Free) + Cloudflare Pages?
 
-### A. Backend on Hugging Face Spaces:
-1. **16 GB RAM on Free Tier**: Render and Railway free tiers offer only 512 MB of RAM, which crashes (`OOM killed`) when compiling `sentence-transformers` vector embeddings or running PyTorch. Hugging Face Spaces provides **16 GB RAM** and **2 vCPUs completely free**.
-2. **Port 7860 Standard**: Hugging Face Spaces expects traffic on port `7860`. Our updated [Dockerfile](file:///c:/Work/CivicConnect/Dockerfile) exposes and starts Uvicorn directly on `0.0.0.0:7860` with `${PORT:-7860}` dynamic fallback.
-3. **No 15-Minute Aggressive Sleep**: Hugging Face Spaces stays warm significantly longer than free Render/Railway instances.
+### A. Backend on Hugging Face Spaces (Gradio SDK):
+1. **100% FREE Tier (No Credit Card / Zero Cost)**: Hugging Face Spaces par **Gradio SDK** default me **CPU Basic (2 vCPU · 16 GB RAM)** ke saath **100% Free** milta hai. (Docker option par unhone recent policy me paid/Pro badge lagaya hai, isliye hum native **Gradio SDK** use kar rahe hain).
+2. **FastAPI Mounted Inside Gradio (`app.py`)**: Hugging Face Spaces Gradio SDK par humne `app.py` banaya hai jo hamari puri FastAPI application (`backend.main:app`) ko mount karta hai.
+   - Saare REST endpoints (`/health`, `/api/query`, `/api/search`, `/docs`) seamlessly work karte hain.
+   - Cloudflare Pages frontend directly in endpoints ko call karta hai.
+   - Bonus: Space ke URL par ek clean live test UI bhi milta hai!
+3. **16 GB RAM Available**: PyTorch, `sentence-transformers`, FAISS aur BM25 bina kisi memory crash (`OOM`) ke smooth chalte hain.
 
 ### B. Frontend on Cloudflare Pages:
 1. **Global Anycast Edge Network**: Zero cold starts, ultra-low latency worldwide, and unlimited bandwidth on the free tier.
@@ -111,7 +114,7 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
    - Go to [huggingface.co/spaces](https://huggingface.co/spaces) and click **Create new Space**.
    - **Space Name**: `civicconnect-api`
    - **License**: `mit` or `apache-2.0`
-   - **Space SDK**: Select **Docker** &rarr; choose **Blank**.
+   - **Space SDK**: Select **Gradio** (100% Free).
    - **Hardware**: **CPU Basic (2 vCPU · 16 GB RAM · Free)**.
    - **Visibility**: **Public**.
    - Click **Create Space**.
@@ -122,14 +125,7 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
    git remote add hf https://huggingface.co/spaces/<your-hf-username>/civicconnect-api
    git push hf main:main
    ```
-   *(Note: The `Dockerfile` has already been updated to listen on port `7860`, so no manual port overrides are required.)*
-
-   *(Also note: `README.md` carries YAML front-matter that Hugging Face reads
-   to configure the Space — title, emoji, `sdk: docker`, licence. It
-   deliberately does **not** set `app_port`, because the Dockerfile already
-   binds to the port Spaces routes to by default. Adding `app_port` there
-   would put the port in two files, and when they disagree the Space builds,
-   reports Running, and is unreachable.)*
+   *(Hugging Face will automatically read `requirements.txt` and launch `app.py` with both Gradio & FastAPI).*
 
 3. **Configure Environment Secrets & Variables on Hugging Face**:
    - In your Space, navigate to **Settings** &rarr; **Variables and secrets**.
@@ -143,11 +139,18 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
      | `GROQ_MODEL` | `qwen/qwen3.8-27b` | Variable |
      | `CORS_ORIGINS` | `*` | Variable |
      | `DATABASE_URL` | `sqlite:///./civicconnect.db` | Variable |
+   - In your Space, navigate to **Settings** &rarr; **Variables and secrets**.
+   - Add the following secret:
+     - `GROQ_API_KEY`: `<your-groq-api-key>`
+   - Add the following variables:
+     - `GROQ_MODEL`: `qwen/qwen3.8-27b`
+     - `CORS_ORIGINS`: `*`
+     - `DATABASE_URL`: `sqlite:///./civicconnect.db`
 
 4. **Verify Live Backend**:
-   - Space URL: `https://<your-hf-username>-civicconnect-api.hf.space`
-   - Visit the health check endpoint: `https://<your-hf-username>-civicconnect-api.hf.space/health`
-   - Verify `serving_real_answers: true`:
+   - Your Space URL is: `https://<your-hf-username>-civicconnect-api.hf.space`
+   - Visit `https://<your-hf-username>-civicconnect-api.hf.space/health`
+   - Expected JSON response:
      ```json
      {
        "status": "ok",
@@ -197,7 +200,4 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
 - [x] FAISS dense index & BM25 sparse index persisted and loaded.
 - [x] Clean editorial typography and responsive centering across all pages.
 - [x] Chat history persists across browser reloads via `localStorage`.
-- [x] Backend live health: `GET /health` returns `200 OK` with `serving_real_answers: true`.
-- [x] Tests: `python -m pytest data/tests/test_data_pipeline.py -k "not test_07"` passes with 6/6 tests clean.
-- [x] Provenance & Quality check: 165 chunks audited, 0 errors, 0 placeholder templates.
 - [x] Zero compilation errors across both Python backend and Astro frontend.

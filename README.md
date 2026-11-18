@@ -3,12 +3,8 @@ title: CivicConnect API
 emoji: "⚖️"
 colorFrom: orange
 colorTo: green
-sdk: docker
-# No app_port: the Dockerfile binds to ${PORT:-7860}, which is the port
-# Hugging Face Spaces routes to by default. Setting it here as well would
-# mean two places to keep in step, and they have already drifted once --
-# app_port said 8000 while the Dockerfile moved to 7860, which routes
-# traffic to a port nothing is listening on.
+sdk: gradio
+app_file: app.py
 pinned: false
 license: mit
 short_description: Hybrid-RAG assistant for Indian law and welfare schemes
