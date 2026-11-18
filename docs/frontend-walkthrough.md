@@ -44,8 +44,7 @@ The frontend is intentionally separated from the RAG implementation so the backe
 
 # 2. Design & Theme
 
-The design tokens live in `frontend/src/styles/global.css`; the component
-patterns are in `frontend/src/components/`.
+The frontend follows the existing `DESIGN.md` specification.
 
 ### Color System
 
@@ -71,9 +70,7 @@ The design uses:
 * Geist Mono for structural labels and eyebrows
 * Uppercase/tracked styling for technical or structural markers
 
-> **Design rule:** Before changing a UI component or adding a style, read the
-> tokens at the top of `frontend/src/styles/global.css` and reuse what is
-> already there rather than introducing a parallel set.
+> **Design rule:** Future contributors should refer to `DESIGN.md` before changing existing UI components or introducing new styles.
 
 ---
 
@@ -873,12 +870,12 @@ src/services/api.ts
 
 rather than making direct API calls from individual components.
 
-### Follow the existing tokens
+### Follow DESIGN.md
 
 Before changing the UI, check:
 
 ```text
-frontend/src/styles/global.css
+DESIGN.md
 ```
 
 Existing visual decisions should be preserved across new components and pages.
