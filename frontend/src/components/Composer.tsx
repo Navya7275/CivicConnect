@@ -41,7 +41,7 @@ export default function Composer({ onSend, disabled = false, submitting = false 
   }, [disabled, submitting]);
 
   return (
-    <div className="relative flex items-end gap-2 bg-card border border-input rounded-ui-xl p-2 w-full shadow-ui-sm focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 transition-all duration-fast min-w-0">
+    <div className="relative flex items-end gap-2 bg-[#f4f4f6] rounded-3xl p-2.5 w-full focus-within:bg-[#efeff2] focus-within:ring-2 focus-within:ring-black/10 transition-all duration-200 min-w-0 shadow-xs">
       <label htmlFor="composer-input" className="sr-only">Type your question about Indian laws or welfare schemes</label>
       <textarea
         id="composer-input"
@@ -51,7 +51,7 @@ export default function Composer({ onSend, disabled = false, submitting = false 
         onKeyDown={handleKeyDown}
         placeholder="Ask a question about welfare eligibility, penalties, or statutory rights…"
         disabled={disabled || submitting}
-        className="flex-grow min-w-0 bg-transparent border-0 rounded-none px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none h-10 max-h-[180px] leading-relaxed self-center"
+        className="flex-grow min-w-0 bg-transparent border-0 rounded-none px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none h-10 max-h-[180px] leading-relaxed self-center"
         autoComplete="off"
         spellCheck="true"
       ></textarea>
@@ -61,7 +61,7 @@ export default function Composer({ onSend, disabled = false, submitting = false 
         type="button"
         onClick={handleSubmit}
         disabled={disabled || submitting}
-        className="btn btn-primary !h-10 !w-10 !p-0 shrink-0 self-center"
+        className="btn btn-primary !h-9 !w-9 !p-0 rounded-full shrink-0 self-center shadow-sm cursor-pointer disabled:opacity-40"
         aria-label="Send message to assistant"
       >
         {submitting ? (

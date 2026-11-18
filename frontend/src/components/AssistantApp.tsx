@@ -213,9 +213,9 @@ export default function AssistantApp() {
       )}
 
       {/* Right Main Panel Shell */}
-      <div className="flex-grow flex flex-col h-full min-w-0 relative bg-muted/20">
+      <div className="flex-grow flex flex-col h-full min-w-0 relative bg-background">
         
-        {/* Top Liquid Glass Toolbar */}
+        {/* Top Minimal Toolbar */}
         <header className="h-16 px-6 bg-transparent flex items-center justify-between shrink-0 z-10">
           
           <div className="flex items-center gap-3">
@@ -248,7 +248,7 @@ export default function AssistantApp() {
           <div className="flex items-center gap-2">
             <a 
               href="/"
-              className="btn btn-secondary btn-sm hidden sm:inline-flex"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full hover:bg-black/5 transition-colors duration-fast hidden sm:inline-flex"
             >
               Exit to Home
             </a>
@@ -257,7 +257,7 @@ export default function AssistantApp() {
         </header>
 
         {/* Sub-view content router panel */}
-        <main className="flex-grow min-h-0 min-w-0 relative bg-muted/20">
+        <main className="flex-grow min-h-0 min-w-0 relative bg-background">
           {currentView === 'chat' && (
             <ChatView 
               conversation={activeConversation}

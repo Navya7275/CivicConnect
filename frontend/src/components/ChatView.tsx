@@ -93,46 +93,43 @@ export default function ChatView({
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="h-full flex flex-col justify-between overflow-hidden bg-muted/20">
+    <div className="h-full flex flex-col justify-between overflow-hidden bg-background">
       
       {/* Scrollable messages container */}
       <div className="flex-grow overflow-y-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-6">
           
           {isEmpty && (
-            <div className="text-center py-12 space-y-8 animate-fade-in">
-              <div className="space-y-3">
-                <span className="badge badge-soft" data-tone="accent">
-                  CivicConnect Assistant
-                </span>
-                <h2 className="text-h2">
+            <div className="text-center py-16 space-y-10 animate-fade-in">
+              <div className="space-y-4 max-w-xl mx-auto">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-foreground leading-[1.15]">
                   What can we clarify for you today?
-                </h2>
-                <p className="text-small text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                  Ask any question on Indian civil statutes, penalties, welfare scheme benefits, or eligibility procedures.
+                </h1>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  Ask any question on Indian civil statutes, road penalties, welfare scheme benefits, or eligibility procedures.
                 </p>
               </div>
 
               {/* Starter Prompt Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-left pt-2">
                 {WELCOME_PROMPTS.map((p, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => onSendMessage(p.query)}
-                    className="card card-interactive !p-5 text-left flex flex-col justify-between group"
+                    className="p-5 rounded-2xl border border-black/[0.08] bg-[#fbfbfd] hover:bg-white text-left flex flex-col justify-between group transition-all duration-200 hover:shadow-md hover:border-black/15 cursor-pointer"
                   >
                     <div>
-                      <div className="font-medium text-sm text-foreground mb-1 group-hover:text-accent-fill transition-colors">
+                      <div className="font-medium text-sm text-foreground mb-1.5 group-hover:text-primary transition-colors">
                         {p.title}
                       </div>
-                      <div className="text-xs text-muted-foreground line-clamp-2">
+                      <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                         {p.description}
                       </div>
                     </div>
-                    <div className="text-xs text-accent-fill font-medium mt-3 flex items-center gap-1">
+                    <div className="text-xs text-muted-foreground group-hover:text-foreground font-medium mt-4 flex items-center gap-1 transition-colors">
                       <span>Ask question</span>
-                      <span>→</span>
+                      <span className="transform group-hover:translate-x-0.5 transition-transform">→</span>
                     </div>
                   </button>
                 ))}
@@ -157,10 +154,10 @@ export default function ChatView({
                 </div>
 
                 <div 
-                  className={`rounded-ui-lg p-5 max-w-[88%] text-sm leading-relaxed ${
+                  className={`p-5 text-sm leading-relaxed ${
                     isUser 
-                      ? 'bg-primary text-primary-foreground font-medium' 
-                      : 'bg-card border border-border text-foreground shadow-ui-sm'
+                      ? 'bg-[#18181b] text-white font-medium rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm' 
+                      : 'bg-[#f7f7f9] border border-black/[0.06] text-foreground rounded-2xl rounded-tl-sm max-w-[90%] shadow-sm'
                   }`}
                 >
                   {isUser ? (
@@ -217,8 +214,8 @@ export default function ChatView({
 
           {/* Active Status indicator during streaming */}
           {submitting && (
-            <div className="flex items-center gap-3 p-4 rounded-ui-lg bg-card border border-border shadow-ui-sm w-fit animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-accent-fill animate-ping"></span>
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border shadow-ui-sm w-fit animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
               <span className="text-xs font-medium text-foreground">
                 {activeStatus === 'sending' && 'Sending question…'}
                 {activeStatus === 'searching' && 'Searching statutory acts & welfare database…'}
