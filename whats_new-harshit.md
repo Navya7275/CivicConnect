@@ -124,6 +124,13 @@ It also provides the battle-tested, turnkey **Zero-Cost Production Deployment Gu
    ```
    *(Note: The `Dockerfile` has already been updated to listen on port `7860`, so no manual port overrides are required.)*
 
+   *(Also note: `README.md` carries YAML front-matter that Hugging Face reads
+   to configure the Space — title, emoji, `sdk: docker`, licence. It
+   deliberately does **not** set `app_port`, because the Dockerfile already
+   binds to the port Spaces routes to by default. Adding `app_port` there
+   would put the port in two files, and when they disagree the Space builds,
+   reports Running, and is unreachable.)*
+
 3. **Configure Environment Secrets & Variables on Hugging Face**:
    - In your Space, navigate to **Settings** &rarr; **Variables and secrets**.
    - Add the following secret:
