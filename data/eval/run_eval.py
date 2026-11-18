@@ -74,12 +74,15 @@ REFUSAL_MARKERS = (
 )
 
 
-def normalise_section(value: str | None) -> str | None:
-    """'Section 7' / 'sec. 7' / '7' all become '7'."""
-    if not value:
-        return None
-    m = re.search(r"(\d+[A-Z]?)", str(value), re.IGNORECASE)
-    return m.group(1).upper() if m else None
+# Shared with the verification agent rather than reimplemented. There were
+# three copies of this five-line function -- here, in check_questions and in
+# verification -- all agreeing by coincidence with nothing keeping them in
+# step. That is precisely how the query and document tokenizers drifted apart
+# and quietly cost 50 places of retrieval rank.
+from backend.agents.verification import (  # noqa: E402
+    extract_section_numbers,
+    normalise_section,
+)
 
 
 def same_provision(a_act: str, a_sec: str, b_act: str, b_sec: str) -> bool:
@@ -101,11 +104,22 @@ class QuestionResult:
 
     qid: str
     answerable: bool
+    # Which Act the answer lives in, so the report can break recall down by
+    # body of law. The aggregate hides the only thing worth knowing: keyword
+    # search scores very differently on the plain-language summaries than on
+    # verbatim statute, and one number averages the two together.
+    expected_act: str = ""
     retrieved: list[tuple[str, str]] = field(default_factory=list)
     recall_hit: bool = False
     cited: list[tuple[str, str]] = field(default_factory=list)
     citation_correct: bool = False
     citation_grounded: bool = True
+    # Section numbers the answer's prose actually names. Both "cited right"
+    # and "grounded" are only as meaningful as this is non-empty: an answer
+    # naming nothing is vacuously grounded, and falls back to citing every
+    # retrieved chunk, which makes "cited right" agree with recall by
+    # construction. Reported so the reader can tell the difference.
+    prose_sections: list[str] = field(default_factory=list)
     refused: bool = False
     verified: bool | None = None
     hallucinated_sections: list[str] = field(default_factory=list)
@@ -176,6 +190,48 @@ def build_arms(chunks: list[dict[str, Any]], want: list[str]) -> dict[str, Any]:
     return arms
 
 
+# Answers already produced in this run, keyed by the question and the exact
+# chunks it was answered from.
+#
+# The hybrid and hybrid+verification arms share one HybridRetriever, so they
+# retrieve identically, and synthesis runs at temperature 0. Asking the
+# provider the same question over the same context therefore buys a second
+# copy of the same answer -- a quarter of every run's LLM calls, spent on
+# nothing. On a free tier where the budget allows roughly one call a minute,
+# that quarter is about twenty minutes.
+_ANSWER_CACHE: dict[tuple, dict[str, Any]] = {}
+
+# Groq enforces output tokens per minute, so the window that has to clear is
+# sixty seconds. The old backoff ran 5, 10, 20, 40 and gave up at 75 seconds
+# total, never once waiting out a full window; runs died with every attempt
+# "rate limited" and nothing to show. These waits cross a minute twice.
+RATE_LIMIT_WAITS = (15, 35, 65, 65)
+
+
+def synthesize_cached(synthesizer: Any, query: str, chunks: list[dict[str, Any]]):
+    """Synthesize an answer, reusing one already produced for the same input."""
+    key = (query, tuple(c.get("chunk_id") for c in chunks))
+    if key in _ANSWER_CACHE:
+        return _ANSWER_CACHE[key]
+
+    for attempt, wait in enumerate((*RATE_LIMIT_WAITS, None)):
+        try:
+            out = synthesizer.synthesize(query, chunks)
+            _ANSWER_CACHE[key] = out
+            return out
+        except Exception as exc:  # noqa: BLE001
+            rate_limited = (
+                "rate" in exc.__class__.__name__.lower() or "429" in str(exc)
+            )
+            if not rate_limited or wait is None:
+                raise
+            print(f"\n    rate limited, waiting {wait}s "
+                  f"(attempt {attempt + 1} of {len(RATE_LIMIT_WAITS)})", flush=True)
+            time.sleep(wait)
+
+    raise RuntimeError("synthesis returned nothing after retries")
+
+
 def as_chunk(item: Any) -> dict[str, Any]:
     """Retrievers return either a chunk dict or {'chunk': ..., 'score': ...}."""
     if isinstance(item, dict) and "chunk" in item and isinstance(item["chunk"], dict):
@@ -202,7 +258,11 @@ def run_one(
     denominator -- bm25 showed 100% over ten questions. Recall@k needs no LLM;
     it must never be lost to one.
     """
-    res = QuestionResult(qid=question["id"], answerable=question.get("answerable", True))
+    res = QuestionResult(
+        qid=question["id"],
+        answerable=question.get("answerable", True),
+        expected_act=question.get("expected_act", ""),
+    )
     started = time.perf_counter()
 
     # --- retrieval: no network, no LLM, always attempted ------------------
@@ -227,23 +287,7 @@ def run_one(
 
     # --- synthesis: needs the provider, and may fail on its own -----------
     try:
-        out = None
-        for attempt in range(5):
-            try:
-                out = synthesizer.synthesize(question["question"], chunks)
-                break
-            except Exception as exc:  # noqa: BLE001
-                rate_limited = (
-                    "rate" in exc.__class__.__name__.lower() or "429" in str(exc)
-                )
-                if not rate_limited or attempt == 4:
-                    raise
-                wait = 2 ** attempt * 5
-                print(f"\n    rate limited, waiting {wait}s", flush=True)
-                time.sleep(wait)
-
-        if out is None:
-            raise RuntimeError("synthesis returned nothing after retries")
+        out = synthesize_cached(synthesizer, question["question"], chunks)
 
         answer = out.get("answer") or ""
         citations = out.get("citations") or []
@@ -257,10 +301,25 @@ def run_one(
                 for a, s in res.cited
             )
 
-        retrieved_keys = {(normalise_section(s), (a or "").lower()) for a, s in res.retrieved}
-        res.citation_grounded = all(
-            (normalise_section(s), (a or "").lower()) in retrieved_keys for a, s in res.cited
-        )
+        # Groundedness has to be read off the PROSE, not off the citation
+        # list. The citations are assembled in code from the retrieved chunks,
+        # so "is every citation among the retrieved chunks" is true however
+        # the model behaves -- it reported 100% and meant nothing. What can
+        # actually go wrong is the answer asserting a section nobody fetched,
+        # and only the prose can show that.
+        #
+        # Matched on section number alone, as the verification agent does, so
+        # the two agree. Pairing a section to its Act from free prose is
+        # fragile and being over-strict here would report hallucinations that
+        # are really just an Act named loosely.
+        known_numbers = {normalise_section(s) for _, s in res.retrieved}
+        known_numbers.discard(None)
+        prose_sections = extract_section_numbers(answer)
+        res.prose_sections = list(prose_sections)
+        res.hallucinated_sections = [
+            n for n in prose_sections if n not in known_numbers
+        ]
+        res.citation_grounded = not res.hallucinated_sections
 
         if verifier is not None:
             v = verifier.verify(answer, citations, chunks)
@@ -288,6 +347,57 @@ def frac(n: int, d: int) -> str:
     return f"{100.0 * n / d:.0f}% ({n}/{d})" if d else "--"
 
 
+def recall_by_act(results: dict[str, list[QuestionResult]]) -> None:
+    """Break recall down by the Act the answer lives in.
+
+    The single figure averages two different problems together. The Consumer
+    Protection and RTI chunks are condensed summaries written in ordinary
+    language, so a question shares vocabulary with them; the Bharatiya Nyaya
+    Sanhita and Motor Vehicles Act chunks are verbatim statute, where it does
+    not. "Someone took my phone out of my bag on a bus" and "Whoever,
+    intending to take dishonestly any movable property out of the possession
+    of any person without that person's consent" have almost no words in
+    common, which is survivable for dense retrieval and close to fatal for
+    BM25.
+
+    Reported separately, that difference is the result. Averaged, it is
+    invisible.
+    """
+    arms = list(results)
+    acts: dict[str, dict[str, list[bool]]] = {}
+    for arm, rows in results.items():
+        for r in rows:
+            if not r.answerable or r.error or not r.expected_act:
+                continue
+            acts.setdefault(r.expected_act, {}).setdefault(arm, []).append(r.recall_hit)
+
+    if len(acts) < 2:
+        return
+
+    # Welfare schemes are one chunk each and there are a lot of them; group
+    # them together rather than printing twenty rows of n=1.
+    STATUTES = ("Bharatiya Nyaya Sanhita", "Motor Vehicles Act",
+                "Consumer Protection Act", "Right to Information")
+    grouped: dict[str, dict[str, list[bool]]] = {}
+    for act, per_arm in acts.items():
+        label = next((s for s in STATUTES if s in act), "Welfare schemes")
+        for arm, hits in per_arm.items():
+            grouped.setdefault(label, {}).setdefault(arm, []).extend(hits)
+
+    width = max(len(k) for k in grouped) + 2
+    print()
+    print("  recall@k by body of law")
+    print()
+    print("  " + "".ljust(width) + "".join(f"{a:>22}" for a in arms))
+    print("  " + "-" * (width + 22 * len(arms)))
+    for label in sorted(grouped, key=lambda k: -len(grouped[k].get(arms[0], []))):
+        cells = ""
+        for arm in arms:
+            hits = grouped[label].get(arm, [])
+            cells += f"{frac(sum(hits), len(hits)):>22}" if hits else f"{'-':>22}"
+        print("  " + label.ljust(width) + cells)
+
+
 def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> None:
     print()
     print("=" * 78)
@@ -304,6 +414,8 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         print(f"  {arm:<22} {frac(sum(r.recall_hit for r in ok), len(ok)):>16} "
               f"{sum(1 for r in rows if r.error):>8}")
 
+    recall_by_act(results)
+
     if not synthesis_ran:
         print()
         print("  Synthesis was not run, so citation and refusal metrics are absent.")
@@ -313,8 +425,9 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
     print()
     print("ANSWERS  (needs the LLM; questions it could not reach are excluded)")
     print()
-    print(f"  {'arm':<22} {'cited right':>16} {'grounded':>16} {'refused':>14} {'lost':>6}")
-    print(f"  {'-' * 78}")
+    print(f"  {'arm':<22} {'named a section':>18} {'cited right':>16} "
+          f"{'grounded':>16} {'refused':>14} {'lost':>6}")
+    print(f"  {'-' * 96}")
 
     starved = False
     for arm, rows in results.items():
@@ -324,7 +437,12 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         lost = sum(1 for r in rows if r.synthesis_error)
         if len(done) < 0.8 * len(rows):
             starved = True
-        print(f"  {arm:<22} {frac(sum(r.citation_correct for r in ans), len(ans)):>16} "
+        # Answers that point at a provision at all. The two figures after it
+        # are conditional on this: an answer naming nothing is vacuously
+        # grounded and falls back to citing everything retrieved.
+        named = sum(1 for r in ans if r.prose_sections)
+        print(f"  {arm:<22} {frac(named, len(ans)):>18} "
+              f"{frac(sum(r.citation_correct for r in ans), len(ans)):>16} "
               f"{frac(sum(r.citation_grounded for r in done), len(done)):>16} "
               f"{frac(sum(r.refused for r in una), len(una)):>14} {lost:>6}")
 
@@ -332,8 +450,16 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         print()
         print("  WARNING: an arm answered fewer than 80% of its questions. Those")
         print("  percentages are over whatever got through, which is not a result.")
-        print("  Re-run with a larger --sleep, or use --no-synthesis for retrieval")
-        print("  metrics alone, which need no provider and are always complete.")
+        print()
+        print("  On a free Groq key the limit is output tokens per minute, not")
+        print("  requests, so waiting longer between questions does not help on")
+        print("  its own -- one 800-token answer is most of a 1000-token minute.")
+        print("  What does help, in order of how much:")
+        print()
+        print("    --arms hybrid            one arm instead of four")
+        print("    CIVICCONNECT_MAX_ANSWER_TOKENS=300   shorter answers, more of them")
+        print("    --sample 10              fewer questions")
+        print("    --no-synthesis           retrieval metrics only, no provider")
 
     if "hybrid+verification" in results:
         rows = [r for r in results["hybrid+verification"] if not r.error and not r.synthesis_error]
@@ -362,10 +488,16 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         print(f"  median {statistics.median(times):.1f}s per question, {len(times)} runs")
 
     print()
-    print("  recall@k     did retrieval return the chunk that answers the question")
-    print("  cited right  did the answer cite the section that answers it")
-    print("  grounded     was every cited section actually among those retrieved")
-    print("  refused      for unanswerable questions, did it correctly decline")
+    print("  named a section  did the answer point at a provision at all")
+    print("  recall@k         did retrieval return the chunk that answers the question")
+    print("  cited right      did the answer cite the section that answers it")
+    print("  grounded         did the prose avoid naming a section nobody retrieved")
+    print("  refused          for unanswerable questions, did it correctly decline")
+    print()
+    print("  'cited right' and 'grounded' are conditional on 'named a section'.")
+    print("  An answer naming no provision is vacuously grounded, and its")
+    print("  citations fall back to every retrieved chunk, which makes")
+    print("  'cited right' repeat recall. Read the first column first.")
 
 
 def main() -> None:

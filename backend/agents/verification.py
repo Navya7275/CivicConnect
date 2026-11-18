@@ -220,9 +220,20 @@ class VerificationAgent:
         # we match on section number alone, not on the act it was attributed to.
         # Pairing a section to its act from free prose is fragile, and being
         # over-strict here causes needless retries. So "Section 35 of the Motor
-        # Vehicles Act" will pass while CPA Section 35 is in context. Catching
-        # that needs act-aware matching, which is worth doing once we index
-        # several acts that share section numbers.
+        # Vehicles Act" will pass while CPA Section 35 is in context.
+        #
+        # That condition has now arrived: the corpus holds four Acts, and the
+        # Consumer Protection Act, the Right to Information Act, the Bharatiya
+        # Nyaya Sanhita and the Motor Vehicles Act all have a Section 7. So
+        # this check can now miss a real hallucination -- an answer naming a
+        # section of one Act while only another Act's same-numbered section
+        # was retrieved reads as grounded.
+        #
+        # It is left lenient on purpose. Act-aware matching has to cope with
+        # "the RTI Act", "the 2005 Act" and bare "the Act", and a false
+        # rejection costs a retry and a worse answer, while a false pass
+        # costs one uncaught case. Tightening it needs its own measurement
+        # against the question set, not a guess here.
         prose_sections = extract_section_numbers(answer)
         hallucinated = [
             number for number in prose_sections if number not in known_numbers

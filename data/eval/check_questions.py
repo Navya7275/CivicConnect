@@ -45,9 +45,9 @@ def norm_act(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (value or "").lower()).removeprefix("the")
 
 
-def norm_section(value: str) -> str | None:
-    m = re.search(r"(\d+[A-Z]?)", str(value or ""), re.IGNORECASE)
-    return m.group(1).upper() if m else None
+# One implementation, shared with the verification agent. See the note in
+# run_eval.py: this function existed in three places at once.
+from backend.agents.verification import normalise_section as norm_section  # noqa: E402
 
 
 def main() -> int:

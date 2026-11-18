@@ -1,10 +1,90 @@
 import os
+import re
 
 from dotenv import load_dotenv
 from groq import Groq
 
+from backend.agents.verification import (
+    extract_section_numbers,
+    normalise_section,
+)
+
 
 load_dotenv()
+
+
+# How many tokens the model may spend on an answer.
+#
+# This was previously unset, which is not the same as unlimited: the client
+# then sends the model's own default, 2048 for qwen/qwen3.8-27b. Groq's free
+# tier allows 1000 output tokens per minute, and it checks the REQUESTED
+# figure before running anything, so every single call was refused outright:
+#
+#     429 Request too large ... output tokens per minute (OTPM):
+#     Limit 1000, Requested 2048 ... reduce max_tokens
+#
+# Not a rate limit that backing off would clear -- a request for more than
+# the per-minute budget can never succeed, however long you wait. It took
+# out the synthesis half of the evaluation and backend/tests/test_api.py
+# with it, and read as flakiness because 429 usually means "try later".
+#
+# 800 leaves headroom under the limit and is far more than an answer needs:
+# the citations are assembled in code from the retrieved chunks, so the model
+# writes only the prose, and the prompt asks for a short plain-language
+# reply. Raise it with CIVICCONNECT_MAX_ANSWER_TOKENS on a paid tier.
+MAX_ANSWER_TOKENS = int(os.getenv("CIVICCONNECT_MAX_ANSWER_TOKENS", "800"))
+
+
+def _act_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (name or "").lower()).removeprefix("the")
+
+
+def cited_chunks(answer: str, retrieved_chunks: list) -> list:
+    """Narrow the citations to the provisions the answer actually relies on.
+
+    Every retrieved chunk used to be returned as a citation. That made the
+    citation list a copy of the retrieval list, with two consequences.
+
+    For the evaluation, "was every cited section among those retrieved" was
+    true by construction, so the groundedness figure was 100% whatever the
+    model did -- a tautology reported as a result. And "did the answer cite
+    the right section" measured recall again under a different name.
+
+    For the reader it was worse. The answer rests on one or two provisions
+    and the interface listed up to ten "Sources", so the citation that
+    actually backs the claim sat among nine that did not. The point of
+    showing a citation is that someone can check the sentence against it;
+    ten of them check nothing.
+
+    The prompt already requires the answer to name the Act and Section it
+    relies on, so the answer itself says which chunks were used. This reads
+    that back, using the same parser the verification agent uses rather than
+    a second copy of it -- the two drifting apart is exactly how the
+    tokenizer bug happened.
+
+    Where several Acts share a section number, the ones whose Act is also
+    named in the answer win. Where the answer names no section at all --
+    welfare scheme answers have no sections, and a refusal cites nothing --
+    every retrieved chunk is returned, because showing the sources that were
+    searched is better than showing none.
+    """
+    if not retrieved_chunks:
+        return []
+
+    numbers = set(extract_section_numbers(answer or ""))
+    if not numbers:
+        return list(retrieved_chunks)
+
+    matched = [
+        chunk for chunk in retrieved_chunks
+        if normalise_section(chunk.get("section")) in numbers
+    ]
+    if not matched:
+        return list(retrieved_chunks)
+
+    answer_key = _act_key(answer)
+    named = [c for c in matched if _act_key(c.get("act", "")) in answer_key]
+    return named or matched
 
 
 class SynthesisAgent:
@@ -131,7 +211,8 @@ Retrieved context:
                     "content": prompt
                 }
             ],
-            temperature=0
+            temperature=0,
+            max_tokens=MAX_ANSWER_TOKENS
         )
 
         answer = response.choices[0].message.content
@@ -150,7 +231,7 @@ Retrieved context:
                 "_retrieval_scores": chunk.get("_retrieval_scores"),
                 "_rrf_score": chunk.get("_rrf_score"),
             }
-            for chunk in retrieved_chunks
+            for chunk in cited_chunks(answer, retrieved_chunks)
         ]
 
         return {
