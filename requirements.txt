@@ -25,6 +25,13 @@ groq>=0.11
 # --- Hugging Face Spaces SDK (Gradio Free Tier Support) ----------------
 gradio>=4.40
 
+# Present because the free Gradio tier runs on ZeroGPU hardware, whose
+# starter template imports it. CivicConnect asks for no GPU -- embeddings
+# run on CPU and the LLM is an HTTP call to Groq -- so nothing here is
+# decorated with @spaces.GPU. The package is listed so the Space cannot
+# fail to start for want of it; it costs a small install and nothing else.
+spaces>=0.30
+
 # --- Data & database [Harshit] -----------------------------------------
 SQLAlchemy>=2.0
 psycopg2-binary>=2.9
