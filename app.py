@@ -11,8 +11,15 @@ This entrypoint mounts our FastAPI backend (`backend.main:app`) into Gradio, exp
 
 from __future__ import annotations
 
+# Imported ahead of gradio, torch and sentence-transformers on purpose. On
+# ZeroGPU hardware this package patches CUDA initialisation, and it can only do
+# that if nothing has touched CUDA before it loads.
+import spaces
+
 import logging
 import os
+import socket
+import threading
 from pathlib import Path
 import gradio as gr
 
@@ -99,6 +106,26 @@ def query_civicconnect(question: str):
         return f"Error processing query: {str(e)}"
 
 
+# --- ZeroGPU's startup requirement -----------------------------------------
+# The free Gradio tier runs on ZeroGPU, and that runtime scans the app at
+# startup for at least one function decorated with @spaces.GPU. Finding none it
+# stops the Space with "No @spaces.GPU function detected during startup", which
+# is how the first deploy ended: the corpus loaded, the graph compiled, and then
+# the Space was killed for not asking for a GPU.
+#
+# CivicConnect genuinely wants no GPU. Retrieval is FAISS over 384-dimensional
+# vectors and synthesis is an HTTP call to Groq, so every part of the answer
+# path is CPU-bound or remote. This function exists to satisfy that check and
+# to report what the runtime handed us; nothing in the answer path calls it, and
+# on CPU hardware the decorator does nothing at all.
+@spaces.GPU(duration=15)
+def gpu_selftest() -> str:
+    """Report the torch/CUDA the Space runtime provided. Not used for answers."""
+    import torch
+
+    return f"torch {torch.__version__}, cuda available: {torch.cuda.is_available()}"
+
+
 # Minimalist Gradio UI wrapper for test & verification
 demo = gr.Interface(
     fn=query_civicconnect,
@@ -115,7 +142,40 @@ demo = gr.Interface(
 # Mount Gradio onto the FastAPI app so both coexist on port 7860
 app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
 
+def _port_is_available(port: int) -> bool:
+    """Whether this process can bind `port` itself.
+
+    On the first Space deploy the app loaded cleanly -- 945 chunks, graph
+    compiled -- and then died on "[Errno 98] error while attempting to bind on
+    address ('0.0.0.0', 7860): address already in use". Something in the Space
+    runtime was already serving that port, and uvicorn's failure to bind takes
+    the whole process down with it.
+
+    Checking first means we either serve the port or stand aside, rather than
+    exiting and leaving the Space with nothing running at all.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(("0.0.0.0", port))
+        except OSError:
+            return False
+    return True
+
+
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.environ.get("PORT", 7860))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    if _port_is_available(port):
+        import uvicorn
+
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    else:
+        # Whatever already holds the port serves `app`, which is built and
+        # mounted by the time we get here. Stay alive so the container is not
+        # reaped, and say so plainly in the log rather than dying quietly.
+        logger.warning(
+            "Port %d is already being served; not starting a second server on "
+            "it. The FastAPI app and the Gradio UI at /gradio are mounted.",
+            port,
+        )
+        threading.Event().wait()
