@@ -525,7 +525,7 @@ import GradientASCII from '../components/ui/GradientASCII';
         
         <div class="step-card-anim p-7 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all duration-700 ease-out hover:-translate-y-1">
           <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold font-mono">01</div>
-          <h3 class="text-h3 text-xl font-medium">1. Ask in Natural Language</h3>
+          <h3 class="text-h3 text-xl font-medium">Ask in Natural Language</h3>
           <p class="text-small text-muted-foreground leading-relaxed">
             Phrase questions normally without needing formal legal jargon or citations. State jurisdiction can be toggled at any moment.
           </p>
@@ -533,7 +533,7 @@ import GradientASCII from '../components/ui/GradientASCII';
 
         <div class="step-card-anim p-7 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all duration-700 ease-out hover:-translate-y-1">
           <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold font-mono">02</div>
-          <h3 class="text-h3 text-xl font-medium">2. Hybrid Retrieval Search</h3>
+          <h3 class="text-h3 text-xl font-medium">Hybrid Retrieval Search</h3>
           <p class="text-small text-muted-foreground leading-relaxed">
             Combines dense vector embeddings with lexical BM25 keyword matching to isolate the exact statutory sections and eligibility rules.
           </p>
@@ -541,7 +541,7 @@ import GradientASCII from '../components/ui/GradientASCII';
 
         <div class="step-card-anim p-7 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all duration-700 ease-out hover:-translate-y-1">
           <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold font-mono">03</div>
-          <h3 class="text-h3 text-xl font-medium">3. Context-Bound Synthesis</h3>
+          <h3 class="text-h3 text-xl font-medium">Context-Bound Synthesis</h3>
           <p class="text-small text-muted-foreground leading-relaxed">
             The reasoning engine generates an explanation constrained strictly to the retrieved facts, refusing to fabricate answers when sources are absent.
           </p>
@@ -549,7 +549,7 @@ import GradientASCII from '../components/ui/GradientASCII';
 
         <div class="step-card-anim p-7 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all duration-700 ease-out hover:-translate-y-1">
           <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold font-mono">04</div>
-          <h3 class="text-h3 text-xl font-medium">4. Section Citation Pinning</h3>
+          <h3 class="text-h3 text-xl font-medium">Section Citation Pinning</h3>
           <p class="text-small text-muted-foreground leading-relaxed">
             Provides inspectable source pills with original statutory excerpts and links to official gazettes and ministry portals.
           </p>
@@ -582,52 +582,69 @@ import GradientASCII from '../components/ui/GradientASCII';
   <!-- Scroll-triggered Stagger Animations for Methodology Flow and Final CTA -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Methodology Flow Section Animation
+      // 1. Methodology Flow Section Animation (Continuous Scrubbed Scroll Effect like the domain cards)
       const methodSection = document.getElementById('methodology-flow-section');
       const stepHeader = document.querySelector('.step-header-anim') as HTMLElement | null;
       const stepCards = document.querySelectorAll('.step-card-anim');
 
-      if (stepHeader && stepCards.length > 0) {
-        // Initial state before entering viewport
-        stepHeader.style.opacity = '0';
-        stepHeader.style.transform = 'translateY(24px)';
+      if (methodSection && stepHeader && stepCards.length === 4) {
+        const updateMethodologyAnim = () => {
+          if (window.innerWidth < 768) {
+            // Normal static view on small mobile
+            stepHeader.style.opacity = '1';
+            stepHeader.style.transform = '';
+            stepCards.forEach(c => {
+              (c as HTMLElement).style.opacity = '1';
+              (c as HTMLElement).style.transform = '';
+            });
+            return;
+          }
 
-        stepCards.forEach((card) => {
-          const el = card as HTMLElement;
-          el.style.opacity = '0';
-          el.style.transform = 'translateY(36px)';
-        });
+          const rect = methodSection.getBoundingClientRect();
+          const vh = window.innerHeight;
 
-        const observerOptions = {
-          root: null,
-          rootMargin: '0px 0px -12% 0px',
-          threshold: 0.15
+          // Animation window: starts when section top is at 80% vh, reaches full bloom around 30% vh
+          const start = vh * 0.85;
+          const end = vh * 0.25;
+          const rawProgress = (start - rect.top) / (start - end);
+          const progress = Math.max(0, Math.min(1, rawProgress));
+
+          // Header smoothly glides up
+          stepHeader.style.opacity = Math.min(1, progress * 1.5).toFixed(2);
+          stepHeader.style.transform = `translateY(${(1 - progress) * 24}px)`;
+
+          // Cards: left column flies in from left + spreads slightly, right column flies in from right
+          // Card 0 (top-left), Card 1 (top-right), Card 2 (bottom-left), Card 3 (bottom-right)
+          const c0 = stepCards[0] as HTMLElement;
+          const c1 = stepCards[1] as HTMLElement;
+          const c2 = stepCards[2] as HTMLElement;
+          const c3 = stepCards[3] as HTMLElement;
+
+          const spreadFactor = 1 - progress;
+          // Left column cards: glide in from left (-translateX) and rotate slightly
+          const leftX = spreadFactor * -60; // px
+          const rightX = spreadFactor * 60; // px
+          const translateY = spreadFactor * 40; // px
+          const leftRotate = spreadFactor * -2.5; // deg
+          const rightRotate = spreadFactor * 2.5; // deg
+          const opacity = (0.2 + progress * 0.8).toFixed(2);
+
+          c0.style.transform = `translate(${leftX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${leftRotate.toFixed(1)}deg)`;
+          c0.style.opacity = opacity;
+
+          c1.style.transform = `translate(${rightX.toFixed(1)}px, ${translateY.toFixed(1)}px) rotate(${rightRotate.toFixed(1)}deg)`;
+          c1.style.opacity = opacity;
+
+          c2.style.transform = `translate(${leftX.toFixed(1)}px, ${(translateY * 1.3).toFixed(1)}px) rotate(${leftRotate.toFixed(1)}deg)`;
+          c2.style.opacity = opacity;
+
+          c3.style.transform = `translate(${rightX.toFixed(1)}px, ${(translateY * 1.3).toFixed(1)}px) rotate(${rightRotate.toFixed(1)}deg)`;
+          c3.style.opacity = opacity;
         };
 
-        const methodObserver = new IntersectionObserver((entries, obs) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              // Animate header first
-              stepHeader.style.opacity = '1';
-              stepHeader.style.transform = 'translateY(0)';
-
-              // Stagger animate cards
-              stepCards.forEach((card, index) => {
-                setTimeout(() => {
-                  const el = card as HTMLElement;
-                  el.style.opacity = '1';
-                  el.style.transform = 'translateY(0)';
-                }, 120 * (index + 1));
-              });
-
-              obs.unobserve(entry.target);
-            }
-          });
-        }, observerOptions);
-
-        if (methodSection) {
-          methodObserver.observe(methodSection);
-        }
+        window.addEventListener('scroll', updateMethodologyAnim, { passive: true });
+        window.addEventListener('resize', updateMethodologyAnim, { passive: true });
+        updateMethodologyAnim();
       }
 
       // 2. Final CTA Section Animation
