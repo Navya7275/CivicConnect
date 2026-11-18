@@ -37,7 +37,8 @@ def _bootstrap_database_if_needed() -> None:
     
     Since civicconnect.db is gitignored and Dockerfile is bypassed on Gradio SDK,
     the Space starts without a database. Loading seed and welfare schemes builds the
-    necessary tables and rows. (Vector indexing artifacts are already tracked in git).
+    necessary tables and rows. The search indexes are then derived from those rows
+    by _build_indexes_if_needed(), which runs straight after this.
     """
     db_path = Path("civicconnect.db")
     if not db_path.exists() or db_path.stat().st_size == 0:
@@ -57,8 +58,55 @@ def _bootstrap_database_if_needed() -> None:
         logger.info("Database '%s' already exists (%d bytes).", db_path, db_path.stat().st_size)
 
 
-# Bootstrap database before FastAPI app or providers load
+def _build_indexes_if_needed() -> None:
+    """Build the FAISS and BM25 artifacts when the container has none.
+
+    The artifacts are deliberately not shipped to the Space, because neither way
+    of shipping them works. Pushed as ordinary files, Hugging Face rejects the
+    push outright -- "your push was rejected because it contains binary files",
+    whatever their size. Pushed through git LFS, the push succeeds and the files
+    then do not exist in the running container: the first deploy reported
+    `BM25 index not found: /app/data/indexing/artifacts/bm25.pkl` while
+    seed_schemes.json in the directory beside it loaded perfectly.
+
+    They are derived data anyway. build_indexes() reads the chunks table that
+    _bootstrap_database_if_needed() has just populated and writes both indexes
+    from it, which is exactly what the Dockerfile does at image build time.
+    Deriving them here has a second benefit: they cannot go stale against the
+    corpus, because they are built from the corpus that was just loaded.
+
+    The cost is one embedding-model download and the embedding of ~960 short
+    chunks on each cold start. Nothing is rebuilt when the artifacts are already
+    present, which is the normal case for a local checkout.
+    """
+    from data.indexing.build_index import ARTIFACTS_DIR
+
+    required = ["faiss.index", "bm25.pkl", "chunk_ids.json"]
+    missing = [name for name in required if not (ARTIFACTS_DIR / name).exists()]
+    if not missing:
+        logger.info("Index artifacts present in %s; not rebuilding.", ARTIFACTS_DIR)
+        return
+
+    logger.info(
+        "Index artifacts missing (%s). Building them from the chunks table; "
+        "this takes a short while on a cold start...", ", ".join(missing))
+    try:
+        from data.indexing.build_index import build_indexes
+
+        build_indexes()
+        logger.info("Index artifacts built. Retrieval should now load for real.")
+    except (Exception, SystemExit) as exc:  # noqa: BLE001
+        # build_indexes() raises SystemExit when the chunks table is missing or
+        # empty, which `except Exception` would not catch -- and an uncaught
+        # SystemExit here would take the whole Space down instead of leaving it
+        # serving stubs with an explanation.
+        logger.exception("Could not build index artifacts: %s", exc)
+
+
+# Bootstrap database and derive the search indexes before the FastAPI app is
+# imported, since its startup is what loads the retrieval provider.
 _bootstrap_database_if_needed()
+_build_indexes_if_needed()
 
 from backend.main import app as fastapi_app
 from backend.orchestration.state import initial_state
