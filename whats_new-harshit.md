@@ -1,7 +1,7 @@
 # What's New — Harshit Garg (Frontend, Database & Deployment)
 
 **Author:** Harshit Garg  
-**Branch:** `harshit/provenance-fixes`  
+**Branch:** merged into `main`  
 **Repository:** `CivicConnect` (Private Repository)  
 **Date:** November 14, 2026  
 
@@ -138,7 +138,7 @@ To take CivicConnect live on the open internet with zero budget, follow this arc
      Add your Hugging Face Space as a git remote and push:
      ```bash
      git remote add hf https://huggingface.co/spaces/<your-username>/civicconnect-api
-     git push hf harshit/provenance-fixes:main
+     git push hf main:main
      ```
    - *Option B (GitHub Sync)*:
      Under your Space's Settings, link the repository `Navya7275/CivicConnect`.
@@ -227,4 +227,4 @@ All changes have been tested locally and pushed to GitHub:
 - Frontend build: `npm run build` compiles with 0 errors.
 - Tests: `python -m pytest data/tests/test_data_pipeline.py -k "not test_07"` passes with 6/6 tests clean.
 - Provenance & Quality check: 165 chunks audited, 0 errors, 0 placeholder templates.
-- Branch: `origin/harshit/provenance-fixes`.
+- Branch: merged into `origin/main`.
