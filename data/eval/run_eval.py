@@ -114,6 +114,12 @@ class QuestionResult:
     cited: list[tuple[str, str]] = field(default_factory=list)
     citation_correct: bool = False
     citation_grounded: bool = True
+    # Section numbers the answer's prose actually names. Both "cited right"
+    # and "grounded" are only as meaningful as this is non-empty: an answer
+    # naming nothing is vacuously grounded, and falls back to citing every
+    # retrieved chunk, which makes "cited right" agree with recall by
+    # construction. Reported so the reader can tell the difference.
+    prose_sections: list[str] = field(default_factory=list)
     refused: bool = False
     verified: bool | None = None
     hallucinated_sections: list[str] = field(default_factory=list)
@@ -309,6 +315,7 @@ def run_one(
         known_numbers = {normalise_section(s) for _, s in res.retrieved}
         known_numbers.discard(None)
         prose_sections = extract_section_numbers(answer)
+        res.prose_sections = list(prose_sections)
         res.hallucinated_sections = [
             n for n in prose_sections if n not in known_numbers
         ]
@@ -418,8 +425,9 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
     print()
     print("ANSWERS  (needs the LLM; questions it could not reach are excluded)")
     print()
-    print(f"  {'arm':<22} {'cited right':>16} {'grounded':>16} {'refused':>14} {'lost':>6}")
-    print(f"  {'-' * 78}")
+    print(f"  {'arm':<22} {'named a section':>18} {'cited right':>16} "
+          f"{'grounded':>16} {'refused':>14} {'lost':>6}")
+    print(f"  {'-' * 96}")
 
     starved = False
     for arm, rows in results.items():
@@ -429,7 +437,12 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         lost = sum(1 for r in rows if r.synthesis_error)
         if len(done) < 0.8 * len(rows):
             starved = True
-        print(f"  {arm:<22} {frac(sum(r.citation_correct for r in ans), len(ans)):>16} "
+        # Answers that point at a provision at all. The two figures after it
+        # are conditional on this: an answer naming nothing is vacuously
+        # grounded and falls back to citing everything retrieved.
+        named = sum(1 for r in ans if r.prose_sections)
+        print(f"  {arm:<22} {frac(named, len(ans)):>18} "
+              f"{frac(sum(r.citation_correct for r in ans), len(ans)):>16} "
               f"{frac(sum(r.citation_grounded for r in done), len(done)):>16} "
               f"{frac(sum(r.refused for r in una), len(una)):>14} {lost:>6}")
 
@@ -475,10 +488,16 @@ def report(results: dict[str, list[QuestionResult]], synthesis_ran: bool) -> Non
         print(f"  median {statistics.median(times):.1f}s per question, {len(times)} runs")
 
     print()
-    print("  recall@k     did retrieval return the chunk that answers the question")
-    print("  cited right  did the answer cite the section that answers it")
-    print("  grounded     did the prose avoid naming a section nobody retrieved")
-    print("  refused      for unanswerable questions, did it correctly decline")
+    print("  named a section  did the answer point at a provision at all")
+    print("  recall@k         did retrieval return the chunk that answers the question")
+    print("  cited right      did the answer cite the section that answers it")
+    print("  grounded         did the prose avoid naming a section nobody retrieved")
+    print("  refused          for unanswerable questions, did it correctly decline")
+    print()
+    print("  'cited right' and 'grounded' are conditional on 'named a section'.")
+    print("  An answer naming no provision is vacuously grounded, and its")
+    print("  citations fall back to every retrieved chunk, which makes")
+    print("  'cited right' repeat recall. Read the first column first.")
 
 
 def main() -> None:
