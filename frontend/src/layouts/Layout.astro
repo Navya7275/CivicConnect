@@ -81,21 +81,21 @@ const isApp = pathname.startsWith('/assistant');
           </div>
 
           <!-- Desktop Navigation Menu -->
-          <div class="hidden md:flex items-center gap-1">
-            <a href="/how-it-works" class="nav-link" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>How It Works</a>
-            <a href="/welfare-schemes" class="nav-link" aria-current={pathname === '/welfare-schemes' ? 'page' : undefined}>Welfare Schemes</a>
-            <a href="/legal-info" class="nav-link" aria-current={pathname === '/legal-info' ? 'page' : undefined}>Laws & Acts</a>
-            <a href="/sources-methodology" class="nav-link" aria-current={pathname === '/sources-methodology' ? 'page' : undefined}>Methodology</a>
-            <a href="/about" class="nav-link" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
-            <a href="/faq" class="nav-link" aria-current={pathname === '/faq' ? 'page' : undefined}>FAQ</a>
-            <a href="/contact" class="nav-link" aria-current={pathname === '/contact' ? 'page' : undefined}>Contact</a>
+          <div class="hidden lg:flex items-center gap-0.5 whitespace-nowrap">
+            <a href="/how-it-works" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>How It Works</a>
+            <a href="/welfare-schemes" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/welfare-schemes' ? 'page' : undefined}>Welfare Schemes</a>
+            <a href="/legal-info" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/legal-info' ? 'page' : undefined}>Laws & Acts</a>
+            <a href="/sources-methodology" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/sources-methodology' ? 'page' : undefined}>Methodology</a>
+            <a href="/about" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/about' ? 'page' : undefined}>About</a>
+            <a href="/faq" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/faq' ? 'page' : undefined}>FAQ</a>
+            <a href="/contact" class="nav-link !px-2.5 !text-[13px] whitespace-nowrap" aria-current={pathname === '/contact' ? 'page' : undefined}>Contact</a>
           </div>
 
           <!-- Launch CTA & Shortkey -->
-          <div class="hidden md:flex items-center gap-3">
-            <a href="/assistant" class="btn btn-primary btn-sm" aria-label="Open CivicConnect AI Assistant">
+          <div class="hidden lg:flex items-center gap-3 shrink-0">
+            <a href="/assistant" class="btn btn-primary btn-sm whitespace-nowrap" aria-label="Open CivicConnect AI Assistant">
               <span>Open Assistant</span>
-              <kbd class="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] rounded bg-white/20 text-white font-mono leading-none">⌘K</kbd>
+              <kbd class="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[10px] rounded bg-white/20 text-white font-mono leading-none">⌘K</kbd>
             </a>
           </div>
 
@@ -103,7 +103,7 @@ const isApp = pathname.startsWith('/assistant');
           <button 
             type="button" 
             id="mobile-nav-toggle"
-            class="md:hidden flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground rounded-md transition-colors" 
+            class="lg:hidden flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground rounded-md transition-colors" 
             aria-controls="mobile-menu" 
             aria-expanded="false"
             aria-label="Toggle Navigation Menu"
@@ -118,7 +118,7 @@ const isApp = pathname.startsWith('/assistant');
         </nav>
 
         <!-- Mobile Navigation Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 border-t border-border bg-card px-6 py-4 flex flex-col gap-2 shadow-md">
+        <div id="mobile-menu" class="hidden lg:hidden absolute top-full left-0 right-0 border-t border-border bg-card px-6 py-4 flex flex-col gap-2 shadow-md">
           <a href="/how-it-works" class="nav-link w-full py-2" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>How It Works</a>
           <a href="/welfare-schemes" class="nav-link w-full py-2" aria-current={pathname === '/welfare-schemes' ? 'page' : undefined}>Welfare Schemes</a>
           <a href="/legal-info" class="nav-link w-full py-2" aria-current={pathname === '/legal-info' ? 'page' : undefined}>Laws & Acts</a>
@@ -215,10 +215,10 @@ const isApp = pathname.startsWith('/assistant');
             mainNavInner.classList.remove('container', 'w-full', 'px-6', 'h-16');
             mainNavInner.classList.add(
               'pointer-events-auto',
-              'max-w-5xl',
-              'w-[92%]',
-              'h-13',
-              'px-5',
+              'max-w-6xl',
+              'w-[95%]',
+              'h-14',
+              'px-6',
               'rounded-full',
               'bg-white/85',
               'backdrop-blur-xl',
@@ -230,10 +230,10 @@ const isApp = pathname.startsWith('/assistant');
             mainHeader.classList.remove('pt-3', 'pointer-events-none');
             mainNavInner.classList.remove(
               'pointer-events-auto',
-              'max-w-5xl',
-              'w-[92%]',
-              'h-13',
-              'px-5',
+              'max-w-6xl',
+              'w-[95%]',
+              'h-14',
+              'px-6',
               'rounded-full',
               'bg-white/85',
               'backdrop-blur-xl',
