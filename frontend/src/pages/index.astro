@@ -144,7 +144,7 @@ import GradientASCII from '../components/ui/GradientASCII';
                   <p class="text-xs sm:text-sm lg:text-base font-medium text-foreground">
                     For questions, legal rights, and everyday civic help.
                   </p>
-                  <p class="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  <p class="step-desc-reveal text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
                     Get help with everyday questions on civic laws, explaining court procedures, checking road penalties, drafting RTI requests, or knowing which government portal to visit.
                   </p>
                 </div>
@@ -166,7 +166,7 @@ import GradientASCII from '../components/ui/GradientASCII';
                   <p class="text-xs sm:text-sm lg:text-base font-medium text-foreground">
                     For verified legal provisions backed by official gazettes.
                   </p>
-                  <p class="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  <p class="step-desc-reveal text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
                     Every sentence is cross-checked against retrieved statutory sections from the Bharatiya Nyaya Sanhita 2023, Motor Vehicles Act 1988, or official scheme guidelines with zero hallucination.
                   </p>
                 </div>
@@ -188,7 +188,7 @@ import GradientASCII from '../components/ui/GradientASCII';
                   <p class="text-xs sm:text-sm lg:text-base font-medium text-foreground">
                     For government aid, eligibility checklists, and direct benefits.
                   </p>
-                  <p class="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  <p class="step-desc-reveal text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
                     Explore cataloged state and central programs—including Ayushman Bharat PM-JAY, PM-Kisan farm aid, and PMJDY financial inclusion—with exact document checklists and transfer details.
                   </p>
                 </div>
@@ -263,6 +263,28 @@ import GradientASCII from '../components/ui/GradientASCII';
 
       if (!runway || !mockup || !featuresCol) return;
 
+      // Initialize word-by-word reveal for description paragraphs on desktop
+      const descElements = document.querySelectorAll('.step-desc-reveal');
+      const stepWordSpans: HTMLElement[][] = [];
+
+      descElements.forEach((desc) => {
+        const text = desc.textContent?.trim() || '';
+        const words = text.split(/\s+/).filter(Boolean);
+        desc.innerHTML = '';
+        const spanList: HTMLElement[] = [];
+        words.forEach((word) => {
+          const span = document.createElement('span');
+          span.className = 'step-word inline-block transition-opacity duration-100 ease-out';
+          span.style.opacity = '0.2';
+          span.textContent = word;
+          desc.appendChild(span);
+          // Append space after word
+          desc.appendChild(document.createTextNode(' '));
+          spanList.push(span);
+        });
+        stepWordSpans.push(spanList);
+      });
+
       let currentActiveIndex = 0;
 
       const activateStep = (index: number) => {
@@ -300,7 +322,6 @@ import GradientASCII from '../components/ui/GradientASCII';
       const heroGradientBg = document.getElementById('hero-gradient-bg');
 
       const handleScroll = () => {
-        if (window.innerWidth < 1024) return;
         const rect = runway.getBoundingClientRect();
         const totalScrollable = runway.offsetHeight - window.innerHeight;
         if (totalScrollable <= 0) return;
@@ -319,7 +340,8 @@ import GradientASCII from '../components/ui/GradientASCII';
           }
         }
 
-        if (window.innerWidth >= 1024) {
+        const isDesktop = window.innerWidth >= 1024;
+        if (isDesktop) {
           // Desktop Sequence:
           let slideProgress = 0;
           if (progress <= 0.24) {
@@ -347,7 +369,7 @@ import GradientASCII from '../components/ui/GradientASCII';
         // Step 0 (Chat) Range: 0.20 -> 0.48 on desktop, 0.05 -> 0.38 on mobile
         // Step 1 (Verify) Range: 0.48 -> 0.74 on desktop, 0.38 -> 0.70 on mobile
         // Step 2 (Schemes) Range: 0.74 -> 1.00 on desktop, 0.70 -> 1.00 on mobile
-        const isMobile = window.innerWidth < 1024;
+        const isMobile = !isDesktop;
         const stepRanges = isMobile ? [
           { start: 0.05, end: 0.38 },
           { start: 0.38, end: 0.70 },
@@ -360,23 +382,56 @@ import GradientASCII from '../components/ui/GradientASCII';
 
         steps.forEach((s, idx) => {
           const bar = s.querySelector('.step-bar') as HTMLElement | null;
-          if (!bar) return;
-
           const range = stepRanges[idx];
+          const words = stepWordSpans[idx];
+
           if (progress < range.start) {
             // Unreached: small indicator line (8% width)
-            bar.style.transform = 'scaleX(0.08)';
-            bar.style.opacity = '0.35';
+            if (bar) {
+              bar.style.transform = 'scaleX(0.08)';
+              bar.style.opacity = '0.35';
+            }
+            if (words) {
+              if (isMobile) {
+                words.forEach(w => w.style.opacity = '1');
+              } else {
+                words.forEach(w => w.style.opacity = '0.2');
+              }
+            }
           } else if (progress >= range.end) {
             // Completed: full line (100% width)
-            bar.style.transform = 'scaleX(1.0)';
-            bar.style.opacity = '1.0';
+            if (bar) {
+              bar.style.transform = 'scaleX(1.0)';
+              bar.style.opacity = '1.0';
+            }
+            if (words) {
+              words.forEach(w => w.style.opacity = '1');
+            }
           } else {
             // Currently active & filling: smoothly scale from 0.08 to 1.0
             const stepProgress = (progress - range.start) / (range.end - range.start);
             const scale = 0.08 + (0.92 * stepProgress);
-            bar.style.transform = `scaleX(${scale.toFixed(3)})`;
-            bar.style.opacity = '1.0';
+            if (bar) {
+              bar.style.transform = `scaleX(${scale.toFixed(3)})`;
+              bar.style.opacity = '1.0';
+            }
+
+            // Word-by-word reveal tied to stepProgress
+            if (words) {
+              if (isMobile) {
+                words.forEach(w => w.style.opacity = '1');
+              } else {
+                const totalWords = words.length;
+                const litCount = Math.floor(stepProgress * totalWords);
+                words.forEach((w, wIdx) => {
+                  if (wIdx <= litCount) {
+                    w.style.opacity = '1';
+                  } else {
+                    w.style.opacity = '0.2';
+                  }
+                });
+              }
+            }
           }
         });
 
