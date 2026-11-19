@@ -96,38 +96,38 @@ export default function ChatView({
     <div className="h-full flex flex-col justify-between overflow-hidden bg-background">
       
       {/* Scrollable messages container */}
-      <div className="flex-grow overflow-y-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto space-y-6">
+      <div className="flex-grow overflow-y-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
           
           {isEmpty && (
-            <div className="text-center py-16 space-y-10 animate-fade-in">
-              <div className="space-y-4 max-w-xl mx-auto">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-foreground leading-[1.15]">
+            <div className="text-center py-6 sm:py-16 space-y-6 sm:space-y-10 animate-fade-in">
+              <div className="space-y-2 sm:space-y-4 max-w-xl mx-auto px-2">
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-medium tracking-tight text-foreground leading-[1.2] sm:leading-[1.15]">
                   What can we clarify for you today?
                 </h1>
-                <p className="text-base text-muted-foreground leading-relaxed">
+                <p className="text-xs sm:text-base text-muted-foreground leading-relaxed">
                   Ask any question on Indian civil statutes, road penalties, welfare scheme benefits, or eligibility procedures.
                 </p>
               </div>
 
               {/* Starter Prompt Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-left pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3.5 text-left pt-1 sm:pt-2 px-1 sm:px-0">
                 {WELCOME_PROMPTS.map((p, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => onSendMessage(p.query)}
-                    className="p-5 rounded-2xl border border-black/[0.08] bg-[#fbfbfd] hover:bg-white text-left flex flex-col justify-between group transition-all duration-200 hover:shadow-md hover:border-black/15 cursor-pointer"
+                    className="p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-black/[0.08] bg-[#fbfbfd] hover:bg-white text-left flex flex-col justify-between group transition-all duration-200 hover:shadow-md hover:border-black/15 cursor-pointer"
                   >
                     <div>
-                      <div className="font-medium text-sm text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                      <div className="font-medium text-xs sm:text-sm text-foreground mb-1 group-hover:text-primary transition-colors">
                         {p.title}
                       </div>
-                      <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                      <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed line-clamp-2">
                         {p.description}
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground group-hover:text-foreground font-medium mt-4 flex items-center gap-1 transition-colors">
+                    <div className="text-[11px] sm:text-xs text-muted-foreground group-hover:text-foreground font-medium mt-3 sm:mt-4 flex items-center gap-1 transition-colors">
                       <span>Ask question</span>
                       <span className="transform group-hover:translate-x-0.5 transition-transform">→</span>
                     </div>

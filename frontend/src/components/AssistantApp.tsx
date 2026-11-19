@@ -216,27 +216,27 @@ export default function AssistantApp() {
       <div className="flex-grow flex flex-col h-full min-w-0 relative bg-background">
         
         {/* Top Minimal Toolbar */}
-        <header className="h-16 px-6 bg-transparent flex items-center justify-between shrink-0 z-10">
+        <header className="h-14 sm:h-16 px-3 sm:px-6 bg-transparent flex items-center justify-between shrink-0 z-10 border-b border-border/40 md:border-none">
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Sidebar Toggle */}
             <button 
               type="button"
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground border border-input rounded-md transition-colors"
+              className="md:hidden p-1.5 sm:p-2 text-muted-foreground hover:text-foreground border border-input rounded-md transition-colors"
               aria-label="Toggle navigation history sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
             {/* Current view indicator for mobile */}
-            <div className="md:hidden text-sm font-medium text-foreground capitalize">
+            <div className="hidden sm:block md:hidden text-sm font-medium text-foreground capitalize">
               {currentView === 'chat' ? 'Assistant' : currentView}
             </div>
           </div>
 
           {/* Active Jurisdiction Selector widget (Segmented Control style) */}
-          <div className="mx-auto md:mx-0">
+          <div className="mx-1 sm:mx-auto md:mx-0 scale-90 sm:scale-100 origin-center">
             <JurisdictionSelector 
               jurisdiction={jurisdiction}
               stateName={stateName}
@@ -248,7 +248,7 @@ export default function AssistantApp() {
           <div className="flex items-center gap-2">
             <a 
               href="/"
-              className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full hover:bg-black/5 transition-colors duration-fast hidden sm:inline-flex"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground px-2.5 sm:px-3 py-1.5 rounded-full border border-border hover:bg-muted/50 transition-colors whitespace-nowrap"
             >
               Exit to Home
             </a>
