@@ -9,7 +9,7 @@ import GradientASCII from '../components/ui/GradientASCII';
     <!-- GradientASCII Canvas attached to document flow so it stays prominent and only merges just before feature animation -->
     <div 
       id="hero-gradient-bg" 
-      class="absolute top-0 left-0 right-0 h-[1850px] pointer-events-none overflow-hidden z-0 transition-opacity duration-300"
+      class="absolute top-0 left-0 right-0 h-[850px] md:h-[1850px] pointer-events-none overflow-hidden z-0 transition-opacity duration-300"
       style="mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0) 100%);"
     >
       <GradientASCII 
@@ -111,10 +111,70 @@ import GradientASCII from '../components/ui/GradientASCII';
   </div>
 
   <!-- ChatGPT-Style Sticky Scrollytelling Section -->
+  <!-- On mobile (<1024px), scrollytelling is cleanly rendered as an elegant normal stack without sticky lock or 500vh runway -->
   <section class="relative bg-transparent -mt-4 md:-mt-6" id="showcase-scrollytelling">
     
-    <!-- Stage Container with total scroll runway -->
-    <div class="relative min-h-[500vh]" id="scrolly-runway">
+    <!-- Mobile Presentation (< lg): Clean, elegant non-sticky card layout -->
+    <div class="block lg:hidden container max-w-xl mx-auto px-5 py-12">
+      <div class="space-y-8">
+        <!-- Mockup Display Card -->
+        <div class="rounded-2xl bg-card border border-border shadow-xl overflow-hidden text-left">
+          <div class="h-10 px-4 bg-muted/60 flex items-center relative select-none">
+            <div class="flex items-center gap-1.5 z-10">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span class="text-xs font-medium text-foreground tracking-tight">CivicConnect</span>
+            </div>
+          </div>
+          <div class="relative w-full aspect-[16/10] bg-card overflow-hidden">
+            <img 
+              src="/showcase/stage-chat.png" 
+              alt="CivicConnect Live Chat Assistant" 
+              class="w-full h-full object-contain p-2"
+            />
+          </div>
+        </div>
+
+        <!-- 3 Feature Points Stacked Clearly -->
+        <div class="space-y-6 pt-2">
+          <div class="p-5 rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-medium text-foreground">1. Natural Language Chat</h3>
+              <span class="badge badge-soft text-xs" data-tone="accent">Everyday Help</span>
+            </div>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+              Ask questions on civic statutes, civil rights, traffic rules, or court procedures without needing legal jargon.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-medium text-foreground">2. Verified Legal Sections</h3>
+              <span class="badge badge-soft text-xs" data-tone="warning">Zero Hallucination</span>
+            </div>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+              Every sentence is cross-checked against retrieved statutory sections from official gazettes and penal acts.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-medium text-foreground">3. Welfare Entitlements</h3>
+              <span class="badge badge-soft text-xs" data-tone="success">Direct Benefits</span>
+            </div>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+              Explore cataloged state and central schemes—like PM-Kisan and Ayushman Bharat—with document checklists.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Presentation (>= lg): Pinned Sticky 2-Stage Scrollytelling Frame -->
+    <div class="hidden lg:block relative min-h-[500vh]" id="scrolly-runway">
       
       <!-- Sticky Frame pinned to viewport -->
       <div class="sticky top-0 h-screen flex items-center overflow-hidden">
@@ -300,6 +360,7 @@ import GradientASCII from '../components/ui/GradientASCII';
       const heroGradientBg = document.getElementById('hero-gradient-bg');
 
       const handleScroll = () => {
+        if (window.innerWidth < 1024) return;
         const rect = runway.getBoundingClientRect();
         const totalScrollable = runway.offsetHeight - window.innerHeight;
         if (totalScrollable <= 0) return;
