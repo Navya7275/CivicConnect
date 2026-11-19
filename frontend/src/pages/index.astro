@@ -114,7 +114,7 @@ import GradientASCII from '../components/ui/GradientASCII';
   <section class="relative bg-transparent -mt-4 md:-mt-6" id="showcase-scrollytelling">
     
     <!-- Stage Container with total scroll runway -->
-    <div class="relative min-h-[350vh] md:min-h-[500vh]" id="scrolly-runway">
+    <div class="relative min-h-[500vh]" id="scrolly-runway">
       
       <!-- Sticky Frame pinned to viewport -->
       <div class="sticky top-0 h-screen flex items-center overflow-hidden">
@@ -344,11 +344,15 @@ import GradientASCII from '../components/ui/GradientASCII';
           featuresCol.style.pointerEvents = 'auto';
         }
 
-        // --- Phase 2: Generous Feature Dwell Duration & Progress Scaling ---
-        // Step 0 (Chat) Range: 0.20 -> 0.48
-        // Step 1 (Verify) Range: 0.48 -> 0.74
-        // Step 2 (Schemes) Range: 0.74 -> 1.00
-        const stepRanges = [
+        // Step 0 (Chat) Range: 0.20 -> 0.48 on desktop, 0.05 -> 0.38 on mobile
+        // Step 1 (Verify) Range: 0.48 -> 0.74 on desktop, 0.38 -> 0.70 on mobile
+        // Step 2 (Schemes) Range: 0.74 -> 1.00 on desktop, 0.70 -> 1.00 on mobile
+        const isMobile = window.innerWidth < 1024;
+        const stepRanges = isMobile ? [
+          { start: 0.05, end: 0.38 },
+          { start: 0.38, end: 0.70 },
+          { start: 0.70, end: 1.00 }
+        ] : [
           { start: 0.20, end: 0.48 },
           { start: 0.48, end: 0.74 },
           { start: 0.74, end: 1.00 }
@@ -376,9 +380,12 @@ import GradientASCII from '../components/ui/GradientASCII';
           }
         });
 
-        if (progress < 0.48) {
+        const activeThreshold1 = isMobile ? 0.38 : 0.48;
+        const activeThreshold2 = isMobile ? 0.70 : 0.74;
+
+        if (progress < activeThreshold1) {
           activateStep(0);
-        } else if (progress < 0.74) {
+        } else if (progress < activeThreshold2) {
           activateStep(1);
         } else {
           activateStep(2);
