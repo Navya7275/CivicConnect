@@ -175,6 +175,14 @@ def shade(cell, hexfill):
 
 
 def table(rows, cap, widths=None, size=9, header=True):
+    # The caption goes ABOVE the table, unlike a figure's. Word has no
+    # "keep with previous", so a caption placed under a table can be pushed
+    # onto the next page on its own — which is what happened to Table 12,
+    # whose caption ended up alone at the top of a page with its table
+    # overleaf. A caption above, marked keep_with_next, cannot be separated.
+    cap_par = p(cap, size=9, italic=True, align=C, space_after=3, line=1.0,
+                space_before=8, color=GREY)
+    cap_par.paragraph_format.keep_with_next = True
     t = doc.add_table(rows=0, cols=len(rows[0]))
     t.style = "Table Grid"
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -206,11 +214,8 @@ def table(rows, cap, widths=None, size=9, header=True):
         el = OxmlElement("w:cantSplit")
         el.set(qn("w:val"), "true")
         trPr.append(el)
-    for cell in t.rows[-1].cells:
-        # Keep the caption on the same page as the end of its table.
-        for par in cell.paragraphs:
-            par.paragraph_format.keep_with_next = True
-    caption(cap)
+    # A table is followed directly by body text, so give it a little air.
+    p("", space_after=2, line=1.0)
     return t
 
 
@@ -260,14 +265,18 @@ style.paragraph_format.widow_control = True
 A4_W, A4_H = Inches(8.27), Inches(11.69)
 
 
-def add_page_border(section, sz=12, space=14):
+def add_page_border(section, sz=8, space=27):
     """Draw a box border on every page of this section.
 
-    `sz` is in eighths of a point, so 12 is 1.5 pt. `space` is the gap in
-    points between the page edge and the border, which is what offsetFrom
-    "page" means. With 0.5 in (36 pt) margins a 14 pt offset leaves the border
-    22 pt clear of the text on every side, and clear of the centred page
-    number in the footer, which sits 0.3 in from the page edge.
+    `sz` is in eighths of a point, so 8 is 1 pt. `space` is the gap in points
+    between the page edge and the border, which is what offsetFrom "page"
+    means.
+
+    The border and the margins have to be chosen together. A true "Narrow"
+    margin of 1.27 cm leaves only 36 pt between text and paper edge, so any
+    border drawn inside it sits almost on the edge of the sheet; the 0.75 in
+    margin used here leaves 54 pt, so the border can stand 27 pt off the edge
+    with another 27 pt of air before the text starts.
 
     pgBorders must sit after pgMar and before pgNumType in a sectPr, which it
     does here because the margins are written by the lines above and the page
@@ -287,12 +296,11 @@ def add_page_border(section, sz=12, space=14):
 
 def page_setup(s, border=True):
     s.page_width, s.page_height = A4_W, A4_H
-    # Narrow margins, matching Word's "Narrow" preset.
-    s.top_margin = Inches(0.5)
-    s.bottom_margin = Inches(0.5)
-    s.left_margin = Inches(0.5)
-    s.right_margin = Inches(0.5)
-    s.footer_distance = Inches(0.3)
+    # Narrow, but not Word's 1.27 cm "Narrow": that leaves no room for a page
+    # border and stretches a 10 pt line to about 105 characters.
+    for attr in ("top_margin", "bottom_margin", "left_margin", "right_margin"):
+        setattr(s, attr, Inches(0.75))
+    s.footer_distance = Inches(0.45)
     if border:
         add_page_border(s)
 
@@ -452,11 +460,13 @@ p("CONTENTS", size=14, bold=True, align=C, space_after=14)
 def toc(label, page, bold=False, ind=0.0):
     par = doc.add_paragraph()
     par.alignment = L
-    par.paragraph_format.line_spacing = 1.3
-    par.paragraph_format.space_after = Pt(1)
+    # Tight enough that the whole contents fits one page. It previously spilled
+    # two entries onto a second, nearly empty one.
+    par.paragraph_format.line_spacing = 1.1
+    par.paragraph_format.space_after = Pt(0)
     par.paragraph_format.left_indent = Inches(ind)
     tabs = par.paragraph_format.tab_stops
-    tabs.add_tab_stop(Inches(5.5), WD_ALIGN_PARAGRAPH.RIGHT)
+    tabs.add_tab_stop(Inches(6.0), WD_ALIGN_PARAGRAPH.RIGHT)
     _font(par.add_run(label), BODY, bold)
     _font(par.add_run("\t" + str(page)), BODY, bold)
 
@@ -469,7 +479,7 @@ for item, pg, b, ind in [
     ("Chapter 1 \u2014 Introduction and Objectives", "1", True, 0),
     ("1.1 Background", "1", False, 0.25),
     ("1.2 Why General-Purpose Assistants Fail on Statute", "1", False, 0.25),
-    ("1.3 Problem Statement", "1", False, 0.25),
+    ("1.3 Problem Statement", "2", False, 0.25),
     ("1.4 Objectives", "2", False, 0.25),
     ("1.5 Scope and Delimitations", "2", False, 0.25),
     ("Chapter 2 \u2014 Literature Survey", "3", True, 0),
@@ -477,7 +487,7 @@ for item, pg, b, ind in [
     ("2.2 Sparse, Dense and Hybrid Retrieval", "3", False, 0.25),
     ("2.3 Rank Fusion", "3", False, 0.25),
     ("2.4 Legal-Domain Language Models and Indian Legal NLP", "3", False, 0.25),
-    ("2.5 Hallucination and Attribution in Legal AI", "3", False, 0.25),
+    ("2.5 Hallucination and Attribution in Legal AI", "4", False, 0.25),
     ("2.6 Agentic Orchestration and Self-Verification", "4", False, 0.25),
     ("2.7 Summary of Prior Work", "4", False, 0.25),
     ("Chapter 3 \u2014 Research Gap and Proposed System", "5", True, 0),
@@ -493,18 +503,18 @@ for item, pg, b, ind in [
     ("4.1 Evaluation Design", "10", False, 0.25),
     ("4.2 Corpus Construction Results", "11", False, 0.25),
     ("4.3 Retrieval Performance at Two Corpus Scales", "12", False, 0.25),
-    ("4.4 Per-Act Breakdown", "12", False, 0.25),
+    ("4.4 Per-Act Breakdown", "13", False, 0.25),
     ("4.5 The Central Finding: Hybrid Retrieval Did Not Beat Dense", "13", False, 0.25),
     ("4.6 Tuning Interventions and Their Measured Effect", "14", False, 0.25),
-    ("4.7 Failure Modes: A System That Looked Healthy", "14", False, 0.25),
+    ("4.7 Failure Modes: A System That Looked Healthy", "15", False, 0.25),
     ("4.8 Deployment Results", "15", False, 0.25),
-    ("4.9 Threats to Validity", "15", False, 0.25),
-    ("Chapter 5 \u2014 Conclusions and Future Work", "15", True, 0),
-    ("5.1 Conclusions", "16", False, 0.25),
-    ("5.2 Learning Outcomes", "16", False, 0.25),
-    ("5.3 Future Work", "16", False, 0.25),
-    ("5.4 Recommendations", "18", False, 0.25),
-    ("REFERENCES", "19", True, 0),
+    ("4.9 Threats to Validity", "16", False, 0.25),
+    ("Chapter 5 \u2014 Conclusions and Future Work", "17", True, 0),
+    ("5.1 Conclusions", "17", False, 0.25),
+    ("5.2 Learning Outcomes", "17", False, 0.25),
+    ("5.3 Future Work", "17", False, 0.25),
+    ("5.4 Recommendations", "19", False, 0.25),
+    ("REFERENCES", "20", True, 0),
 ]:
     toc(item, pg, b, ind)
 

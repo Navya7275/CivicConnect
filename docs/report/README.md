@@ -51,21 +51,41 @@ Set in `build_report.py`, and matching what was asked for:
 
 | Property | Value |
 |---|---|
-| Page | A4, box border on every page (14 pt from the page edge) |
-| Margins | 0.5 in on all four sides (Word's "Narrow") |
+| Page | A4, 1 pt box border on every page, 27 pt from the page edge |
+| Margins | 0.75 in on all four sides |
 | Body text | Times New Roman 10 pt, justified, 1.2 line spacing |
 | Chapter title | 17 pt bold |
 | Subheading | 15 pt bold |
 | Further subheading | 13 pt bold |
 | Page numbers | 8 pt, centred; roman for front matter, decimal from Chapter 1 |
 
-Two settings exist to stop a page holding only a stray line or two. Headings,
-figures, and the sentence introducing a figure carry `keep_with_next`, and
-table rows carry `cantSplit`, so a heading is never stranded at the foot of a
-page and a caption never floats away from what it captions. New pages are
-started with `page_break_before` on the following paragraph rather than with
-`add_page_break()`, which appends an empty paragraph and produces a blank page
-whenever the preceding page happens to be exactly full.
+The margin is 0.75 in rather than Word's 1.27 cm "Narrow" because the two
+requirements collide. At 1.27 cm there are only 36 pt between the text and the
+edge of the sheet, so a page border drawn inside that gap sits almost on the
+paper edge, and a 10 pt line stretches to about 105 characters. At 0.75 in
+there are 54 pt, enough for the border to stand 27 pt off the edge with
+another 27 pt of air before the text starts. To go back to a true Narrow
+margin, change `page_setup()` and drop the border — they cannot both be had.
+
+Several settings exist to stop a page holding only a stray line or two:
+
+- headings, figures, and the sentence introducing a figure carry
+  `keep_with_next`, so a heading is never stranded at the foot of a page;
+- table rows carry `cantSplit`, and a header row repeats when a long table
+  does break across pages;
+- **table captions are placed above their table**, unlike figure captions,
+  which go below. Word has no "keep with previous", so a caption under a table
+  can be pushed onto the next page by itself — which happened to Table 12. A
+  caption above, marked `keep_with_next`, cannot be separated from its table;
+- new pages are started with `page_break_before` on the following paragraph
+  rather than with `add_page_break()`, which appends an empty paragraph and
+  produces a blank page whenever the preceding page happens to be exactly
+  full.
+
+`docs/report/` has no layout checker committed, but the quickest way to find
+these problems again is to render the PDF and measure how far down each page
+the text actually reaches; anything under about half a page that is not a
+chapter ending or a one-per-page front-matter page is worth a look.
 
 After any rebuild that changes the length of the text, the contents page
 numbers must be re-checked against the rendered PDF — they are written out by
