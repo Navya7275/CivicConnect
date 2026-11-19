@@ -122,11 +122,11 @@ import GradientASCII from '../components/ui/GradientASCII';
           
           <div class="relative flex flex-col lg:flex-row items-center justify-between w-full min-h-[480px] lg:min-h-[520px] gap-6 lg:gap-0">
             
-            <!-- Left Side (or Bottom on mobile): Feature Tab Menu -->
+            <!-- Left Side (or Below Mockup on mobile): Feature Tab Menu -->
             <div 
               id="scrolly-features-col" 
-              class="w-full lg:w-[34%] flex flex-col gap-4 sm:gap-6 lg:gap-8 transition-all duration-700 ease-out z-10 order-2 lg:order-1"
-              style="opacity: 0; transform: translateY(20px); pointer-events: none;"
+              class="w-full lg:w-[34%] flex flex-col gap-5 sm:gap-6 lg:gap-8 transition-all duration-700 ease-out z-10 order-2 lg:order-1"
+              style="opacity: 1; pointer-events: auto;"
             >
               <!-- Step 1: Chat -->
               <div class="scrolly-step group cursor-pointer transition-all duration-300" data-step="0">
@@ -320,9 +320,7 @@ import GradientASCII from '../components/ui/GradientASCII';
         }
 
         if (window.innerWidth >= 1024) {
-          // Dedicated 2-Stage Sequence:
-          // Stage A (progress 0 -> 0.24): Screenshot stays locked in the CENTER with rich background scrolling behind it!
-          // Stage B (progress 0.24 -> 0.46): Screenshot slides smoothly from CENTER to RIGHT, features fade in.
+          // Desktop Sequence:
           let slideProgress = 0;
           if (progress <= 0.24) {
             slideProgress = 0;
@@ -330,23 +328,19 @@ import GradientASCII from '../components/ui/GradientASCII';
             slideProgress = Math.min(1, (progress - 0.24) / 0.22);
           }
 
-          // Centered position: -28% offset in flex row, 1.15x scale, comfortable spacing: +12px
-          // Right position: 0% offset, 1.0x scale, translateY 0
           const currentOffset = -28 * (1 - slideProgress);
           const currentScale = 1.15 - (0.15 * slideProgress);
           const currentTranslateY = 12 * (1 - slideProgress);
 
           mockup.style.transform = `translateX(${currentOffset.toFixed(2)}%) translateY(${currentTranslateY.toFixed(1)}px) scale(${currentScale.toFixed(3)})`;
-
-          // Left features fade in and slide into place during Stage B
           featuresCol.style.opacity = slideProgress.toFixed(2);
           featuresCol.style.transform = `translateX(${(-40 * (1 - slideProgress)).toFixed(1)}px)`;
           featuresCol.style.pointerEvents = slideProgress > 0.8 ? 'auto' : 'none';
         } else {
-          // Mobile fallback
-          mockup.style.transform = '';
+          // Mobile & Tablet: Features and Mockup are naturally stacked and always 100% visible
+          mockup.style.transform = 'scale(0.98)';
           featuresCol.style.opacity = '1';
-          featuresCol.style.transform = '';
+          featuresCol.style.transform = 'none';
           featuresCol.style.pointerEvents = 'auto';
         }
 
